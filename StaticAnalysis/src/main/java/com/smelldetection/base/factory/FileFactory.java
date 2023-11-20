@@ -38,12 +38,10 @@ public class FileFactory {
         int maxDepth = 10;
         Stream<Path> stream = Files.find(start,maxDepth,(filepath, attributes) -> true);
         applicationYamlOrProperities = stream.sorted().map(String::valueOf).filter(filepath ->{
-            if((String.valueOf(filepath).toLowerCase().endsWith("application.yml") || String.valueOf(filepath).toLowerCase().endsWith("application.yaml") || String.valueOf(filepath).toLowerCase().endsWith("application.properties")) && !String.valueOf(filepath).toLowerCase().contains("target")){
-                return true;
-            }
-            else {
-                return false;
-            }
+            return (String.valueOf(filepath).toLowerCase().endsWith("application.yml")
+                    || String.valueOf(filepath).toLowerCase().endsWith("application.yaml")
+                    || String.valueOf(filepath).toLowerCase().endsWith("application.properties"))
+                    && !String.valueOf(filepath).toLowerCase().contains("target");
         }).collect(Collectors.toList());
         return  applicationYamlOrProperities;
     }

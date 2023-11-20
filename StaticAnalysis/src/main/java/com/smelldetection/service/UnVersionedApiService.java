@@ -25,6 +25,14 @@ public class UnVersionedApiService {
     @Autowired
     public FileFactory fileFactory;
 
+    /**
+     * NoAPIVersioning
+     * @param request
+     * @return
+     * @throws IOException
+     * @throws ClassNotFoundException
+     * @throws ParseException
+     */
     public ApiVersionContext getUnVersionedApis(RequestItem request) throws IOException, ClassNotFoundException, ParseException {
         String path = request.getServicesPath();
         String servicesDirectory = new File(path).getAbsolutePath();

@@ -31,7 +31,9 @@ public class WrongServiceCutService {
         String servicesDirectory = new File(path).getAbsolutePath();
         List<String> servicesPath = fileFactory.getServicePaths(servicesDirectory);
         ApiParserUtils apiParserUtils = new ApiParserUtils();
+        // 遍历服务路径
         for (String svc : servicesPath) {
+            // 根据配置文件解析服务名称
             List<String> applicationYamlOrPropertities = fileFactory.getApplicationYamlOrPropertities(svc);
             Yaml yaml = new Yaml();
             String serviceName = "";
@@ -51,6 +53,7 @@ public class WrongServiceCutService {
                     serviceName = (String) p.get("spring.application.name");
                 }
             }
+            // 获取服务中的Java文件，主要是筛出实体类
             List<String> javaFiles = fileFactory.getJavaFiles(svc);
             for (String javafile : javaFiles) {
                 File file = new File(javafile);

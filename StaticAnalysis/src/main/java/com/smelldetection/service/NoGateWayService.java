@@ -38,6 +38,7 @@ public class NoGateWayService {
         boolean hasDependency = false;
         boolean hasProperity = false;
         Yaml yaml = new Yaml();
+        // 依赖判断
         for (String pom: pomFiles) {
             Model svc1 = mavenReader.read(new FileReader(pom));
             for (Dependency dependency1 : svc1.getDependencies()) {
@@ -57,6 +58,7 @@ public class NoGateWayService {
                     break;
                 }
         }
+        // 配置文件判断
         List<String> applicationYamlOrPropertities = fileFactory.getApplicationYamlOrPropertities(servicesDirectory);
         Map gateway = null;
         Map zuul = null;

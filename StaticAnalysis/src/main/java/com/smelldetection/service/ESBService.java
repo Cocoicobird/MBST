@@ -15,6 +15,12 @@ import org.springframework.stereotype.Service;
 public class ESBService {
     @Autowired
     public ESBParserUtils esbParserUtils;
+
+    /**
+     * 根据服务调用情况来确定是否为 ESBUsage
+     * @param request
+     * @return
+     */
     public ESBServiceContext getESBServices(RequestItem request) {
         String path = request.getServicesPath();
         ESBServiceContext esbServiceContext = new ESBServiceContext();

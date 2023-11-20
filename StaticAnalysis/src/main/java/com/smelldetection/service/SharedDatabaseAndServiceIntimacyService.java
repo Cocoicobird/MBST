@@ -32,12 +32,14 @@ public class SharedDatabaseAndServiceIntimacyService {
     public SharedDatabaseContext getsharedDatabaseandServiceIntimacy(RequestItem request) throws IOException {
         String path = request.getServicesPath();
         String servicesDirectory = new File(path).getAbsolutePath();
+        System.out.println("[DEBUG] " + servicesDirectory);
         List<String> applicationYamlOrProperties= fileFactory.getApplicationYamlOrPropertities(servicesDirectory);
         Yaml yaml = new Yaml();
         HashMap<String,ArrayList<String>> databaseMap = new HashMap<>();
         HashMap<String,ArrayList<String>> ServiceIntimacyMap = new HashMap<>();
         SharedDatabaseContext sharedDatabaseContext = new SharedDatabaseContext();
         for(String app: applicationYamlOrProperties){
+            System.out.println("[DEBUG] " + app);
             String serviceName = "";
             if(app.endsWith("yaml") || app.endsWith("yml")){
                 Map map = yaml.load(new FileInputStream(app));
@@ -59,7 +61,7 @@ public class SharedDatabaseAndServiceIntimacyService {
             while (line != null) {
                 if (line.contains(pattern)) {
                     int startIndex = line.indexOf(pattern) + 8;
-                    int endIndex = line.indexOf("?");
+                    int endIndex = line.contains("?") ? line.indexOf("?") : line.length();
                     if (line.contains("///")) {
                         startIndex = line.indexOf("///") + 3;
                         target = "localhost:3306/" + line.substring(startIndex, endIndex);

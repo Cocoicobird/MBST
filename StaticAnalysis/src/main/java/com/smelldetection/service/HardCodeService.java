@@ -21,6 +21,12 @@ public class HardCodeService {
     @Autowired
     public FileFactory fileFactory;
 
+    /**
+     * 遍历文件，正则表达式匹配
+     * @param request
+     * @return
+     * @throws IOException
+     */
     public HardCodeContext getHardCode(RequestItem request) throws IOException {
         String path = request.getServicesPath();
         List<String> filesType = Arrays.asList("java","js","py");

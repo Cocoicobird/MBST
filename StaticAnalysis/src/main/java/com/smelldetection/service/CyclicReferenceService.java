@@ -46,6 +46,13 @@ public class CyclicReferenceService {
         this.fileFactory=fileFactory;
     }
 
+    /**
+     * 根据配置文件类型（yaml 和 yml 或者 properties）解析服务名称
+     * @param applicationYamlOrPropertities
+     * @return
+     * @throws IOException
+     * @throws XmlPullParserException
+     */
     private String resolveProjectNames(List<String> applicationYamlOrPropertities) throws IOException, XmlPullParserException {
         String serviceName = "";
         for (String app : applicationYamlOrPropertities) {
@@ -66,6 +73,13 @@ public class CyclicReferenceService {
         return serviceName;
 
     }
+
+    /**
+     * 根据 pom 文件解析包名
+     * @param pomFilePaths
+     * @throws IOException
+     * @throws XmlPullParserException
+     */
     public void resolvePackageName(List<String> pomFilePaths) throws IOException, XmlPullParserException {
         for (String pomFilePath : pomFilePaths) {
             final File pomFile = new File(pomFilePath);
@@ -80,6 +94,13 @@ public class CyclicReferenceService {
         }
     }
 
+    /**
+     * 解析 extension 和 implementation
+     * @param serviceName
+     * @param javaFilePaths
+     * @throws FileNotFoundException
+     * @throws ClassNotFoundException
+     */
     private void resolveExtensionAndImplementation(String serviceName, List<String> javaFilePaths) throws FileNotFoundException, ClassNotFoundException {
         TypeSolver typeSolver = new CombinedTypeSolver();
         JavaSymbolSolver symbolSolver = new JavaSymbolSolver(typeSolver);
@@ -149,6 +170,14 @@ public class CyclicReferenceService {
         }
     }
 
+    /**
+     * 获取与循环引用相关的信息
+     * @param request
+     * @return
+     * @throws IOException
+     * @throws ClassNotFoundException
+     * @throws XmlPullParserException
+     */
     public CyclicReferenceContext getCyclicReference(RequestItem request) throws IOException, ClassNotFoundException, XmlPullParserException {
         this.context=new CyclicReferenceContext();
         String path = request.getServicesPath();

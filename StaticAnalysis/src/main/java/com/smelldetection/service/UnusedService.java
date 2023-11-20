@@ -24,6 +24,12 @@ public class UnusedService {
     @Autowired
     public FileFactory fileFactory;
 
+    /**
+     * 服务中未使用的接口和抽象类
+     * @param request
+     * @return
+     * @throws IOException
+     */
     public UnusedContext getUnusedInterfaceAndAbstractClass(RequestItem request) throws IOException {
         UnusedContext unusedContext = new UnusedContext();
 

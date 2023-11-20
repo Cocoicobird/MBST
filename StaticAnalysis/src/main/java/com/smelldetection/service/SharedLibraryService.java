@@ -29,6 +29,7 @@ public class SharedLibraryService {
     public FileFactory fileFactory;
     
     /**
+     * 共用库判断
     * @Description: collect data of sharedLibraries
     * @Param: [request]
     * @return: com.example.smelldetection.base.SharedLibarayContext
@@ -40,6 +41,7 @@ public class SharedLibraryService {
         MavenXpp3Reader mavenReader = new MavenXpp3Reader();
         SharedLibraryContext libraryContext = new SharedLibraryContext();
         int num = pomFiles.size();
+        // pom 文件两两比较
         for(int i = 0;i < num - 1; i++){
             for(int j = i +1; j<num; j++){
                 Model svc1 = mavenReader.read(new FileReader(pomFiles.get(i)));

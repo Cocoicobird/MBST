@@ -21,6 +21,12 @@ public class GodService {
     public WrongServiceCutService wrongServiceCutService;
 
 
+    /**
+     * 逻辑和 wrongServiceCutService 里的类似
+     * @param requestItem
+     * @return
+     * @throws IOException
+     */
     public GodContext getGodServices(RequestItem requestItem) throws IOException {
         WrongCutContext wrongCutContext= wrongServiceCutService.getServicesEntityCount(requestItem);
         double avgEntityCount = wrongServiceCutService.getAvgEntityCount(wrongCutContext);

@@ -109,7 +109,7 @@ public class CyclicReferenceService {
             CompilationUnit cu = StaticJavaParser.parse(new File(filePath));
             for (TypeDeclaration<?> typeDeclaration : cu.getTypes()) {
                 //get class extension
-                String fullClassName = typeDeclaration.getFullyQualifiedName().isPresent() ? (String) typeDeclaration.getFullyQualifiedName().get() : null;
+                String fullClassName = typeDeclaration.getFullyQualifiedName().isPresent() ? typeDeclaration.getFullyQualifiedName().get() : null;
                 if (fullClassName != null) {
                     //build a list containing all the full names of classes in this project
                     projectClasses.add(fullClassName);

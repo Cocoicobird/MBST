@@ -85,7 +85,7 @@ public class AnalysisController {
         indexArr[0] = "k8s-system-log-*";
     }
 
-    @RequestMapping(path = "getAnalysisResults", method = RequestMethod.POST)
+    @RequestMapping(path = "/getAnalysisResults", method = RequestMethod.POST)
     public FinalContext getAnalysisResults(@RequestBody RequestItem requestItem) throws IOException {
         RestTemplate restTemplate = new RestTemplate();
         Map<String, String> params = new HashMap<>();

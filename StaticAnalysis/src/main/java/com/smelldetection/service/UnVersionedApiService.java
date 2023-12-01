@@ -61,8 +61,8 @@ public class UnVersionedApiService {
                 apiVersionContext.getMissingUrlMap().put(serviceName,new HashMap<>());
             }
             List<String> javaFiles = fileFactory.getJavaFiles(svc);
-            for (String javafile : javaFiles) {
-                File file = new File(javafile);
+            for (String javaFile : javaFiles) {
+                File file = new File(javaFile);
                 apiParserUtils.inspectJavaFile(file, apiVersionContext, serviceName);
             }
         }

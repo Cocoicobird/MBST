@@ -1,5 +1,7 @@
 package com.smelldetection.utils;
 
+import com.smelldetection.entity.item.ServiceCutItem;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -121,5 +123,41 @@ public class FileUtils {
                         (!String.valueOf(filepath).contains("\\test\\")
                                 && !String.valueOf(filepath).contains("/test/"))).collect(Collectors.toList());
         return javaFiles;
+    }
+
+    /**
+     * 获取 service 下的实体类
+     * @param directory 微服务模块目录
+     */
+    public static Set<String> getServiceEntities(String directory) throws IOException {
+        List<String> javaFiles = getJavaFiles(directory);
+        Set<String> serviceEntities = new LinkedHashSet<>();
+        for (String javaFile : javaFiles) {
+            File file = new File(javaFile);
+            if (javaFile.toLowerCase().contains("/entity/")
+                    || javaFile.toLowerCase().contains("/domain/")
+                    || javaFile.toLowerCase().contains("/bean/")) {
+                serviceEntities.add(javaFile);
+            }
+            if (ApiParserUtils.isEntityClass(file)) {
+                serviceEntities.add(javaFile);
+            }
+        }
+        return serviceEntities;
+    }
+
+    /**
+     * 获取系统所有微服务模块的实体类数量
+     * @param filePathToMicroserviceName 微服务模块路径与微服务名称的映射
+     */
+    public static List<ServiceCutItem> getSystemServiceCuts(Map<String, String> filePathToMicroserviceName) throws IOException {
+        List<ServiceCutItem> systemServiceCuts = new ArrayList<>();
+        for (String directory : filePathToMicroserviceName.keySet()) {
+            ServiceCutItem serviceCut = new ServiceCutItem();
+            serviceCut.setMicroserviceName(filePathToMicroserviceName.get(directory));
+            serviceCut.setEntityCount(getServiceEntities(directory).size());
+            systemServiceCuts.add(serviceCut);
+        }
+        return systemServiceCuts;
     }
 }

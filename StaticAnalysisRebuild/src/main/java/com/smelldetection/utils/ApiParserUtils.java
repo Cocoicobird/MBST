@@ -1,5 +1,6 @@
 package com.smelldetection.utils;
 
+import com.github.javaparser.ParseResult;
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
@@ -8,12 +9,17 @@ import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.ast.expr.MemberValuePair;
 import com.github.javaparser.ast.expr.NormalAnnotationExpr;
 import com.github.javaparser.ast.expr.SingleMemberAnnotationExpr;
+import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import com.smelldetection.entity.smell.detail.ApiVersionDetail;
 import com.smelldetection.entity.item.UrlItem;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -140,5 +146,32 @@ public class ApiParserUtils {
         String pattern = "^(?!.*v\\.\\d+).*\\/v([0-9]*[a-z]*\\.*)+([0-9]|[a-z])+\\/.*$";
         Pattern p = Pattern.compile(pattern);
         return p.matcher(url).matches();
+    }
+
+    /**
+     * 判断是否为实体类
+     * @param javaFile .java 文件
+     */
+    public static boolean isEntityClass(File javaFile) throws FileNotFoundException {
+        CompilationUnit compilationUnit = StaticJavaParser.parse(javaFile);
+        Set<String> count = new LinkedHashSet<>();
+        new EntityClassVisitor().visit(compilationUnit, count);
+        return count.size() == 1;
+    }
+
+    private static class EntityClassVisitor extends VoidVisitorAdapter<Object> {
+
+        @Override
+        public void visit(ClassOrInterfaceDeclaration n, Object arg) {
+            Set<String> count = (Set<String>) arg;
+            if (n.getAnnotations() != null) {
+                for (AnnotationExpr annotation : n.getAnnotations()) {
+                    if (annotation.getNameAsString().equals("Entity")
+                            || annotation.getNameAsString().equals("Document")) {
+                        count.add(annotation.getNameAsString());
+                    }
+                }
+            }
+        }
     }
 }

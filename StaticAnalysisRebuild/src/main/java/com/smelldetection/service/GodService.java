@@ -36,7 +36,7 @@ public class GodService {
                     && (systemServiceCuts.size() != 1) && std != 0) {
                 if (serviceCut.getEntityCount() > systemAverageEntityCount && serviceCut.getEntityCount() <= 2)
                     continue;
-                godServiceDetail.getGodServices().add(serviceCut.getMicroserviceName());
+                godServiceDetail.getGodServices().put(serviceCut.getMicroserviceName(), serviceCut);
             }
         }
         return godServiceDetail;

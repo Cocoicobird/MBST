@@ -1,9 +1,10 @@
 package com.smelldetection.entity.smell.detail;
 
+import com.smelldetection.entity.item.ServiceCutItem;
 import lombok.Data;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Cocoicobird
@@ -11,9 +12,9 @@ import java.util.List;
  */
 @Data
 public class GodServiceDetail {
-    List<String> godServices;
+    Map<String, ServiceCutItem> godServices;
 
     public GodServiceDetail() {
-        this.godServices = new ArrayList<>();
+        this.godServices = new HashMap<>();
     }
 }

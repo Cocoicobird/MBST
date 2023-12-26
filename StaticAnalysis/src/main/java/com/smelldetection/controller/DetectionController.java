@@ -113,6 +113,7 @@ public class DetectionController {
 
     @RequestMapping(path = "/hardcodeIPandPort",method = RequestMethod.POST, produces = "application/json; charset=UTF-8", consumes = {"text/plain", "application/*"})
     public HardCodeContext HardCOdeIPandPort(@RequestBody RequestItem requestItem) throws IOException {
+        System.out.println(requestItem.getServicesPath());
         return hardCodeService.getHardCode(requestItem);
     }
 

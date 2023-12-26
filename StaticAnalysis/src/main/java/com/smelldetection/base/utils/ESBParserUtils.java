@@ -48,6 +48,7 @@ public class ESBParserUtils {
         HashMap<String,HashMap<String,Integer>> mappings = new HashMap<>();
         for (Map.Entry<String,String> entry:
                 hashMap.entrySet()) {
+            // 传入微服务模块路径
             HashMap<String,Integer> result = parseWebService(entry.getValue());
             mappings.put(entry.getKey(),result);
         }
@@ -156,6 +157,9 @@ public class ESBParserUtils {
     private static HashMap<String,Integer> parseWebService(String path){
         HashMap<String,Integer> resultOfService = new HashMap<>();
         Path serviceRoot = Paths.get(path);
+        /**
+         * 一次性处理整个项目中的 .java 文件
+         */
         ProjectRoot projectRoot = new ParserCollectionStrategy().collect(serviceRoot);
 
         projectRoot.getSourceRoots().forEach(sourceRoot -> {
@@ -254,10 +258,8 @@ public class ESBParserUtils {
         //每一个方法单独做处理
         for (int i = 0; i < parseStorage.getMethodDeclarations().size(); i++) {
             Set<Expression> callPathSetInit = new HashSet<>();
-
             //获取初始url参数
             argProcessMethod(parseStorage.getMethodDeclarations().get(i),callPathSetInit,restTemplateName);
-
             //解析，将其解析成形如"http:// + ... + ..." 的形式
 //            parseRightExprs(callPathSetInit,parseStorage,i);
             for (Expression set:
@@ -268,13 +270,10 @@ public class ESBParserUtils {
                     //logger.info(e.getClass().getName()+"解析错误！！！");
                     continue;
                 }
-
             }
             Set<Expression> callPathSetFinal = new HashSet<>();
-
             //针对字符串进行分割获取服务名
             argProcessMethod(parseStorage.getMethodDeclarations().get(i),callPathSetFinal, restTemplateName);
-
             for (Expression set:
                     callPathSetFinal) {
                 //如果是字符串
@@ -293,7 +292,6 @@ public class ESBParserUtils {
             }
 
         }
-
         return result;
     }
 

@@ -3,9 +3,7 @@ package com.smelldetection.entity.smell.detail;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author Cocoicobird
@@ -14,13 +12,20 @@ import java.util.Set;
 @Data
 @AllArgsConstructor
 public class SharedLibraryDetail {
-    private String service1;
-    private String service2;
-    private Set<String> sharedLibraries;
+    private Map<String, Set<String>> sharedLibraries;
 
-    public SharedLibraryDetail(String service1, String service2) {
-        this.service1 = service1;
-        this.service2 = service2;
-        sharedLibraries = new LinkedHashSet<>();
+    public SharedLibraryDetail() {
+        this.sharedLibraries = new HashMap<>();
+    }
+
+    public boolean contains(String key) {
+        return this.sharedLibraries.containsKey(key);
+    }
+
+    public void put(String key, String value) {
+        if (!contains(key)) {
+            this.sharedLibraries.put(key, new LinkedHashSet<>());
+        }
+        this.sharedLibraries.get(key).add(value);
     }
 }

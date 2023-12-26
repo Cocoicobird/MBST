@@ -56,7 +56,9 @@ public class GreedyService {
             if(!staticFiles.isEmpty() && staticFiles.size() <= 2){
                 greedyContext.addGreedySvc(new ServiceItem(serviceName, staticFiles));
             }
-            else if(staticFiles.isEmpty() && wrongServiceCutService.getServicesEntityCount(request).getWrongCutMap().containsKey(serviceName) && wrongServiceCutService.getServicesEntityCount(request).getWrongCutMap().get(serviceName).get("entityCount") <1 )
+            else if(staticFiles.isEmpty() &&
+                    wrongServiceCutService.getServicesEntityCount(request).getWrongCutMap().containsKey(serviceName)
+                    && wrongServiceCutService.getServicesEntityCount(request).getWrongCutMap().get(serviceName).get("entityCount") <1 )
                 greedyContext.addGreedySvc(new ServiceItem(serviceName, staticFiles));
         }
         if(!greedyContext.getGreedySvc().isEmpty())

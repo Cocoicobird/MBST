@@ -1,7 +1,7 @@
 package com.smelldetection.service;
 
 import com.smelldetection.entity.smell.detail.ApiVersionDetail;
-import com.smelldetection.utils.ApiParserUtils;
+import com.smelldetection.utils.JavaParserUtils;
 import com.smelldetection.utils.FileUtils;
 import org.springframework.stereotype.Service;
 import org.yaml.snakeyaml.Yaml;
@@ -44,7 +44,7 @@ public class NoApiVersionService {
             List<String> javaFiles = FileUtils.getJavaFiles(service);
             for (String javaFile : javaFiles) {
                 File file = new File(javaFile);
-                ApiParserUtils.resolveApiFromJavaFile(file, apiVersionDetail, microserviceName);
+                JavaParserUtils.resolveApiFromJavaFile(file, apiVersionDetail, microserviceName);
             }
         }
         boolean status = false;
@@ -68,7 +68,7 @@ public class NoApiVersionService {
             List<String> javaFiles = FileUtils.getJavaFiles(directory);
             for (String javaFile : javaFiles) {
                 File file = new File(javaFile);
-                ApiParserUtils.resolveApiFromJavaFile(file, apiVersionDetail, microserviceName);
+                JavaParserUtils.resolveApiFromJavaFile(file, apiVersionDetail, microserviceName);
             }
         }
         boolean status = false;

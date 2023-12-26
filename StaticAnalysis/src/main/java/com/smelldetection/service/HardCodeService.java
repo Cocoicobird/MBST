@@ -29,6 +29,7 @@ public class HardCodeService {
      */
     public HardCodeContext getHardCode(RequestItem request) throws IOException {
         String path = request.getServicesPath();
+        System.out.println(path);
         List<String> filesType = Arrays.asList("java","js","py");
         List<String> excludeDir = Arrays.asList("target");
         return HardCodeUtils.analysisAllFiles(path,filesType,excludeDir);

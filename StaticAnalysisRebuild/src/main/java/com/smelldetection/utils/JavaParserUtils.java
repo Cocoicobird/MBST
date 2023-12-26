@@ -1,32 +1,38 @@
 package com.smelldetection.utils;
 
 import com.github.javaparser.ParseResult;
+import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.ast.expr.MemberValuePair;
 import com.github.javaparser.ast.expr.NormalAnnotationExpr;
 import com.github.javaparser.ast.expr.SingleMemberAnnotationExpr;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
+import com.github.javaparser.symbolsolver.JavaSymbolSolver;
+import com.github.javaparser.symbolsolver.model.resolution.TypeSolver;
+import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 import com.smelldetection.entity.smell.detail.ApiVersionDetail;
 import com.smelldetection.entity.item.UrlItem;
+import com.smelldetection.entity.smell.detail.CyclicReferenceDetail;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Pattern;
 
 /**
  * @author Cocoicobird
  * @version 1.0
  */
-public class ApiParserUtils {
+public class JavaParserUtils {
 
     /**
      * 解析 .java 文件的 API，由类上的注解路径 + 方法上的注解路径拼接
@@ -156,22 +162,98 @@ public class ApiParserUtils {
         CompilationUnit compilationUnit = StaticJavaParser.parse(javaFile);
         Set<String> count = new LinkedHashSet<>();
         new EntityClassVisitor().visit(compilationUnit, count);
-        return count.size() == 1;
+        return !count.isEmpty();
     }
 
-    private static class EntityClassVisitor extends VoidVisitorAdapter<Object> {
+    private static class EntityClassVisitor extends VoidVisitorAdapter<Set<String>> {
 
         @Override
-        public void visit(ClassOrInterfaceDeclaration n, Object arg) {
-            Set<String> count = (Set<String>) arg;
+        public void visit(ClassOrInterfaceDeclaration n, Set<String> arg) {
             if (n.getAnnotations() != null) {
                 for (AnnotationExpr annotation : n.getAnnotations()) {
                     if (annotation.getNameAsString().equals("Entity")
                             || annotation.getNameAsString().equals("Document")) {
-                        count.add(annotation.getNameAsString());
+                        arg.add(annotation.getNameAsString());
                     }
                 }
             }
         }
     }
+
+    /**
+     * 解析 Java 文件的继承和实现关系
+     * @param microserviceName 微服务名称
+     * @param javaFiles 微服务中的 .java 文件路径
+     * @param classNames 存储类名
+     * @param extensionAndImplementations 继承和实现关系
+     * @param cyclicReferenceDetail 存储循环引用信息
+     */
+    public static void resolveExtensionAndImplementation(String microserviceName, List<String> javaFiles,
+                                                         List<String> classNames,
+                                                         Map<String, Set<String>> extensionAndImplementations,
+                                                         CyclicReferenceDetail cyclicReferenceDetail) throws FileNotFoundException {
+        TypeSolver typeSolver = new CombinedTypeSolver();
+        JavaSymbolSolver javaSymbolSolver = new JavaSymbolSolver(typeSolver);
+        StaticJavaParser.setConfiguration(new ParserConfiguration().setSymbolResolver(javaSymbolSolver));
+        for (String javaFile : javaFiles) {
+            CompilationUnit compilationUnit = StaticJavaParser.parse(new File(javaFile));
+            for (TypeDeclaration<?> typeDeclaration : compilationUnit.getTypes()) {
+                String fullClassName = typeDeclaration.getFullyQualifiedName().isPresent() ?
+                        typeDeclaration.getFullyQualifiedName().get() : null;
+                if (fullClassName != null) {
+                    classNames.add(fullClassName);
+                }
+            }
+        }
+        for (String javaFile : javaFiles) {
+            CompilationUnit compilationUnit = StaticJavaParser.parse(new File(javaFile));
+            for (TypeDeclaration<?> typeDeclaration : compilationUnit.getTypes()) {
+                String fullClassName = typeDeclaration.getFullyQualifiedName().isPresent() ?
+                        typeDeclaration.getFullyQualifiedName().get() : null;
+                if (fullClassName != null) {
+                    if ("com.github.javaparser.ast.body.ClassOrInterfaceDeclaration".equals(typeDeclaration.getClass().getName())) {
+                        ClassOrInterfaceDeclaration classOrInterfaceDeclaration = (ClassOrInterfaceDeclaration) typeDeclaration;
+                        for (ClassOrInterfaceType classOrInterfaceType : classOrInterfaceDeclaration.getExtendedTypes()) {
+                            for (String className : classNames) {
+                                String[] str = className.split("\\.");
+                                if (str[str.length - 1].equals(classOrInterfaceType.getNameAsString())) {
+                                    if (!extensionAndImplementations.containsKey(className)) {
+                                        extensionAndImplementations.put(className, new LinkedHashSet<>());
+                                    }
+                                    extensionAndImplementations.get(className).add(fullClassName);
+                                    break;
+                                }
+                            }
+                        }
+                        for (ClassOrInterfaceType classOrInterfaceType : classOrInterfaceDeclaration.getImplementedTypes()) {
+                            for (String className : classNames) {
+                                String[] str = className.split("\\.");
+                                if (str[str.length - 1].equals(classOrInterfaceType.getNameAsString())) {
+                                    if (!extensionAndImplementations.containsKey(className)) {
+                                        extensionAndImplementations.put(className, new LinkedHashSet<>());
+                                    }
+                                    extensionAndImplementations.get(className).add(fullClassName);
+                                    break;
+                                }
+                            }
+                        }
+                        for (Node node : classOrInterfaceDeclaration.getChildNodes()) {
+                            if ("com.github.javaparser.ast.body.ClassOrInterfaceDeclaration".equals(node.getClass().getCanonicalName())) {
+                                ClassOrInterfaceDeclaration c = (ClassOrInterfaceDeclaration) node;
+                                for (ClassOrInterfaceType classOrInterfaceType : c.getExtendedTypes()) {
+                                    if (classOrInterfaceType.getNameAsString().equals(classOrInterfaceDeclaration.getNameAsString())) {
+                                        int length = classOrInterfaceDeclaration.getNameAsString().length();
+                                        String innerFullName = fullClassName.substring(0, fullClassName.length() - length) + c.getName().asString();
+                                        cyclicReferenceDetail.addCyclicReference(microserviceName, fullClassName, innerFullName);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
 }

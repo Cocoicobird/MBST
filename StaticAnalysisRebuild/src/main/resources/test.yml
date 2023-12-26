@@ -1,0 +1,495 @@
+root(Type=CompilationUnit):
+  packageDeclaration(Type=PackageDeclaration):
+    name(Type=Name):
+      identifier: "examples"
+      qualifier(Type=Name):
+        identifier: "javaparser"
+        qualifier(Type=Name):
+          identifier: "org"
+  imports:
+    - import(Type=ImportDeclaration):
+        isAsterisk: "false"
+        isStatic: "false"
+        name(Type=Name):
+          identifier: "Test"
+          qualifier(Type=Name):
+            identifier: "test"
+            qualifier(Type=Name):
+              identifier: "examples"
+              qualifier(Type=Name):
+                identifier: "javaparser"
+                qualifier(Type=Name):
+                  identifier: "org"
+    - import(Type=ImportDeclaration):
+        isAsterisk: "false"
+        isStatic: "false"
+        name(Type=Name):
+          identifier: "Stack"
+          qualifier(Type=Name):
+            identifier: "util"
+            qualifier(Type=Name):
+              identifier: "java"
+    - import(Type=ImportDeclaration):
+        isAsterisk: "false"
+        isStatic: "false"
+        name(Type=Name):
+          identifier: "Stream"
+          qualifier(Type=Name):
+            identifier: "stream"
+            qualifier(Type=Name):
+              identifier: "util"
+              qualifier(Type=Name):
+                identifier: "java"
+  types:
+    - type(Type=ClassOrInterfaceDeclaration):
+        isInterface: "false"
+        name(Type=SimpleName):
+          identifier: "ReversePolishNotation"
+        comment(Type=JavadocComment):
+          content: "\r\n * @author Cocoicobird\r\n * @version 1.0\r\n "
+        extendedTypes:
+          - extendedType(Type=ClassOrInterfaceType):
+              name(Type=SimpleName):
+                identifier: "B"
+        members:
+          - member(Type=FieldDeclaration):
+              modifiers:
+                - modifier(Type=Modifier):
+                    keyword: "PUBLIC"
+                - modifier(Type=Modifier):
+                    keyword: "STATIC"
+              variables:
+                - variable(Type=VariableDeclarator):
+                    initializer(Type=IntegerLiteralExpr):
+                      value: "1000000000"
+                    name(Type=SimpleName):
+                      identifier: "ONE_BILLION"
+                    type(Type=PrimitiveType):
+                      type: "INT"
+          - member(Type=FieldDeclaration):
+              modifiers:
+                - modifier(Type=Modifier):
+                    keyword: "PUBLIC"
+                - modifier(Type=Modifier):
+                    keyword: "STATIC"
+              variables:
+                - variable(Type=VariableDeclarator):
+                    initializer(Type=IntegerLiteralExpr):
+                      value: "2_000_000_000"
+                    name(Type=SimpleName):
+                      identifier: "TWO_BILLION"
+                    type(Type=PrimitiveType):
+                      type: "INT"
+          - member(Type=FieldDeclaration):
+              modifiers:
+                - modifier(Type=Modifier):
+                    keyword: "PRIVATE"
+              variables:
+                - variable(Type=VariableDeclarator):
+                    initializer(Type=IntegerLiteralExpr):
+                      value: "2000000000"
+                    name(Type=SimpleName):
+                      identifier: "THREE_BILLION"
+                    type(Type=PrimitiveType):
+                      type: "INT"
+          - member(Type=FieldDeclaration):
+              modifiers:
+                - modifier(Type=Modifier):
+                    keyword: "PRIVATE"
+              variables:
+                - variable(Type=VariableDeclarator):
+                    initializer(Type=IntegerLiteralExpr):
+                      value: "0"
+                    name(Type=SimpleName):
+                      identifier: "memory"
+                    type(Type=PrimitiveType):
+                      type: "DOUBLE"
+          - member(Type=MethodDeclaration):
+              body(Type=BlockStmt):
+                statements:
+                  - statement(Type=ExpressionStmt):
+                      expression(Type=VariableDeclarationExpr):
+                        variables:
+                          - variable(Type=VariableDeclarator):
+                              initializer(Type=MethodCallExpr):
+                                name(Type=SimpleName):
+                                  identifier: "split"
+                                scope(Type=NameExpr):
+                                  name(Type=SimpleName):
+                                    identifier: "input"
+                                arguments:
+                                  - argument(Type=StringLiteralExpr):
+                                      value: " "
+                              name(Type=SimpleName):
+                                identifier: "tokens"
+                              type(Type=ArrayType):
+                                origin: "TYPE"
+                                componentType(Type=ClassOrInterfaceType):
+                                  name(Type=SimpleName):
+                                    identifier: "String"
+                  - statement(Type=ExpressionStmt):
+                      expression(Type=VariableDeclarationExpr):
+                        variables:
+                          - variable(Type=VariableDeclarator):
+                              initializer(Type=ObjectCreationExpr):
+                                type(Type=ClassOrInterfaceType):
+                                  name(Type=SimpleName):
+                                    identifier: "Stack"
+                              name(Type=SimpleName):
+                                identifier: "numbers"
+                              type(Type=ClassOrInterfaceType):
+                                name(Type=SimpleName):
+                                  identifier: "Stack"
+                                typeArguments:
+                                  - typeArgument(Type=ClassOrInterfaceType):
+                                      name(Type=SimpleName):
+                                        identifier: "Double"
+                  - statement(Type=ExpressionStmt):
+                      expression(Type=MethodCallExpr):
+                        name(Type=SimpleName):
+                          identifier: "forEach"
+                        scope(Type=MethodCallExpr):
+                          name(Type=SimpleName):
+                            identifier: "of"
+                          scope(Type=NameExpr):
+                            name(Type=SimpleName):
+                              identifier: "Stream"
+                          arguments:
+                            - argument(Type=NameExpr):
+                                name(Type=SimpleName):
+                                  identifier: "tokens"
+                        arguments:
+                          - argument(Type=LambdaExpr):
+                              isEnclosingParameters: "false"
+                              body(Type=BlockStmt):
+                                statements:
+                                  - statement(Type=ExpressionStmt):
+                                      expression(Type=VariableDeclarationExpr):
+                                        variables:
+                                          - variable(Type=VariableDeclarator):
+                                              name(Type=SimpleName):
+                                                identifier: "a"
+                                              type(Type=PrimitiveType):
+                                                type: "DOUBLE"
+                                  - statement(Type=ExpressionStmt):
+                                      expression(Type=VariableDeclarationExpr):
+                                        variables:
+                                          - variable(Type=VariableDeclarator):
+                                              name(Type=SimpleName):
+                                                identifier: "b"
+                                              type(Type=PrimitiveType):
+                                                type: "DOUBLE"
+                                  - statement(Type=SwitchStmt):
+                                      selector(Type=NameExpr):
+                                        name(Type=SimpleName):
+                                          identifier: "t"
+                                      entries:
+                                        - entrie(Type=SwitchEntry):
+                                            type: "STATEMENT_GROUP"
+                                            labels:
+                                              - label(Type=StringLiteralExpr):
+                                                  value: "+"
+                                            statements:
+                                              - statement(Type=ExpressionStmt):
+                                                  expression(Type=AssignExpr):
+                                                    operator: "ASSIGN"
+                                                    target(Type=NameExpr):
+                                                      name(Type=SimpleName):
+                                                        identifier: "b"
+                                                    value(Type=MethodCallExpr):
+                                                      name(Type=SimpleName):
+                                                        identifier: "pop"
+                                                      scope(Type=NameExpr):
+                                                        name(Type=SimpleName):
+                                                          identifier: "numbers"
+                                              - statement(Type=ExpressionStmt):
+                                                  expression(Type=AssignExpr):
+                                                    operator: "ASSIGN"
+                                                    target(Type=NameExpr):
+                                                      name(Type=SimpleName):
+                                                        identifier: "a"
+                                                    value(Type=MethodCallExpr):
+                                                      name(Type=SimpleName):
+                                                        identifier: "pop"
+                                                      scope(Type=NameExpr):
+                                                        name(Type=SimpleName):
+                                                          identifier: "numbers"
+                                              - statement(Type=ExpressionStmt):
+                                                  expression(Type=MethodCallExpr):
+                                                    name(Type=SimpleName):
+                                                      identifier: "push"
+                                                    scope(Type=NameExpr):
+                                                      name(Type=SimpleName):
+                                                        identifier: "numbers"
+                                                    arguments:
+                                                      - argument(Type=BinaryExpr):
+                                                          operator: "PLUS"
+                                                          left(Type=NameExpr):
+                                                            name(Type=SimpleName):
+                                                              identifier: "a"
+                                                          right(Type=NameExpr):
+                                                            name(Type=SimpleName):
+                                                              identifier: "b"
+                                              - statement(Type=BreakStmt):
+                                        - entrie(Type=SwitchEntry):
+                                            type: "STATEMENT_GROUP"
+                                            labels:
+                                              - label(Type=StringLiteralExpr):
+                                                  value: "/"
+                                            statements:
+                                              - statement(Type=ExpressionStmt):
+                                                  expression(Type=AssignExpr):
+                                                    operator: "ASSIGN"
+                                                    target(Type=NameExpr):
+                                                      name(Type=SimpleName):
+                                                        identifier: "b"
+                                                    value(Type=MethodCallExpr):
+                                                      name(Type=SimpleName):
+                                                        identifier: "pop"
+                                                      scope(Type=NameExpr):
+                                                        name(Type=SimpleName):
+                                                          identifier: "numbers"
+                                              - statement(Type=ExpressionStmt):
+                                                  expression(Type=AssignExpr):
+                                                    operator: "ASSIGN"
+                                                    target(Type=NameExpr):
+                                                      name(Type=SimpleName):
+                                                        identifier: "a"
+                                                    value(Type=MethodCallExpr):
+                                                      name(Type=SimpleName):
+                                                        identifier: "pop"
+                                                      scope(Type=NameExpr):
+                                                        name(Type=SimpleName):
+                                                          identifier: "numbers"
+                                              - statement(Type=ExpressionStmt):
+                                                  expression(Type=MethodCallExpr):
+                                                    name(Type=SimpleName):
+                                                      identifier: "push"
+                                                    scope(Type=NameExpr):
+                                                      name(Type=SimpleName):
+                                                        identifier: "numbers"
+                                                    arguments:
+                                                      - argument(Type=BinaryExpr):
+                                                          operator: "DIVIDE"
+                                                          left(Type=NameExpr):
+                                                            name(Type=SimpleName):
+                                                              identifier: "a"
+                                                          right(Type=NameExpr):
+                                                            name(Type=SimpleName):
+                                                              identifier: "b"
+                                              - statement(Type=BreakStmt):
+                                        - entrie(Type=SwitchEntry):
+                                            type: "STATEMENT_GROUP"
+                                            labels:
+                                              - label(Type=StringLiteralExpr):
+                                                  value: "-"
+                                            statements:
+                                              - statement(Type=ExpressionStmt):
+                                                  expression(Type=AssignExpr):
+                                                    operator: "ASSIGN"
+                                                    target(Type=NameExpr):
+                                                      name(Type=SimpleName):
+                                                        identifier: "b"
+                                                    value(Type=MethodCallExpr):
+                                                      name(Type=SimpleName):
+                                                        identifier: "pop"
+                                                      scope(Type=NameExpr):
+                                                        name(Type=SimpleName):
+                                                          identifier: "numbers"
+                                              - statement(Type=ExpressionStmt):
+                                                  expression(Type=AssignExpr):
+                                                    operator: "ASSIGN"
+                                                    target(Type=NameExpr):
+                                                      name(Type=SimpleName):
+                                                        identifier: "a"
+                                                    value(Type=MethodCallExpr):
+                                                      name(Type=SimpleName):
+                                                        identifier: "pop"
+                                                      scope(Type=NameExpr):
+                                                        name(Type=SimpleName):
+                                                          identifier: "numbers"
+                                              - statement(Type=ExpressionStmt):
+                                                  expression(Type=MethodCallExpr):
+                                                    name(Type=SimpleName):
+                                                      identifier: "push"
+                                                    scope(Type=NameExpr):
+                                                      name(Type=SimpleName):
+                                                        identifier: "numbers"
+                                                    arguments:
+                                                      - argument(Type=BinaryExpr):
+                                                          operator: "MINUS"
+                                                          left(Type=NameExpr):
+                                                            name(Type=SimpleName):
+                                                              identifier: "a"
+                                                          right(Type=NameExpr):
+                                                            name(Type=SimpleName):
+                                                              identifier: "b"
+                                              - statement(Type=BreakStmt):
+                                        - entrie(Type=SwitchEntry):
+                                            type: "STATEMENT_GROUP"
+                                            labels:
+                                              - label(Type=StringLiteralExpr):
+                                                  value: "*"
+                                            statements:
+                                              - statement(Type=ExpressionStmt):
+                                                  expression(Type=AssignExpr):
+                                                    operator: "ASSIGN"
+                                                    target(Type=NameExpr):
+                                                      name(Type=SimpleName):
+                                                        identifier: "b"
+                                                    value(Type=MethodCallExpr):
+                                                      name(Type=SimpleName):
+                                                        identifier: "pop"
+                                                      scope(Type=NameExpr):
+                                                        name(Type=SimpleName):
+                                                          identifier: "numbers"
+                                              - statement(Type=ExpressionStmt):
+                                                  expression(Type=AssignExpr):
+                                                    operator: "ASSIGN"
+                                                    target(Type=NameExpr):
+                                                      name(Type=SimpleName):
+                                                        identifier: "a"
+                                                    value(Type=MethodCallExpr):
+                                                      name(Type=SimpleName):
+                                                        identifier: "pop"
+                                                      scope(Type=NameExpr):
+                                                        name(Type=SimpleName):
+                                                          identifier: "numbers"
+                                              - statement(Type=ExpressionStmt):
+                                                  expression(Type=MethodCallExpr):
+                                                    name(Type=SimpleName):
+                                                      identifier: "push"
+                                                    scope(Type=NameExpr):
+                                                      name(Type=SimpleName):
+                                                        identifier: "numbers"
+                                                    arguments:
+                                                      - argument(Type=BinaryExpr):
+                                                          operator: "MULTIPLY"
+                                                          left(Type=NameExpr):
+                                                            name(Type=SimpleName):
+                                                              identifier: "a"
+                                                          right(Type=NameExpr):
+                                                            name(Type=SimpleName):
+                                                              identifier: "b"
+                                              - statement(Type=BreakStmt):
+                                        - entrie(Type=SwitchEntry):
+                                            type: "STATEMENT_GROUP"
+                                            statements:
+                                              - statement(Type=ExpressionStmt):
+                                                  expression(Type=MethodCallExpr):
+                                                    name(Type=SimpleName):
+                                                      identifier: "push"
+                                                    scope(Type=NameExpr):
+                                                      name(Type=SimpleName):
+                                                        identifier: "numbers"
+                                                    arguments:
+                                                      - argument(Type=MethodCallExpr):
+                                                          name(Type=SimpleName):
+                                                            identifier: "valueOf"
+                                                          scope(Type=NameExpr):
+                                                            name(Type=SimpleName):
+                                                              identifier: "Double"
+                                                          arguments:
+                                                            - argument(Type=NameExpr):
+                                                                name(Type=SimpleName):
+                                                                  identifier: "t"
+                              parameters:
+                                - parameter(Type=Parameter):
+                                    isVarArgs: "false"
+                                    name(Type=SimpleName):
+                                      identifier: "t"
+                                    type(Type=UnknownType):
+                  - statement(Type=ReturnStmt):
+                      expression(Type=MethodCallExpr):
+                        name(Type=SimpleName):
+                          identifier: "pop"
+                        scope(Type=NameExpr):
+                          name(Type=SimpleName):
+                            identifier: "numbers"
+              type(Type=ClassOrInterfaceType):
+                name(Type=SimpleName):
+                  identifier: "Double"
+              name(Type=SimpleName):
+                identifier: "calc"
+              modifiers:
+                - modifier(Type=Modifier):
+                    keyword: "PUBLIC"
+              parameters:
+                - parameter(Type=Parameter):
+                    isVarArgs: "false"
+                    name(Type=SimpleName):
+                      identifier: "input"
+                    type(Type=ClassOrInterfaceType):
+                      name(Type=SimpleName):
+                        identifier: "String"
+          - member(Type=MethodDeclaration):
+              body(Type=BlockStmt):
+                statements:
+                  - statement(Type=ReturnStmt):
+                      expression(Type=NameExpr):
+                        name(Type=SimpleName):
+                          identifier: "memory"
+              type(Type=PrimitiveType):
+                type: "DOUBLE"
+              name(Type=SimpleName):
+                identifier: "memoryRecall"
+              modifiers:
+                - modifier(Type=Modifier):
+                    keyword: "PUBLIC"
+          - member(Type=MethodDeclaration):
+              body(Type=BlockStmt):
+                statements:
+                  - statement(Type=ExpressionStmt):
+                      expression(Type=AssignExpr):
+                        operator: "ASSIGN"
+                        target(Type=NameExpr):
+                          name(Type=SimpleName):
+                            identifier: "memory"
+                        value(Type=IntegerLiteralExpr):
+                          value: "0"
+              type(Type=VoidType):
+              name(Type=SimpleName):
+                identifier: "memoryClear"
+              modifiers:
+                - modifier(Type=Modifier):
+                    keyword: "PUBLIC"
+          - member(Type=MethodDeclaration):
+              body(Type=BlockStmt):
+                statements:
+                  - statement(Type=ExpressionStmt):
+                      expression(Type=AssignExpr):
+                        operator: "ASSIGN"
+                        target(Type=NameExpr):
+                          name(Type=SimpleName):
+                            identifier: "memory"
+                        value(Type=NameExpr):
+                          name(Type=SimpleName):
+                            identifier: "value"
+              type(Type=VoidType):
+              name(Type=SimpleName):
+                identifier: "memoryStore"
+              modifiers:
+                - modifier(Type=Modifier):
+                    keyword: "PUBLIC"
+              parameters:
+                - parameter(Type=Parameter):
+                    isVarArgs: "false"
+                    name(Type=SimpleName):
+                      identifier: "value"
+                    type(Type=PrimitiveType):
+                      type: "DOUBLE"
+        modifiers:
+          - modifier(Type=Modifier):
+              keyword: "PUBLIC"
+    - type(Type=ClassOrInterfaceDeclaration):
+        isInterface: "false"
+        name(Type=SimpleName):
+          identifier: "A"
+    - type(Type=ClassOrInterfaceDeclaration):
+        isInterface: "false"
+        name(Type=SimpleName):
+          identifier: "B"
+        extendedTypes:
+          - extendedType(Type=ClassOrInterfaceType):
+              name(Type=SimpleName):
+                identifier: "A"

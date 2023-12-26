@@ -15,8 +15,8 @@ import java.util.*;
 @Service
 public class SharedLibraryService {
 
-    public Set<String> getSharedLibraries(List<Pom> poms) {
-        Map<String, List<SharedLibraryDetail>> sharedLibraryDetails = new HashMap<>();
+    public SharedLibraryDetail getSharedLibraries(List<Pom> poms) {
+        SharedLibraryDetail sharedLibraryDetail = new SharedLibraryDetail();
         int num = poms.size();
         for (int i = 0; i < num; i++) {
             for (int j = i + 1; j < num; j++) {
@@ -36,16 +36,13 @@ public class SharedLibraryService {
                             }
                             String service1 = mavenModel1.getGroupId() + mavenModel2.getArtifactId();
                             String service2 = mavenModel2.getGroupId() + mavenModel2.getArtifactId();
-                            if (!sharedLibraryDetails.containsKey(sharedLibrary)) {
-                                sharedLibraryDetails.put(sharedLibrary, new ArrayList<>());
-                            }
-                            sharedLibraryDetails.get(sharedLibrary).add(new SharedLibraryDetail(service1, service2));
+                            sharedLibraryDetail.put(sharedLibrary, service1);
+                            sharedLibraryDetail.put(sharedLibrary, service2);
                         }
                     }
                 }
             }
         }
-        // TODO
-        return new LinkedHashSet<>();
+        return sharedLibraryDetail;
     }
 }

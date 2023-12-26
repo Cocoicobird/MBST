@@ -3,7 +3,6 @@ package com.smelldetection.entity.smell.detail;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,7 +14,7 @@ import java.util.Map;
 @Data
 @AllArgsConstructor
 public class SharedDatabasesAndServiceIntimacyDetail {
-    private Map<String, List<String>> sharedDatabases;
+    private Map<String, List<String>> sharedDatabases; // key 为数据库 value 为使用该数据库的微服务集合
     public Map<String, List<String>> serviceIntimacy;
 
 

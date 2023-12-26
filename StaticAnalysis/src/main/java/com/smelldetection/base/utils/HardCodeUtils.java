@@ -42,16 +42,21 @@ public class HardCodeUtils {
         FileFactory fileFactory = new FileFactory();
         List<String> resultList = new LinkedList<>();
         List<String> servicePath = fileFactory.getServicePaths(path);
+        System.out.println(path);
         HardCodeContext hcAnalysisResult = new HardCodeContext();
         for(String service: servicePath) {
+            System.out.println(service);
 //            if(fileFactory.getApplicationYamlOrPropertities(service).size() != 0)
             List<String> result = getJavaFiles(service);
             String serviceName = fileFactory.getServiceName(service);
-            hcAnalysisResult = checkAllFile(hcAnalysisResult, serviceName,result);
-            
+            // TODO
+            if (serviceName != null) {
+                hcAnalysisResult = checkAllFile(hcAnalysisResult, serviceName, result);
+            }
         }
         if(!hcAnalysisResult.getAnalysisResult().isEmpty())
             hcAnalysisResult.setStatus(true);
+        System.out.println(hcAnalysisResult);
         return hcAnalysisResult;
     }
 

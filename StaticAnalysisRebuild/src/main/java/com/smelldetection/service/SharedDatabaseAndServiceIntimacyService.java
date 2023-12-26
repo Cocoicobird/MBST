@@ -15,7 +15,7 @@ import java.util.*;
 @Service
 public class SharedDatabaseAndServiceIntimacyService {
 
-    public Set<String> getSharedDatabasesAndServiceIntimacy(List<Configuration> configurations) throws IOException {
+    public SharedDatabasesAndServiceIntimacyDetail getSharedDatabasesAndServiceIntimacy(List<Configuration> configurations) throws IOException {
         String pattern = "mysql://";
         Map<String, List<String>> sharedDatabases = new HashMap<>();
         Map<String, List<String>> serviceIntimacy = new HashMap<>();
@@ -42,10 +42,10 @@ public class SharedDatabaseAndServiceIntimacyService {
                         sharedDatabases.put(database, new ArrayList<>());
                     }
                     sharedDatabases.get(database).add(configuration.getMicroserviceName());
-                    if (!serviceIntimacy.containsKey(database)) {
-                        serviceIntimacy.put(database, new ArrayList<>());
+                    if (!serviceIntimacy.containsKey(configuration.getMicroserviceName())) {
+                        serviceIntimacy.put(configuration.getMicroserviceName(), new ArrayList<>());
                     }
-                    serviceIntimacy.get(database).add(configuration.getMicroserviceName());
+                    serviceIntimacy.get(configuration.getMicroserviceName()).add(database);
                 }
             }
         }
@@ -68,9 +68,6 @@ public class SharedDatabaseAndServiceIntimacyService {
                 }
             }
         }
-        /** TODO
-         * return sharedDatabasesAndServiceIntimacyDetail;
-         */
-        return new LinkedHashSet<>();
+        return sharedDatabasesAndServiceIntimacyDetail;
     }
 }

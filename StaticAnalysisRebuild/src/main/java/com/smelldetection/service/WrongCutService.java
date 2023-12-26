@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * @author Cocoicobird
@@ -39,7 +38,7 @@ public class WrongCutService {
                     && (filePathToMicroserviceName.size() != 1) && std != 0) {
                 if (serviceCut.getEntityCount() > systemAverageEntityCount && serviceCut.getEntityCount() <= 2)
                     continue;
-                wrongCutDetail.getWrongCutMicroservices().add(serviceCut.getMicroserviceName());
+                wrongCutDetail.getWrongCutMicroservices().put(serviceCut.getMicroserviceName(), serviceCut);
             }
         }
         return wrongCutDetail;

@@ -16,7 +16,8 @@ public class TooMuchStandardsService {
     public TMSContext getTMSServices(RequestItem request){
         String path = request.getServicesPath();
         TMSContext tmsContext = new TMSContext();
-        TooMuchStandardAnalysisUtils.analysisTMSABS("/root/test-lin/test/experiment/experiment", tmsContext);
+        TooMuchStandardAnalysisUtils.analysisTMSABS(request.getServicesPath(), tmsContext);
+        // TooMuchStandardAnalysisUtils.analysisTMSABS("/root/test-lin/test/experiment/experiment", tmsContext);
         if(tmsContext.getValueMap().getIsMussy())
             tmsContext.setStatus(true);
         return tmsContext;

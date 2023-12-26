@@ -122,6 +122,7 @@ public class FileFactory {
         File dir = new File(servicesDirectory);
         File[] files = dir.listFiles();
         List<String> servicesPath = new ArrayList<>();
+        assert files != null;
         for(File file: files){
             if(file.isDirectory()){
                 servicesPath.add(file.getAbsolutePath());

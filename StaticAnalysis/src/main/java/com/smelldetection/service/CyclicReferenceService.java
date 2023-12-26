@@ -189,6 +189,7 @@ public class CyclicReferenceService {
             String servicesDirectory = new File(servicePath).getAbsolutePath();
             List<String> applicationYamlOrPropertities = fileFactory.getApplicationYamlOrPropertities(servicePath);
             if(applicationYamlOrPropertities.size() == 0) continue;
+            // 针对每个微服务
             String serviceName = resolveProjectNames(applicationYamlOrPropertities);
             List<String> javaFilePaths = fileFactory.getJavaFiles(servicesDirectory);
             String packageName = fileFactory.getPackageName(servicesDirectory);

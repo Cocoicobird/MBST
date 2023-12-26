@@ -1,6 +1,9 @@
 package com.smelldetection.controller;
 
 import com.smelldetection.entity.smell.detail.HardCodeDetail;
+import com.smelldetection.entity.smell.detail.SharedDatabasesAndServiceIntimacyDetail;
+import com.smelldetection.entity.smell.detail.TooManyStandardsDetail;
+import com.smelldetection.entity.smell.detail.SharedLibraryDetail;
 import com.smelldetection.entity.system.component.Configuration;
 import com.smelldetection.entity.system.component.Pom;
 import com.smelldetection.service.*;
@@ -42,6 +45,27 @@ public class HomeController {
 
     @Autowired
     private HardCodeService hardCodeService;
+
+    @Autowired
+    private TooManyStandardsService tooManyStandardsService;
+
+    @Autowired
+    private CyclicReferenceService cyclicReferenceService;
+
+    @Autowired
+    private GreedyService greedyService;
+
+    @Autowired
+    private WrongCutService wrongCutService;
+
+    @Autowired
+    private ESBUsageService esbUsageService;
+
+    @Autowired
+    private ScatteredService scatteredService;
+
+    @Autowired
+    private GodService godService;
 
     @GetMapping("/static")
     public String staticAnalysis(HttpServletRequest request) throws IOException, XmlPullParserException {
@@ -109,10 +133,7 @@ public class HomeController {
                 System.out.println(key + "=" + value);
             });
         }
-        Set<String> sharedDatabases = sharedDatabaseService.getSharedDatabasesAndServiceIntimacy(configurations);
-        for (String sharedDatabase : sharedDatabases) {
-            System.out.println(sharedDatabase);
-        }
+        SharedDatabasesAndServiceIntimacyDetail sharedDatabases = sharedDatabaseService.getSharedDatabasesAndServiceIntimacy(configurations);
         return "configuration";
     }
 
@@ -130,10 +151,7 @@ public class HomeController {
             pom.setMavenModel(model);
             poms.add(pom);
         }
-        Set<String> sharedLibraries = sharedLibraryService.getSharedLibraries(poms);
-        for (String sharedLibrary : sharedLibraries) {
-            System.out.println(sharedLibrary);
-        }
+        SharedLibraryDetail sharedLibraries = sharedLibraryService.getSharedLibraries(poms);
         return "dependency";
     }
 
@@ -192,5 +210,12 @@ public class HomeController {
             System.out.println(hardCodeDetail);
         }
         return "hardCode";
+    }
+
+    @GetMapping("/tooManyStandards")
+    public String tooManyStandards(HttpServletRequest request) throws IOException {
+        TooManyStandardsDetail tooManyStandardsDetail = tooManyStandardsService.TooManyStandards(request.getParameter("path"));
+        System.out.println(tooManyStandardsDetail);
+        return "tooManyStandards";
     }
 }

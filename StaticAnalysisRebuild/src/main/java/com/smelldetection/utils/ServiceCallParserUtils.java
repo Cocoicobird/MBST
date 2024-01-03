@@ -206,6 +206,9 @@ public class ServiceCallParserUtils {
             Set<Expression> callPathInit = new LinkedHashSet<>();
             // 获取初始 url 参数
             processMethodArgs(javaFileParseItem.getMethodDeclarations().get(i), callPathInit, restTemplateName);
+//            System.out.println(javaFileParseItem.getMethodDeclarations().get(i));
+//            System.out.println(callPathInit);
+//            System.out.println(restTemplateName);
             // 解析，将其解析成形如 "http:// + ... + ..." 的形式
             for (Expression callPath : callPathInit) {
                 parseRightExpr(callPath, javaFileParseItem, i);
@@ -280,10 +283,13 @@ public class ServiceCallParserUtils {
     private static void parseRightExpr(Node node, JavaFileParseItem javaFileParseItem, Integer methodDeclarationIndex) {
         //针对变量、方法、多加号连接字符串，形如 "http://" + serviceName + "/.../..." 的表达式进行解析
         if (node instanceof NameExpr) {
+            // System.out.println("NameExpr");
             Expression rightExpr = getRightExprFromMethod(javaFileParseItem.getMethodDeclarations().get(methodDeclarationIndex), (Expression) node);
+            // System.out.println("rightExpr: " + rightExpr);
             if (rightExpr == null) {
                 // 获取变量初始化
                 rightExpr = getRightExprFromField(javaFileParseItem.getFieldDeclarations(), (Expression) node);
+                // System.out.println(rightExpr);
             }
             if (rightExpr != null) {
                 //将其替代，在方法中
@@ -334,7 +340,9 @@ public class ServiceCallParserUtils {
                     && ((VariableDeclarator) node).getName().toString().equals(expression.toString())
                     && !"".equals(((VariableDeclarator) node).getInitializer().toString())) {
                 Expression rightExpr = ((VariableDeclarator)node).getInitializer().get();
-                return rightExpr;
+                if (rightExpr != null) {
+                    return rightExpr;
+                }
             }
             return null;
         } else if (node instanceof AssignExpr && ((AssignExpr) node).getTarget().toString().equals(expression.toString())) {
@@ -358,7 +366,7 @@ public class ServiceCallParserUtils {
     private static Expression getRightExprFromField(List<FieldDeclaration> fieldDeclarations, Expression node) {
         for (int i = 0; i < fieldDeclarations.size(); i++) {
             FieldDeclaration fieldDeclaration = fieldDeclarations.get(i);
-            for (int j = 0; j < fieldDeclaration.getVariables().size(); i++) {
+            for (int j = 0; j < fieldDeclaration.getVariables().size(); j++) {
                 if (fieldDeclaration.getVariable(j).getName().toString().equals(node.toString())
                         && fieldDeclaration.getVariable(j).getInitializer().isPresent()) {
                     return fieldDeclaration.getVariable(j).getInitializer().get();

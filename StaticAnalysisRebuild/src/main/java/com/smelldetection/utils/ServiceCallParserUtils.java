@@ -29,6 +29,7 @@ public class ServiceCallParserUtils {
 
     // private static final String REGEX1 = "(service|Service)";
     private static final String REGEX = "\\S*(service|Service|SERVICE)";
+    private static final String REGEX_IP_PORT = "(localhost|((2(5[0-5]|[0-4]\\d))|[0-1]?\\d{1,2})(\\.((2(5[0-5]|[0-4]\\d))|[0-1]?\\d{1,2})){3}):[1-9]\\d*";
     private static final double percent = 0.95;
     public static Logger logger = LogManager.getLogger(ServiceCallParserUtils.class);
 
@@ -80,6 +81,7 @@ public class ServiceCallParserUtils {
             System.out.println(entry.getKey() + " " + entry.getValue());
             Map<String, Integer> parseResults = parseWebService(entry.getKey());
             microserviceCallResults.put(entry.getValue(), parseResults);
+            System.out.println("parseResults: " + parseResults);
         }
         return microserviceCallResults;
     }
@@ -122,6 +124,7 @@ public class ServiceCallParserUtils {
             List<CompilationUnit> compilationUnits = sourceRoot.getCompilationUnits();
             for (CompilationUnit compilationUnit : compilationUnits) {
                 Map<String, Integer> parseResultsOfJavaFile = parseJavaFile(compilationUnit);
+                System.out.println("parseResultsOfJavaFile: " + parseResultsOfJavaFile);
                 parseResultsOfMicroservice.putAll(parseResultsOfJavaFile);
             }
         });
@@ -220,11 +223,13 @@ public class ServiceCallParserUtils {
                 String microserviceName;
                 if (callPath.isStringLiteralExpr()) { // 如果是字符串
                     microserviceName = getMicroserviceNameFromURL(callPath);
+                    System.out.println("1callPath: " + callPath);
                     if (microserviceName != null) {
                         parseResults.put(microserviceName, parseResults.getOrDefault(callPath.toString(), 0) + 1);
                     }
                 } else { // 形如 "http:// + ... + ..." 的形式
                     microserviceName = getMicroserviceNameStandaloneExpr(callPath);
+                    System.out.println("2callPath: " + callPath);
                     parseResults.put(microserviceName, parseResults.getOrDefault(microserviceName, 0) + 1);
                 }
             }
@@ -250,9 +255,10 @@ public class ServiceCallParserUtils {
     private static String getMicroserviceNameStandaloneExpr(Expression node) {
         String[] strings = node.toString().split("\\+|/|\"");
         for (String string : strings) {
-            Matcher matcher = Pattern.compile(REGEX).matcher(string);
-            if (matcher.find()) {
-                return matcher.group();
+            Matcher matcher1 = Pattern.compile(REGEX).matcher(string);
+            Matcher matcher2 = Pattern.compile(REGEX_IP_PORT).matcher(string);
+            if (matcher1.find() || matcher2.find()) {
+                return string.replace("localhost", "127.0.0.1");
             }
         }
         return null;

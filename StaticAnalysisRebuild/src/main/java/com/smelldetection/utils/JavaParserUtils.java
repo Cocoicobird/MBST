@@ -86,7 +86,7 @@ public class JavaParserUtils {
 
     private static List<String> matchApiVersion(String url) {
         // String pattern = "/v[0-9]+/";
-        String pattern = "^/v\\d+(\\.\\d+)?/$";
+        String pattern = "/v\\d+(\\.\\d+)?/";
         Pattern r = Pattern.compile(pattern);
         Matcher m = r.matcher(url);
         List<String> apiVersions = new ArrayList<>();

@@ -85,6 +85,8 @@ public class MetricController {
             List<String> dtoClasses = JavaParserUtils.getDtoClasses(javaFiles); // 数据传输类 DTO
             Set<String> apis = new LinkedHashSet<>(); // api
             Set<String> apiVersions = JavaParserUtils.getApiVersions(javaFiles, apis); // api 版本数
+            Set<String> dataBases = new LinkedHashSet<>();
+            getDataBases(dataBases, configurations);
             // <微服务名称:<Service对象:<方法名:次数>>>
             Map<String, Map<String, Map<String, Integer>>> serviceMethodCallResults = new HashMap<>();
             serviceMethodCallResults.put(microserviceName, new HashMap<>());
@@ -140,12 +142,42 @@ public class MetricController {
             System.out.println("数据传输类集合: " + dtoClasses);
             System.out.println("API 集合: " + apis);
             System.out.println("API 版本集合: " + apiVersions);
+            System.out.println("使用的数据库: " + dataBases);
             // System.out.println("微服务间调用: " + microserviceCallResults);
             System.out.println("服务层方法调用: " + serviceMethodCallResults.get(microserviceName));
         }
         Map<String, Map<String, Integer>> microserviceCallResults = ServiceCallParserUtils.getMicroserviceCallResults(filePathToMicroserviceName); // 微服务间调用
         System.out.println("微服务间调用: " + microserviceCallResults);
         return "extra";
+    }
+
+    private void getDataBases(Set<String> dataBases, List<Configuration> configurations) {
+        String pattern = "mysql://";
+        for (Configuration configuration : configurations) {
+            for (String key : configuration.getItems().keySet()) {
+                String value = configuration.get(key);
+                String dataBase = "";
+                if (value.contains(pattern)) {
+                    int startIndex = value.indexOf(pattern) + 8;
+                    int endIndex = value.contains("?") ? value.indexOf("?") : value.length();
+                    if (value.contains("///")) {
+                        startIndex = value.indexOf("///") + 3;
+                        dataBase = "localhost:3306/" + value.substring(startIndex, endIndex);
+                    }
+                    else if (value.contains("127.0.0.1")){
+                        startIndex = value.indexOf("//") + 2;
+                        dataBase = value.substring(startIndex, endIndex);
+                        dataBase = dataBase.replace("localhost", "127.0.0.1");
+                    }
+                    else {
+                        dataBase = value.substring(startIndex, endIndex);
+                    }
+                }
+                if (!"".equals(dataBase)) {
+                    dataBases.add(dataBase);
+                }
+            }
+        }
     }
 
     /*

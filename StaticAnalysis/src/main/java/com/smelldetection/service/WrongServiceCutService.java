@@ -65,7 +65,7 @@ public class WrongServiceCutService {
                     entitySet.add(javafile);
                 }
             }
-            if(!serviceName.equals("")){
+            if(!"".equals(serviceName)){
                 Map<String, Integer> map = new HashMap<>();
                 if(entitySet.size() != 0){
                     map.put("entityCount",entitySet.size());

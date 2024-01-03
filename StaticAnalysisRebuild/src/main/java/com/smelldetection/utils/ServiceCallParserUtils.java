@@ -30,7 +30,6 @@ public class ServiceCallParserUtils {
     // private static final String REGEX1 = "(service|Service)";
     private static final String REGEX = "\\S*(service|Service|SERVICE)";
     private static final double percent = 0.95;
-    private static final int threshold = 3;
     public static Logger logger = LogManager.getLogger(ServiceCallParserUtils.class);
 
     /**
@@ -77,7 +76,8 @@ public class ServiceCallParserUtils {
             return null;
         }
         Map<String, Map<String, Integer>> microserviceCallResults = new HashMap<>();
-        for (Map.Entry<String, String > entry : filePathToMicroserviceName.entrySet()) {
+        for (Map.Entry<String, String> entry : filePathToMicroserviceName.entrySet()) {
+            System.out.println(entry.getKey() + " " + entry.getValue());
             Map<String, Integer> parseResults = parseWebService(entry.getKey());
             microserviceCallResults.put(entry.getValue(), parseResults);
         }
@@ -143,10 +143,11 @@ public class ServiceCallParserUtils {
             JavaFileParseItem javaFileParseItem = new JavaFileParseItem();
             // 针对每个类或者接口声明中的成员
             for (BodyDeclaration<?> typeDeclarationMember : typeDeclarationMembers) {
+                // System.out.println(typeDeclarationMember.getClass().getName());
                 if ("FieldDeclaration".equals(judgeNode(typeDeclarationMember))) {
                     javaFileParseItem.getFieldDeclarations().add(typeDeclarationMember.asFieldDeclaration());
                 } else if ("MethodDeclaration".equals(judgeNode(typeDeclarationMember))) {
-                    javaFileParseItem.getMethodDeclarations().add(typeDeclaration.asMethodDeclaration());
+                    javaFileParseItem.getMethodDeclarations().add(typeDeclarationMember.asMethodDeclaration());
                 }
             }
             // 针对上述收集的信息进行数据分析
@@ -165,9 +166,8 @@ public class ServiceCallParserUtils {
             return "FieldDeclaration";
         } else if (node instanceof MethodDeclaration) {
             return "MethodDeclaration";
-        } else {
-            return null;
         }
+        return null;
     }
 
     /**
@@ -188,6 +188,7 @@ public class ServiceCallParserUtils {
         }
         // 在方法中解析其使用
         if (!"".equals(restTemplateName)) {
+            System.out.println("restTemplateName " + restTemplateName);
             parseResults = processMethods(javaFileParseItem, restTemplateName);
         }
         return parseResults;

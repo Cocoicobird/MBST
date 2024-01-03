@@ -25,6 +25,8 @@ public class UnVersionedApiService {
     @Autowired
     public FileFactory fileFactory;
 
+    private static int count = 0;
+
     /**
      * NoAPIVersioning
      * @param request
@@ -33,7 +35,7 @@ public class UnVersionedApiService {
      * @throws ClassNotFoundException
      * @throws ParseException
      */
-    public ApiVersionContext getUnVersionedApis(RequestItem request) throws IOException, ClassNotFoundException, ParseException {
+    public ApiVersionContext getUnVersionedApis(RequestItem request) throws IOException, ParseException {
         String path = request.getServicesPath();
         String servicesDirectory = new File(path).getAbsolutePath();
         List<String> servicesPath = fileFactory.getServicePaths(servicesDirectory);
@@ -56,6 +58,9 @@ public class UnVersionedApiService {
                     Properties p = new Properties();
                     p.load(in);
                     serviceName = (String) p.get("spring.application.name");
+                }
+                if ("".equals(serviceName) || serviceName == null) {
+                    serviceName = "service" + count++;
                 }
                 apiVersionContext.getUnversionedMap().put(serviceName, new HashMap<>());
                 apiVersionContext.getMissingUrlMap().put(serviceName,new HashMap<>());

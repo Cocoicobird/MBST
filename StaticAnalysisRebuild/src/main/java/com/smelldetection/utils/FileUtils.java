@@ -4,10 +4,7 @@ import com.smelldetection.entity.item.ServiceCutItem;
 import com.smelldetection.entity.system.component.Configuration;
 import org.yaml.snakeyaml.Yaml;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -25,7 +22,7 @@ public class FileUtils {
 
     /**
      * 获取某一目录下的所有配置文件路径
-     * @param directory 本地项目路径
+     * @param directory 微服务路径
      * @return 返回 directory 下的所有配置文件路径列表
      */
     public static List<String> getApplicationYamlOrProperties(String directory) throws IOException {
@@ -121,7 +118,8 @@ public class FileUtils {
         Path parent = Paths.get(directory);
         List<String> javaFiles;
         int maxDepth = 15;
-        Stream<Path> stream = Files.find(parent, maxDepth, (filePath, attributes) -> String.valueOf(filePath).endsWith(".java"));
+        Stream<Path> stream = Files.find(parent, maxDepth,
+                (filePath, attributes) -> String.valueOf(filePath).endsWith(".java"));
         // 忽略 test 目录下的 .java 文件，但是该目录以外的类名可以包含 test 或者 Test
         javaFiles = stream.sorted().map(String::valueOf).filter(filepath ->
                         (!String.valueOf(filepath).contains("\\test\\")
@@ -249,5 +247,48 @@ public class FileUtils {
             break;
         }
         return packageName;
+    }
+
+    /**
+     * 计算一个 .java 文件的代码行数 去除空行、注释
+     * @param javaFile .java 文件
+     * @return 代码行数
+     */
+    public static int getJavaFileLinesOfCode(File javaFile) {
+        int linesOfCode = 0;
+        BufferedReader bufferedReader = null;
+        boolean comment = false;
+        try {
+            bufferedReader = new BufferedReader(new FileReader(javaFile));
+            String line = "";
+            while ((line = bufferedReader.readLine()) != null) {
+                line = line.trim();
+                if ("".equals(line))
+                    continue;
+                if (line.startsWith("//"))
+                    continue;
+                if (line.startsWith("/*") && !line.endsWith("*/")) {
+                    comment = true;
+                    continue;
+                }
+                if (comment) {
+                    if (line.endsWith("*/"))
+                        comment = false;
+                    continue;
+                }
+                linesOfCode++;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (bufferedReader != null) {
+                try {
+                    bufferedReader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return linesOfCode;
     }
 }

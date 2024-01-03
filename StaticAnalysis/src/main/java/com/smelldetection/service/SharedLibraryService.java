@@ -56,8 +56,8 @@ public class SharedLibraryService {
                                 sharedLibrary = dependency1.getGroupId() + "." + dependency1.getArtifactId();
                             if(sharedLibrary.startsWith("org.springframework.boot"))
                                 continue;
-                            String services1 = svc1.getGroupId() +"." +svc1.getArtifactId();
-                            String services2 = svc2.getGroupId() +"." +svc2.getArtifactId();
+                            String services1 = svc1.getGroupId() == null ? "" : svc1.getGroupId() +"." +svc1.getArtifactId();
+                            String services2 = svc2.getGroupId() == null ? "" : svc2.getGroupId() +"." +svc2.getArtifactId();
                             SharedLibraryItem libraryItem= libraryContext.getSharedLibraries().getOrDefault(sharedLibrary,new SharedLibraryItem(sharedLibrary));
                             libraryItem.addSvc(services1, services2);
                             libraryContext.addItem(libraryItem);

@@ -25,6 +25,7 @@ public class ESBService {
         String path = request.getServicesPath();
         ESBServiceContext esbServiceContext = new ESBServiceContext();
         esbServiceContext.setResult(esbParserUtils.ESBUsageAnalysis(path));
+        // System.out.println(esbParserUtils.ESBUsageAnalysis(path) == null ? "null" : "not null");
         for (String service : esbServiceContext.getResult().keySet()) {
             if (esbServiceContext.getResult().get(service).getIsESBUsage()) {
                 esbServiceContext.setStatus(true);

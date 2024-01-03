@@ -240,8 +240,9 @@ public class ServiceCallParserUtils {
     private static String getMicroserviceNameFromURL(Expression node) {
         String[] strings = node.toString().split("/");
         for (String string : strings) {
-            Matcher matcher = Pattern.compile(REGEX).matcher(string);
-            if (matcher.find()) {
+            Matcher matcher1 = Pattern.compile(REGEX).matcher(string);
+            Matcher matcher2 = Pattern.compile(REGEX_IP_PORT).matcher(string);
+            if (matcher1.find() || matcher2.find()) {
                 return string;
             }
         }

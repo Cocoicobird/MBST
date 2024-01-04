@@ -27,6 +27,8 @@ import java.util.*;
 public class MetricExtraService {
 
     public void extraMetric(String microserviceSystemPath) throws IOException, XmlPullParserException {
+        System.out.println("----------------------------------------------------------------");
+        System.out.println("当前项目地址: " + microserviceSystemPath);
         List<String> microservicePaths = FileUtils.getServices(microserviceSystemPath);
         Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(microserviceSystemPath);
         // 针对每一个微服务
@@ -121,16 +123,17 @@ public class MetricExtraService {
             }
             System.out.println("当前微服务: " + microserviceName);
             System.out.println("代码行数: " + linesOfCode);
+            System.out.println("实体类集合(个数:" + entityClasses.size() + "): " + entityClasses);
             System.out.println("实体类属性总数: " + entitiesFieldCount);
-            System.out.println("实体类集合: " + entityClasses);
-            System.out.println("控制器类集合: " + controllerClasses);
-            System.out.println("接口集合: " + interfaces);
-            System.out.println("抽象类集合: " + abstractClasses);
-            System.out.println("服务实现类集合: " + serviceImplementationClasses);
-            System.out.println("数据传输类集合: " + dtoClasses);
-            System.out.println("API 集合: " + apis);
-            System.out.println("API 版本集合: " + apiVersions);
-            System.out.println("使用的数据库: " + dataBases);
+            System.out.println("实体类平均属性个数: " + (entityClasses.isEmpty() ? 0 : entitiesFieldCount * 1.0 / entityClasses.size()));
+            System.out.println("控制器类集合(个数:" + controllerClasses.size() + "): " + controllerClasses);
+            System.out.println("接口集合(个数:" + interfaces.size() + "): " + interfaces);
+            System.out.println("抽象类集合(个数:" + abstractClasses.size() + "): " + abstractClasses);
+            System.out.println("服务实现类集合(个数:" + serviceImplementationClasses.size() + "): " + serviceImplementationClasses);
+            System.out.println("数据传输类集合(个数:" + dtoClasses.size() + "): " + dtoClasses);
+            System.out.println("API 集合(个数:" + apis.size() + "): " + apis);
+            System.out.println("API 版本集合(个数:" + apiVersions.size() + "): " + apiVersions);
+            System.out.println("使用的数据库(个数:" + dataBases.size() + "): " + dataBases);
             System.out.println("服务层方法调用: " + serviceMethodCallResults.get(microserviceName));
         }
         Map<String, Map<String, Integer>> microserviceCallResults = ServiceCallParserUtils.getMicroserviceCallResults(filePathToMicroserviceName); // 微服务间调用

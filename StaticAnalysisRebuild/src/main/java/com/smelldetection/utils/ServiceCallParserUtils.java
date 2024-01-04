@@ -78,10 +78,10 @@ public class ServiceCallParserUtils {
         }
         Map<String, Map<String, Integer>> microserviceCallResults = new HashMap<>();
         for (Map.Entry<String, String> entry : filePathToMicroserviceName.entrySet()) {
-            System.out.println(entry.getKey() + " " + entry.getValue());
+            // System.out.println(entry.getKey() + " " + entry.getValue());
             Map<String, Integer> parseResults = parseWebService(entry.getKey());
             microserviceCallResults.put(entry.getValue(), parseResults);
-            System.out.println("parseResults: " + parseResults);
+            // System.out.println("parseResults: " + parseResults);
         }
         return microserviceCallResults;
     }
@@ -124,7 +124,7 @@ public class ServiceCallParserUtils {
             List<CompilationUnit> compilationUnits = sourceRoot.getCompilationUnits();
             for (CompilationUnit compilationUnit : compilationUnits) {
                 Map<String, Integer> parseResultsOfJavaFile = parseJavaFile(compilationUnit);
-                System.out.println("parseResultsOfJavaFile: " + parseResultsOfJavaFile);
+                // System.out.println("parseResultsOfJavaFile: " + parseResultsOfJavaFile);
                 parseResultsOfMicroservice.putAll(parseResultsOfJavaFile);
             }
         });
@@ -191,7 +191,7 @@ public class ServiceCallParserUtils {
         }
         // 在方法中解析其使用
         if (!"".equals(restTemplateName)) {
-            System.out.println("restTemplateName " + restTemplateName);
+            // System.out.println("restTemplateName " + restTemplateName);
             parseResults = processMethods(javaFileParseItem, restTemplateName);
         }
         return parseResults;
@@ -223,13 +223,13 @@ public class ServiceCallParserUtils {
                 String microserviceName;
                 if (callPath.isStringLiteralExpr()) { // 如果是字符串
                     microserviceName = getMicroserviceNameFromURL(callPath);
-                    System.out.println("1callPath: " + callPath);
+                    // System.out.println("1callPath: " + callPath);
                     if (microserviceName != null) {
                         parseResults.put(microserviceName, parseResults.getOrDefault(callPath.toString(), 0) + 1);
                     }
                 } else { // 形如 "http:// + ... + ..." 的形式
                     microserviceName = getMicroserviceNameStandaloneExpr(callPath);
-                    System.out.println("2callPath: " + callPath);
+                    // System.out.println("2callPath: " + callPath);
                     parseResults.put(microserviceName, parseResults.getOrDefault(microserviceName, 0) + 1);
                 }
             }

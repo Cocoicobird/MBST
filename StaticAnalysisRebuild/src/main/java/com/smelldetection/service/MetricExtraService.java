@@ -58,11 +58,6 @@ public class MetricExtraService {
                 }
                 configurations.add(configuration);
             }
-//            for (Configuration configuration : configurations) {
-//                for (String key : configuration.getItems().keySet()) {
-//                    System.out.println(key + "=" + configuration.getItems().get(key));
-//                }
-//            }
             // 解析依赖文件
             List<Pom> poms = new ArrayList<>();
             for (String p : pomXml) {
@@ -84,7 +79,7 @@ public class MetricExtraService {
             }
             int linesOfCode = 0; // 总代码行
             int entitiesFieldCount = 0; // 实体类所有属性个数
-            List<String> entityClasses = new ArrayList<>(); // 实体类集合
+            List<String> entityClasses = FileUtils.getJavaFilesUnderEntity(microservicePath); // 实体类集合
             List<String> controllerClasses = new ArrayList<>(); // 控制器类集合
             List<String> interfaces = new ArrayList<>(); // 接口
             List<String> serviceImplementationClasses = new ArrayList<>();
@@ -98,11 +93,9 @@ public class MetricExtraService {
             Map<String, Map<String, Map<String, Integer>>> serviceMethodCallResults = new HashMap<>();
             String microserviceName = filePathToMicroserviceName.get(microservicePath);
             serviceMethodCallResults.put(microserviceName, new HashMap<>());
-            // System.out.println("----: " + FileUtils.getJavaFilesUnderEntity(microservicePath));
-            for (String javaFile : FileUtils.getJavaFilesUnderEntity(microservicePath)) {
+            for (String javaFile : entityClasses) {
                 // 实体类和 DTO
                 if (JavaParserUtils.isEntityClass(microservicePath, new File(javaFile), allDependencies)) {
-                    entityClasses.add(javaFile);
                     entitiesFieldCount += JavaParserUtils.getEntityClassFieldCount(new File(javaFile));
                 } else {
                     dtoClasses.add(javaFile);

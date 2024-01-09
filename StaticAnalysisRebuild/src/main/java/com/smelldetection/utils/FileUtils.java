@@ -145,7 +145,6 @@ public class FileUtils {
         List<String> javaFilesUnderEntity = new ArrayList<>();
         List<String> javaFiles = FileUtils.getJavaFiles(directory);
         for (String javaFile : javaFiles) {
-            // System.out.println(javaFile);
             if (javaFile.contains("/entity/") || javaFile.contains("\\entity\\")
                     || javaFile.contains("/domain/") || javaFile.contains("\\domain\\")
                     || javaFile.contains("/bean/") || javaFile.contains("\\bean\\")) {
@@ -167,9 +166,7 @@ public class FileUtils {
             if (javaFile.contains("/entity/") || javaFile.contains("\\entity\\")
                     || javaFile.contains("/domain/") || javaFile.contains("\\domain\\")
                     || javaFile.contains("/bean/") || javaFile.contains("\\bean\\")) {
-                if (JavaParserUtils.isEntityClass(directory, file, dependencies)) {
-                    serviceEntities.add(javaFile);
-                }
+                serviceEntities.add(javaFile);
             }
         }
         return serviceEntities;

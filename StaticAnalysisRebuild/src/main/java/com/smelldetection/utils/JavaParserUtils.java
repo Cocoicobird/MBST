@@ -205,10 +205,10 @@ public class JavaParserUtils {
             for (String mapper : mappers.keySet()) {
                 Document document = mappers.get(mapper);
                 Element rootElement = document.getRootElement();
-                System.out.println("root: " + rootElement.getName());
                 for (Element element : rootElement.elements()) {
                     if ("select".equals(element.getName())) {
-                        if (javaFile.getAbsolutePath().contains(element.attributeValue("resultType"))) {
+                        if (javaFile.getAbsolutePath().contains(element.attributeValue("resultType").replace(".", "/"))
+                                || javaFile.getAbsolutePath().contains(element.attributeValue("resultType").replace(".", "\\"))) {
                             flag = true;
                             break;
                         }
@@ -216,7 +216,7 @@ public class JavaParserUtils {
                 }
             }
         }
-        return !count.isEmpty() || flag;
+        return !count.isEmpty() || flag || !javaFile.getAbsolutePath().toLowerCase().contains("dto");
     }
 
     /**

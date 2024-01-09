@@ -3,6 +3,8 @@ package com.smelldetection.service;
 import com.smelldetection.entity.item.ServiceCutItem;
 import com.smelldetection.entity.smell.detail.WrongCutDetail;
 import com.smelldetection.utils.FileUtils;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import org.dom4j.DocumentException;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -20,7 +22,7 @@ public class WrongCutService {
      * 获取系统错误划分的服务
      * @param filePathToMicroserviceName 微服务模块路径与微服务名的映射
      */
-    public WrongCutDetail getWrongCut(Map<String, String> filePathToMicroserviceName) throws IOException {
+    public WrongCutDetail getWrongCut(Map<String, String> filePathToMicroserviceName) throws IOException, DocumentException, XmlPullParserException {
         List<ServiceCutItem> systemServiceCuts = FileUtils.getSystemServiceCuts(filePathToMicroserviceName);
         double systemTotalEntityCount = 0;
         for (ServiceCutItem serviceCut : systemServiceCuts) {

@@ -455,7 +455,8 @@ public class ESBParserUtils {
             return null;
         }
         //查找赋值语句
-        else if (node instanceof AssignExpr  && ((AssignExpr)node).getTarget().toString().equals(set.toString())){
+        else if (node instanceof AssignExpr
+                && ((AssignExpr)node).getTarget().toString().equals(set.toString())){
             Expression rightExpr = ((AssignExpr)node).getValue();
             if (rightExpr!=null){
                 return rightExpr;

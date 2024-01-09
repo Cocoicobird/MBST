@@ -1,9 +1,19 @@
 package com.smelldetection.utils;
 
+import ch.qos.logback.core.rolling.helper.FileStoreUtil;
 import com.smelldetection.entity.item.ServiceCutItem;
 import com.smelldetection.entity.system.component.Configuration;
+import com.smelldetection.entity.system.component.Pom;
+import org.apache.maven.model.Dependency;
+import org.apache.maven.model.Model;
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import org.dom4j.Document;
+import org.dom4j.DocumentException;
+import org.dom4j.io.SAXReader;
 import org.yaml.snakeyaml.Yaml;
 
+import javax.xml.parsers.SAXParser;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -128,21 +138,38 @@ public class FileUtils {
     }
 
     /**
+     * 获取模块下 entity 目录下的所有文件
+     * @param directory 微服务模块
+     */
+    public static List<String> getJavaFilesUnderEntity(String directory) throws IOException {
+        List<String> javaFilesUnderEntity = new ArrayList<>();
+        List<String> javaFiles = FileUtils.getJavaFiles(directory);
+        for (String javaFile : javaFiles) {
+            // System.out.println(javaFile);
+            if (javaFile.contains("/entity/") || javaFile.contains("\\entity\\")
+                    || javaFile.contains("/domain/") || javaFile.contains("\\domain\\")
+                    || javaFile.contains("/bean/") || javaFile.contains("\\bean\\")) {
+                javaFilesUnderEntity.add(javaFile);
+            }
+        }
+        return javaFilesUnderEntity;
+    }
+
+    /**
      * 获取 service 下的实体类
      * @param directory 微服务模块目录
      */
-    public static Set<String> getServiceEntities(String directory) throws IOException {
+    public static Set<String> getServiceEntities(String directory, Set<String> dependencies) throws IOException, DocumentException {
         List<String> javaFiles = getJavaFiles(directory);
         Set<String> serviceEntities = new LinkedHashSet<>();
         for (String javaFile : javaFiles) {
             File file = new File(javaFile);
-            if (javaFile.toLowerCase().contains("/entity/")
-                    || javaFile.toLowerCase().contains("/domain/")
-                    || javaFile.toLowerCase().contains("/bean/")) {
-                serviceEntities.add(javaFile);
-            }
-            if (JavaParserUtils.isEntityClass(file)) {
-                serviceEntities.add(javaFile);
+            if (javaFile.contains("/entity/") || javaFile.contains("\\entity\\")
+                    || javaFile.contains("/domain/") || javaFile.contains("\\domain\\")
+                    || javaFile.contains("/bean/") || javaFile.contains("\\bean\\")) {
+                if (JavaParserUtils.isEntityClass(directory, file, dependencies)) {
+                    serviceEntities.add(javaFile);
+                }
             }
         }
         return serviceEntities;
@@ -152,12 +179,12 @@ public class FileUtils {
      * 获取系统所有微服务模块的实体类数量
      * @param filePathToMicroserviceName 微服务模块路径与微服务名称的映射
      */
-    public static List<ServiceCutItem> getSystemServiceCuts(Map<String, String> filePathToMicroserviceName) throws IOException {
+    public static List<ServiceCutItem> getSystemServiceCuts(Map<String, String> filePathToMicroserviceName) throws IOException, XmlPullParserException, DocumentException {
         List<ServiceCutItem> systemServiceCuts = new ArrayList<>();
         for (String directory : filePathToMicroserviceName.keySet()) {
             ServiceCutItem serviceCut = new ServiceCutItem();
             serviceCut.setMicroserviceName(filePathToMicroserviceName.get(directory));
-            serviceCut.setEntityCount(getServiceEntities(directory).size());
+            serviceCut.setEntityCount(getServiceEntities(directory, getMicroserviceDependencies(directory)).size());
             systemServiceCuts.add(serviceCut);
         }
         return systemServiceCuts;
@@ -195,8 +222,11 @@ public class FileUtils {
                 Configuration configuration = new Configuration();
                 if (applicationYamlOrProperty.endsWith("yaml") || applicationYamlOrProperty.endsWith("yml")) {
                     Yaml yaml = new Yaml();
-                    Map<String, Object> yml = yaml.load(new FileInputStream(applicationYamlOrProperty));
-                    resolveYaml(new Stack<>(), configuration.getItems(), yml);
+                    final Iterable<Object> objects = yaml.loadAll(new FileInputStream(applicationYamlOrProperty));
+                    for (Object o : objects) {
+                        // System.out.println(o.toString());
+                        FileUtils.resolveYaml(new Stack<>(), configuration.getItems(), (Map<String, Object>) o);
+                    }
                 } else {
                     resolveProperties(applicationYamlOrProperty, configuration.getItems());
                 }
@@ -290,5 +320,39 @@ public class FileUtils {
             }
         }
         return linesOfCode;
+    }
+
+    /**
+     * 获取微服务模块下的 Mapper 映射文件
+     * @param directory 模块路径
+     * @return 路径和 Mapper 的 Document 对象映射
+     */
+    public static Map<String, Document> getMappers(String directory) throws IOException, DocumentException {
+        Map<String, Document> filePathToMapperXml = new HashMap<>();
+        SAXReader saxReader = new SAXReader();
+        Path parent = Paths.get(directory);
+        int maxDepth = 10;
+        List<String> mappers = Files.find(parent, maxDepth, (filepath, attributes) ->
+                String.valueOf(filepath).toLowerCase().contains("mapper.xml"))
+                .map(Path::toString)
+                .collect(Collectors.toList());
+        for (String mapper : mappers) {
+            Document mapperDocument = saxReader.read(new File(mapper));
+            filePathToMapperXml.put(mapper, mapperDocument);
+        }
+        return filePathToMapperXml;
+    }
+
+    public static Set<String> getMicroserviceDependencies(String directory) throws IOException, XmlPullParserException {
+        List<String> pomXml = FileUtils.getPomXml(directory);
+        Set<String> microserviceDependencies = new LinkedHashSet<>();
+        for (String p : pomXml) {
+            MavenXpp3Reader mavenXpp3Reader = new MavenXpp3Reader();
+            Model model = mavenXpp3Reader.read(new FileInputStream(p));
+            for (Dependency dependency : model.getDependencies()) {
+                microserviceDependencies.add(dependency.getGroupId() + "." + dependency.getArtifactId());
+            }
+        }
+        return microserviceDependencies;
     }
 }

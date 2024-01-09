@@ -15,6 +15,9 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSol
 import com.smelldetection.entity.smell.detail.ApiVersionDetail;
 import com.smelldetection.entity.item.UrlItem;
 import com.smelldetection.entity.smell.detail.CyclicReferenceDetail;
+import org.dom4j.Document;
+import org.dom4j.DocumentException;
+import org.dom4j.Element;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -188,11 +191,32 @@ public class JavaParserUtils {
      * 判断是否为实体类
      * @param javaFile .java 文件
      */
-    public static boolean isEntityClass(File javaFile) throws FileNotFoundException {
+    public static boolean isEntityClass(String directory, File javaFile, Set<String> dependencies) throws IOException, DocumentException {
         CompilationUnit compilationUnit = StaticJavaParser.parse(javaFile);
+        // JPA 框架
         Set<String> count = new LinkedHashSet<>();
-        new EntityClassVisitor().visit(compilationUnit, count);
-        return !count.isEmpty();
+        if (dependencies.contains("org.springframework.boot.spring-boot-starter-data-jpa")) {
+            new EntityClassVisitor().visit(compilationUnit, count);
+        }
+        // mybatis 框架
+        boolean flag = false;
+        if (dependencies.contains("org.mybatis.spring.boot.mybatis-spring-boot-starter") || dependencies.contains("org.mybatis.mybatis")) {
+            Map<String, Document> mappers = FileUtils.getMappers(directory);
+            for (String mapper : mappers.keySet()) {
+                Document document = mappers.get(mapper);
+                Element rootElement = document.getRootElement();
+                System.out.println("root: " + rootElement.getName());
+                for (Element element : rootElement.elements()) {
+                    if ("select".equals(element.getName())) {
+                        if (javaFile.getAbsolutePath().contains(element.attributeValue("resultType"))) {
+                            flag = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        return !count.isEmpty() || flag;
     }
 
     /**
@@ -352,7 +376,7 @@ public class JavaParserUtils {
                         for (ClassOrInterfaceType classOrInterfaceType : n.getImplementedTypes()) {
                             if (classOrInterfaceType.getNameAsString().contains("Service")) {
                                 arg.add("ServiceImpl");
-                                System.out.println(n.getNameAsString());
+                                // System.out.println(n.getNameAsString());
                                 return;
                             }
                         }
@@ -398,11 +422,10 @@ public class JavaParserUtils {
     private static void resolve(Node node, List<Node> methodCallExprList) {
         if (node instanceof MethodCallExpr) {
             methodCallExprList.add(node);
-        } else {
-            if (node.getChildNodes() != null) {
-                for (Node childNode : node.getChildNodes()) {
-                    resolve(childNode, methodCallExprList);
-                }
+        }
+        if (node.getChildNodes() != null) {
+            for (Node childNode : node.getChildNodes()) {
+                resolve(childNode, methodCallExprList);
             }
         }
     }
@@ -414,7 +437,8 @@ public class JavaParserUtils {
     public static Map<String, Map<String, Integer>> getServiceMethodCallOfController(CompilationUnit compilationUnit) {
         Map<String, Map<String, Integer>> allMethodCallOfController = getAllMethodCallOfController(compilationUnit);
         Map<String, Map<String, Integer>> serviceMethodCallOfController = new HashMap<>();
-        Set<String> fields = new LinkedHashSet<>();
+        // <变量名:类名>
+        Map<String, String> fields = new HashMap<>();
         // 解析成员变量
         for (TypeDeclaration<?> typeDeclaration : compilationUnit.getTypes()) {
             if (typeDeclaration.isClassOrInterfaceDeclaration()) {
@@ -424,7 +448,7 @@ public class JavaParserUtils {
                         if (fieldDeclaration.getAnnotations() != null) {
                             for (AnnotationExpr annotation : fieldDeclaration.getAnnotations()) {
                                 if ("Autowired".equals(annotation.getNameAsString())) {
-                                    fields.add(fieldDeclaration.getVariable(0).getNameAsString());
+                                    fields.put(fieldDeclaration.getVariable(0).getNameAsString(), fieldDeclaration.getVariable(0).getTypeAsString());
                                 }
                             }
                         }
@@ -433,8 +457,8 @@ public class JavaParserUtils {
             }
         }
         for (String key : allMethodCallOfController.keySet()) {
-            if (key.toLowerCase().contains("service") && fields.contains(key)) {
-                serviceMethodCallOfController.put(key, allMethodCallOfController.get(key));
+            if (key.toLowerCase().contains("service") && fields.containsKey(key)) {
+                serviceMethodCallOfController.put(fields.get(key), allMethodCallOfController.get(key));
             }
         }
         return serviceMethodCallOfController;

@@ -4,6 +4,8 @@ import com.smelldetection.entity.item.ServiceGreedyItem;
 import com.smelldetection.entity.smell.detail.ServiceGreedyDetail;
 import com.smelldetection.entity.smell.detail.WrongCutDetail;
 import com.smelldetection.utils.FileUtils;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import org.dom4j.DocumentException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,7 +24,7 @@ public class GreedyService {
     @Autowired
     private WrongCutService wrongCutService;
 
-    public ServiceGreedyDetail getGreedyService(Map<String, String> filePathToMicroserviceName) throws IOException {
+    public ServiceGreedyDetail getGreedyService(Map<String, String> filePathToMicroserviceName) throws IOException, DocumentException, XmlPullParserException {
         ServiceGreedyDetail serviceGreedyDetail = new ServiceGreedyDetail();
         WrongCutDetail wrongCutDetail = wrongCutService.getWrongCut(filePathToMicroserviceName);
         for (String directory : filePathToMicroserviceName.keySet()) {

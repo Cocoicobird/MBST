@@ -11,6 +11,7 @@ import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import org.dom4j.DocumentException;
 import org.springframework.stereotype.Service;
 import org.yaml.snakeyaml.Yaml;
 
@@ -26,13 +27,15 @@ import java.util.*;
 @Service
 public class MetricExtraService {
 
-    public void extraMetric(String microserviceSystemPath) throws IOException, XmlPullParserException {
+    public void extraMetric(String microserviceSystemPath) throws IOException, XmlPullParserException, DocumentException {
         System.out.println("----------------------------------------------------------------");
         System.out.println("当前项目地址: " + microserviceSystemPath);
         List<String> microservicePaths = FileUtils.getServices(microserviceSystemPath);
         Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(microserviceSystemPath);
         // 针对每一个微服务
+        Set<String> dataBases = new LinkedHashSet<>();
         for (String microservicePath : microservicePaths) {
+            System.out.println(microservicePath);
             List<String> javaFiles = FileUtils.getJavaFiles(microservicePath); // main 下所有 .java 文件
             List<String> applicationYamlOrProperties = FileUtils.getApplicationYamlOrProperties(microservicePath); // 配置文件
             List<String> pomXml = FileUtils.getPomXml(microservicePath); // 依赖文件
@@ -41,13 +44,25 @@ public class MetricExtraService {
                 Configuration configuration = new Configuration();
                 if (applicationYamlOrProperty.endsWith("yaml") || applicationYamlOrProperty.endsWith("yml")) {
                     Yaml yaml = new Yaml();
-                    Map<String, Object> yml = yaml.load(new FileInputStream(applicationYamlOrProperty));
-                    FileUtils.resolveYaml(new Stack<>(), configuration.getItems(), yml);
+                    // Map<String, Object> yml = yaml.load(new FileInputStream(applicationYamlOrProperty));
+                    final Iterable<Object> objects = yaml.loadAll(new FileInputStream(applicationYamlOrProperty));
+                    for (Object o : objects) {
+                        // System.out.println("=============================");
+                        // System.out.println(o.toString());
+                        FileUtils.resolveYaml(new Stack<>(), configuration.getItems(), (Map<String, Object>) o);
+                    }
+                    // System.out.println(yml);
+                    // FileUtils.resolveYaml(new Stack<>(), configuration.getItems(), yml);
                 } else {
                     FileUtils.resolveProperties(applicationYamlOrProperty, configuration.getItems());
                 }
                 configurations.add(configuration);
             }
+//            for (Configuration configuration : configurations) {
+//                for (String key : configuration.getItems().keySet()) {
+//                    System.out.println(key + "=" + configuration.getItems().get(key));
+//                }
+//            }
             // 解析依赖文件
             List<Pom> poms = new ArrayList<>();
             for (String p : pomXml) {
@@ -58,11 +73,13 @@ public class MetricExtraService {
                 poms.add(pom);
             }
             Set<String> dependencies = new LinkedHashSet<>(); // 非 Spring 官方依赖
+            Set<String> allDependencies = new LinkedHashSet<>(); // 所有依赖
             for (Pom pom : poms) {
                 for (Dependency dependency : pom.getMavenModel().getDependencies()) {
                     if (!dependency.getGroupId().startsWith("org.springframework.boot")) {
                         dependencies.add(dependency.getGroupId() + "." + dependency.getArtifactId());
                     }
+                    allDependencies.add(dependency.getGroupId() + "." + dependency.getArtifactId());
                 }
             }
             int linesOfCode = 0; // 总代码行
@@ -75,22 +92,27 @@ public class MetricExtraService {
             List<String> dtoClasses = JavaParserUtils.getDtoClasses(javaFiles); // 数据传输类 DTO
             Set<String> apis = new LinkedHashSet<>(); // api
             Set<String> apiVersions = JavaParserUtils.getApiVersions(javaFiles, apis); // api 版本数
-            Set<String> dataBases = new LinkedHashSet<>();
+            dataBases.clear();
             getDataBases(dataBases, configurations);
             // <微服务名称:<Service对象:<方法名:次数>>>
             Map<String, Map<String, Map<String, Integer>>> serviceMethodCallResults = new HashMap<>();
             String microserviceName = filePathToMicroserviceName.get(microservicePath);
             serviceMethodCallResults.put(microserviceName, new HashMap<>());
+            // System.out.println("----: " + FileUtils.getJavaFilesUnderEntity(microservicePath));
+            for (String javaFile : FileUtils.getJavaFilesUnderEntity(microservicePath)) {
+                // 实体类和 DTO
+                if (JavaParserUtils.isEntityClass(microservicePath, new File(javaFile), allDependencies)) {
+                    entityClasses.add(javaFile);
+                    entitiesFieldCount += JavaParserUtils.getEntityClassFieldCount(new File(javaFile));
+                } else {
+                    dtoClasses.add(javaFile);
+                }
+            }
             for (String javaFile : javaFiles) {
                 File file = new File(javaFile);
                 CompilationUnit compilationUnit = StaticJavaParser.parse(file);
                 // 代码行
                 linesOfCode += FileUtils.getJavaFileLinesOfCode(file);
-                // 实体类
-                if (JavaParserUtils.isEntityClass(file)) {
-                    entityClasses.add(javaFile);
-                    entitiesFieldCount += JavaParserUtils.getEntityClassFieldCount(file);
-                }
                 // 控制器类
                 if (JavaParserUtils.isControllerClass(file)) {
                     controllerClasses.add(javaFile);

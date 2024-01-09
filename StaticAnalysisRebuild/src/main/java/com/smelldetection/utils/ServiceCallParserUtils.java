@@ -79,7 +79,9 @@ public class ServiceCallParserUtils {
         Map<String, Map<String, Integer>> microserviceCallResults = new HashMap<>();
         for (Map.Entry<String, String> entry : filePathToMicroserviceName.entrySet()) {
             // System.out.println(entry.getKey() + " " + entry.getValue());
+            // 传入模块路径
             Map<String, Integer> parseResults = parseWebService(entry.getKey());
+            // 存储解析结果
             microserviceCallResults.put(entry.getValue(), parseResults);
             // System.out.println("parseResults: " + parseResults);
         }
@@ -214,7 +216,11 @@ public class ServiceCallParserUtils {
 //            System.out.println(restTemplateName);
             // 解析，将其解析成形如 "http:// + ... + ..." 的形式
             for (Expression callPath : callPathInit) {
-                parseRightExpr(callPath, javaFileParseItem, i);
+                try {
+                    parseRightExpr(callPath, javaFileParseItem, i);
+                } catch (Exception e) {
+                    continue;
+                }
             }
             Set<Expression> callPathFinal = new LinkedHashSet<>();
             // 针对字符串进行分割获取服务名
@@ -352,9 +358,13 @@ public class ServiceCallParserUtils {
                 }
             }
             return null;
-        } else if (node instanceof AssignExpr && ((AssignExpr) node).getTarget().toString().equals(expression.toString())) {
+        } else if (node instanceof AssignExpr
+                && ((AssignExpr) node).getTarget().toString().equals(expression.toString())) {
             Expression rightExpr = ((AssignExpr) node).getValue();
-            return rightExpr;
+            if (rightExpr != null) {
+                return rightExpr;
+            }
+            return null;
         }
         Expression rightExpr = null;
         for (Node child : node.getChildNodes()) {
@@ -373,10 +383,13 @@ public class ServiceCallParserUtils {
     private static Expression getRightExprFromField(List<FieldDeclaration> fieldDeclarations, Expression node) {
         for (int i = 0; i < fieldDeclarations.size(); i++) {
             FieldDeclaration fieldDeclaration = fieldDeclarations.get(i);
-            for (int j = 0; j < fieldDeclaration.getVariables().size(); j++) {
-                if (fieldDeclaration.getVariable(j).getName().toString().equals(node.toString())
-                        && fieldDeclaration.getVariable(j).getInitializer().isPresent()) {
-                    return fieldDeclaration.getVariable(j).getInitializer().get();
+            if (fieldDeclaration != null) {
+                for (int j = 0; j < fieldDeclaration.getVariables().size(); j++) {
+                    // System.out.println(fieldDeclaration.getVariable(j));
+                    if (fieldDeclaration.getVariable(j).getName().toString().equals(node.toString())
+                            && fieldDeclaration.getVariable(j).getInitializer().isPresent()) {
+                        return fieldDeclaration.getVariable(j).getInitializer().get();
+                    }
                 }
             }
         }

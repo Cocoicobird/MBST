@@ -4,6 +4,8 @@ import com.smelldetection.entity.item.ServiceCutItem;
 import com.smelldetection.entity.smell.detail.GodServiceDetail;
 import com.smelldetection.entity.smell.detail.WrongCutDetail;
 import com.smelldetection.utils.FileUtils;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import org.dom4j.DocumentException;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -18,7 +20,7 @@ import java.util.Set;
 @Service
 public class GodService {
 
-    public GodServiceDetail getGodService(Map<String, String> filePathToMicroserviceName) throws IOException {
+    public GodServiceDetail getGodService(Map<String, String> filePathToMicroserviceName) throws IOException, DocumentException, XmlPullParserException {
         List<ServiceCutItem> systemServiceCuts = FileUtils.getSystemServiceCuts(filePathToMicroserviceName);
         double systemTotalEntityCount = 0;
         for (ServiceCutItem serviceCut : systemServiceCuts) {

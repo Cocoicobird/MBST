@@ -322,7 +322,7 @@ public class FileUtils {
     /**
      * 获取微服务模块下的 Mapper 映射文件
      * @param directory 模块路径
-     * @return 路径和 Mapper 的 Document 对象映射
+     * @return 路径和 Mapper 文件的 Document 对象映射
      */
     public static Map<String, Document> getMappers(String directory) throws IOException, DocumentException {
         Map<String, Document> filePathToMapperXml = new HashMap<>();

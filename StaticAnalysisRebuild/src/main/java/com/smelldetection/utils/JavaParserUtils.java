@@ -205,6 +205,7 @@ public class JavaParserUtils {
             for (String mapper : mappers.keySet()) {
                 Document document = mappers.get(mapper);
                 Element rootElement = document.getRootElement();
+                List<Element> resultMaps = new ArrayList<>();
                 for (Element element : rootElement.elements()) {
                     if ("select".equals(element.getName())) {
                         if (javaFile.getAbsolutePath().contains(element.attributeValue("resultType").replace(".", "/"))
@@ -212,6 +213,16 @@ public class JavaParserUtils {
                             flag = true;
                             break;
                         }
+                    }
+                    if ("resultMap".equals(element.getName())) {
+                        resultMaps.add(element);
+                    }
+                }
+                for (Element resultMap : resultMaps) {
+                    if (javaFile.getAbsolutePath().contains(resultMap.attributeValue("type").replace(".", "/"))
+                            || javaFile.getAbsolutePath().contains(resultMap.attributeValue("type").replace(".", "\\"))) {
+                        flag = true;
+                        break;
                     }
                 }
             }

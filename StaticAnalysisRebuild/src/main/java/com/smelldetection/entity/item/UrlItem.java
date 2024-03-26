@@ -15,9 +15,11 @@ import java.util.Map;
 @Data
 public class UrlItem {
     private String url1;
-    private Map<String, String> url2;
+    private Map<String, String> url2; // key 为方法名 value 为 url
+    private Map<String, String> httpMethod; // key 为方法名 value 为对应的 HTTP 方法
 
     public UrlItem() {
         this.url2 = new HashMap<>();
+        this.httpMethod = new HashMap<>();
     }
 }

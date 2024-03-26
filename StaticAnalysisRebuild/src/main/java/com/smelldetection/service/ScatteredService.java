@@ -11,11 +11,12 @@ import java.util.Set;
 /**
  * @author Cocoicobird
  * @version 1.0
+ * @description 松散服务
  */
 @Service
 public class ScatteredService {
 
-    public ScatteredServiceDetail getScatteredServices(Map<String, String> filePathToMicroserviceName){
+    public ScatteredServiceDetail getScatteredFunctionalityServices(Map<String, String> filePathToMicroserviceName){
         ScatteredServiceDetail scatteredServiceDetail = new ScatteredServiceDetail();
         Map<String, Map<String,Integer>> microserviceCallResults = ServiceCallParserUtils.getMicroserviceCallResults(filePathToMicroserviceName);
         if (microserviceCallResults != null) {
@@ -31,6 +32,7 @@ public class ScatteredService {
                     // 那么先存 A B
                     if (serviceCallItem.get(calledMicroserviceName) > threshold) { // 调用次数超过阈值，这两个微服务是分散的
                         boolean isExist = false;
+                        // 遍历松散服务集合的列表
                         for (Set<String> scatteredService : scatteredServiceDetail.getScatteredServices()) {
                             if (scatteredService.contains(microserviceName) && !scatteredService.contains(calledMicroserviceName)) {
                                 scatteredService.add(calledMicroserviceName);
@@ -60,7 +62,7 @@ public class ScatteredService {
         // Remove duplicates, gather functionality scattered services
         // 去重
         ScatteredServiceDetail ssd = new ScatteredServiceDetail();
-        for(Set<String> set: scatteredServiceDetail.getScatteredServices()) {
+        for (Set<String> set: scatteredServiceDetail.getScatteredServices()) {
             boolean isExist = false;
             if (ssd.getScatteredServices().size() == 0) {
                 ssd.getScatteredServices().add(new HashSet<>(set));

@@ -31,6 +31,34 @@ import java.util.stream.Stream;
 public class FileUtils {
 
     /**
+     * 解析配置文件中的配置项
+     * @param filePathToMicroserviceName 路径和服务名称映射
+     * @return 配置项
+     * @throws IOException
+     */
+    public static List<Configuration> getConfiguration(Map<String, String> filePathToMicroserviceName) throws IOException {
+        List<Configuration> configurations = new ArrayList<>();
+        for (String filePath : filePathToMicroserviceName.keySet()) {
+            List<String> applicationYamlOrProperties = FileUtils.getApplicationYamlOrProperties(filePath);
+            for (String application : applicationYamlOrProperties) {
+                Configuration configuration = new Configuration();
+                if (application.endsWith("yaml") || application.endsWith("yml")) {
+                    Yaml yaml = new Yaml();
+                    final Iterable<Object> objects = yaml.loadAll(new FileInputStream(application));
+                    for (Object o : objects) {
+                        FileUtils.resolveYaml(new Stack<>(), configuration.getItems(), (Map<String, Object>) o);
+                    }
+                } else {
+                    FileUtils.resolveProperties(application, configuration.getItems());
+                }
+                configuration.setMicroserviceName(filePathToMicroserviceName.get(filePath));
+                configurations.add(configuration);
+            }
+        }
+        return configurations;
+    }
+
+    /**
      * 获取某一目录下的所有配置文件路径
      * @param directory 微服务路径
      * @return 返回 directory 下的所有配置文件路径列表
@@ -61,7 +89,7 @@ public class FileUtils {
             if (value instanceof Map) {
                 resolveYaml(stack, map, (Map<String, Object>) value);
             } else {
-                map.put(String.join(".", stack), value.toString());
+                map.put(String.join(".", stack), value == null ? "" : value.toString());
                 stack.pop();
             }
         }
@@ -101,6 +129,26 @@ public class FileUtils {
     }
 
     /**
+     * 将 pomXml 里的文件解析成 Pom 对象
+     * @param pomXml pom.xml 文件路径
+     * @return Pom 对象
+     */
+    public static List<Pom> getPomObject(List<String> pomXml) throws IOException, XmlPullParserException {
+        List<Pom> poms = new ArrayList<>();
+        for (String p : pomXml) {
+            Pom pom = new Pom();
+            MavenXpp3Reader mavenXpp3Reader = new MavenXpp3Reader();
+            Model model = mavenXpp3Reader.read(new FileInputStream(p));
+            for (Dependency dependency : model.getDependencies()) {
+                System.out.println(dependency);
+            }
+            pom.setMavenModel(model);
+            poms.add(pom);
+        }
+        return poms;
+    }
+
+    /**
      * 获取本机 directory 项目路径下的所有微服务模块的完整路径
      * @param directory 微服务系统路径
      * @return 微服务系统所有微服务模块的完整路径
@@ -112,8 +160,21 @@ public class FileUtils {
             return services;
         }
         for (File file : files) {
-            if (file.isDirectory() && FileUtils.getApplicationYamlOrProperties(file.getAbsolutePath()).size() != 0) {
-                services.add(file.getAbsolutePath());
+            if (file.isDirectory()) {
+                if (file.toString().contains("src")) {
+                    boolean flag = false;
+                    List<String> javaFiles = getJavaFiles(file.toString());
+                    for (String javaFile : javaFiles) {
+                        if (JavaParserUtils.isStartupClass(javaFile)) {
+                            flag = true;
+                            break;
+                        }
+                    }
+                    if (flag)
+                        services.add(file.toString().substring(0, file.toString().indexOf("src")));
+                } else {
+                    services.addAll(getServices(file.toString()));
+                }
             }
         }
         return services;
@@ -162,7 +223,7 @@ public class FileUtils {
         List<String> javaFiles = getJavaFiles(directory);
         Set<String> serviceEntities = new LinkedHashSet<>();
         for (String javaFile : javaFiles) {
-            File file = new File(javaFile);
+            // File file = new File(javaFile);
             if (javaFile.contains("/entity/") || javaFile.contains("\\entity\\")
                     || javaFile.contains("/domain/") || javaFile.contains("\\domain\\")
                     || javaFile.contains("/bean/") || javaFile.contains("\\bean\\")) {
@@ -227,7 +288,8 @@ public class FileUtils {
                 } else {
                     resolveProperties(applicationYamlOrProperty, configuration.getItems());
                 }
-                microserviceName = configuration.getItems().getOrDefault("spring.application.name", "");
+                String[] strings = service.split("\\\\");
+                microserviceName = configuration.getItems().getOrDefault("spring.application.name", strings[strings.length - 1]);
             }
             filePathToMicroserviceName.put(service, microserviceName);
         }

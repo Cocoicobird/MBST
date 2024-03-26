@@ -15,14 +15,15 @@ import java.util.Map;
 /**
  * @author Cocoicobird
  * @version 1.0
+ * @description 硬编码
  */
 @Service
 public class HardCodeService {
 
-    public List<HardCodeDetail> getHardCode(List<String> services) throws IOException {
+    public List<HardCodeDetail> getHardCode(Map<String, String> filePathToMicroserviceName) throws IOException {
         List<HardCodeDetail> hardCodeDetails = new ArrayList<>();
-        for (String service : services) {
-            String microserviceName = "";
+        for (String service : filePathToMicroserviceName.keySet()) {
+            String microserviceName = filePathToMicroserviceName.get(service);
             List<String> javaFiles = FileUtils.getJavaFiles(service);
             List<HardCodeItem> hardCodeItems = new ArrayList<>();
             HardCodeUtils.resolveHardCodeFromJavaFiles(javaFiles, hardCodeItems);

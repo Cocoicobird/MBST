@@ -21,6 +21,7 @@ import java.util.Set;
 public class GodService {
 
     public GodServiceDetail getGodService(Map<String, String> filePathToMicroserviceName) throws IOException, DocumentException, XmlPullParserException {
+        // ServiceCutItem 包含微服务名称以及该微服务模块的实体数量
         List<ServiceCutItem> systemServiceCuts = FileUtils.getSystemServiceCuts(filePathToMicroserviceName);
         double systemTotalEntityCount = 0;
         for (ServiceCutItem serviceCut : systemServiceCuts) {

@@ -21,48 +21,10 @@ import java.util.Stack;
 @Service
 public class NoApiVersionService {
 
-    public void getNoApiVersion(String directory) throws IOException {
-        List<String> services = FileUtils.getServices(directory);
+    public ApiVersionDetail getNoApiVersion(Map<String, String> filePathToMicroserviceName) throws IOException {
         ApiVersionDetail apiVersionDetail = new ApiVersionDetail();
-        for (String service : services) {
-            List<String> applicationYamlOrProperties = FileUtils.getApplicationYamlOrProperties(service);
-            String microserviceName = "";
-            for (String application : applicationYamlOrProperties) {
-                Map<String, String> configuration = new HashMap<>();
-                if (application.endsWith("yaml") || application.endsWith("yml")) {
-                    Yaml yaml = new Yaml();
-                    Map<String, Object> yml = yaml.load(new FileInputStream(application));
-                    FileUtils.resolveYaml(new Stack<>(), configuration, yml);
-                } else {
-                    FileUtils.resolveProperties(application, configuration);
-                }
-                microserviceName = configuration.getOrDefault("spring.application.name", "");
-                System.out.println(microserviceName);
-                apiVersionDetail.getNoVersion().put(microserviceName, new HashMap<>());
-                apiVersionDetail.getMissingUrl().put(microserviceName, new HashMap<>());
-            }
-            List<String> javaFiles = FileUtils.getJavaFiles(service);
-            for (String javaFile : javaFiles) {
-                File file = new File(javaFile);
-                JavaParserUtils.resolveApiFromJavaFile(file, apiVersionDetail, microserviceName);
-            }
-        }
-        boolean status = false;
-        for(String microserviceName: apiVersionDetail.getNoVersion().keySet()) {
-            if(!apiVersionDetail.getNoVersion().get(microserviceName).isEmpty()){
-                status = true;
-                break;
-            }
-        }
-        System.out.println(apiVersionDetail);
-        // apiVersionDetail.setStatus(status);
-        // TODO return apiVersionDetail;
-    }
-
-    private void getNoApiVersion(Map<String, String> directoryToMicroservice) throws IOException {
-        ApiVersionDetail apiVersionDetail = new ApiVersionDetail();
-        for (String directory : directoryToMicroservice.keySet()) {
-            String microserviceName = directoryToMicroservice.get(directory);
+        for (String directory : filePathToMicroserviceName.keySet()) {
+            String microserviceName = filePathToMicroserviceName.get(directory);
             apiVersionDetail.getNoVersion().put(microserviceName, new HashMap<>());
             apiVersionDetail.getMissingUrl().put(microserviceName, new HashMap<>());
             List<String> javaFiles = FileUtils.getJavaFiles(directory);
@@ -78,6 +40,6 @@ public class NoApiVersionService {
                 break;
             }
         }
-        System.out.println(status + "\n" + apiVersionDetail);
+        return apiVersionDetail;
     }
 }

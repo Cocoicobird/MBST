@@ -13,6 +13,7 @@ import java.util.Set;
 @Data
 public class ScatteredServiceDetail {
     private boolean status;
+    // 松散服务集合，若干个服务共同完成一个功能
     private List<Set<String>> scatteredServices;
 
     public ScatteredServiceDetail() {

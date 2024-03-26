@@ -57,7 +57,8 @@ public class JavaParserUtils {
                 continue;
             }
             sufUrl = sufUrl.substring(1, sufUrl.length() - 1);
-            String url = preUrl + sufUrl;
+            String httpMethod = urlItem.getHttpMethod().get(methodName);
+            String url = preUrl + sufUrl + ("".equals(httpMethod) ? "" : " " + httpMethod);
             if (!matchApiPattern(url)) {
                 apiVersionDetail.getNoVersion().get(microserviceName).put(methodName, url);
             }
@@ -78,7 +79,8 @@ public class JavaParserUtils {
             for (String methodName : urlItem.getUrl2().keySet()) {
                 String sufUrl = urlItem.getUrl2().get(methodName);
                 sufUrl = sufUrl.substring(1, sufUrl.length() - 1);
-                String url = preUrl + sufUrl;
+                String httpMethod = urlItem.getHttpMethod().get(methodName);
+                String url = preUrl + sufUrl + ("".equals(httpMethod) ? "" : " " + httpMethod);
                 apis.add(url);
                 List<String> apiVersion = matchApiVersion(url);
                 apiVersions.addAll(apiVersion);
@@ -152,8 +154,12 @@ public class JavaParserUtils {
                                 annotation.getName().asString().equals("PatchMapping")) {
                             UrlItem urlItem = (UrlItem) arg;
                             String url2 = ((SingleMemberAnnotationExpr) annotation).getMemberValue().toString();
+                            String method = getHttpMethodByAnnotationType(annotation.getName().asString());
+                            if (method == null)
+                                method = "";
+                            // urlItem.getUrl2().put(n.getName().asString(), url2 + "+" + method);
                             urlItem.getUrl2().put(n.getName().asString(), url2);
-
+                            urlItem.getHttpMethod().put(n.getName().asString(), method);
                         }
                     } else if (annotation.getClass().equals(NormalAnnotationExpr.class)) {
                         if (annotation.getName().asString().equals("RequestMapping") ||
@@ -164,13 +170,28 @@ public class JavaParserUtils {
                                 annotation.getName().asString().equals("PatchMapping")) {
                             if (((NormalAnnotationExpr) annotation).getPairs().size() == 0) {
                                 UrlItem urlItem = (UrlItem) arg;
+                                String method = getHttpMethodByAnnotationType(annotation.getName().asString());
+                                if (method == null)
+                                    method = "";
+                                // urlItem.getUrl2().put(n.getName().asString(), "+" + method);
                                 urlItem.getUrl2().put(n.getName().asString(), "");
+                                urlItem.getHttpMethod().put(n.getName().asString(), method);
                                 return;
+                            }
+                            String method = getHttpMethodByAnnotationType(annotation.getName().asString());
+                            if (method == null) {
+                                for (MemberValuePair pair : ((NormalAnnotationExpr) annotation).getPairs()) {
+                                    if (pair.getName().asString().equals("method")) {
+                                        method = pair.getValue().toString();
+                                    }
+                                }
                             }
                             for (MemberValuePair pair : ((NormalAnnotationExpr) annotation).getPairs()) {
                                 if (pair.getName().asString().equals("value") || pair.getName().asString().equals("path")) {
                                     UrlItem urlItem = (UrlItem) arg;
+                                    // urlItem.getUrl2().put(n.getName().asString(), pair.getValue().toString() + "+" + (method == null ? "" : method));
                                     urlItem.getUrl2().put(n.getName().asString(), pair.getValue().toString());
+                                    urlItem.getHttpMethod().put(n.getName().asString(), method);
                                     return;
                                 }
                             }
@@ -178,6 +199,22 @@ public class JavaParserUtils {
                     }
                 }
             }
+        }
+    }
+
+    private static String getHttpMethodByAnnotationType(String annotation) {
+        if ("PostMapping".equals(annotation)) {
+            return "post";
+        } else if ("GetMapping".equals(annotation)) {
+            return "get";
+        } else if ("PutMapping".equals(annotation)) {
+            return "put";
+        } else if ("DeleteMapping".equals(annotation)) {
+            return "delete";
+        } else if ("PatchMapping".equals(annotation)) {
+            return "patch";
+        } else {
+            return null;
         }
     }
 
@@ -458,7 +495,7 @@ public class JavaParserUtils {
                         FieldDeclaration fieldDeclaration = bodyDeclaration.asFieldDeclaration();
                         if (fieldDeclaration.getAnnotations() != null) {
                             for (AnnotationExpr annotation : fieldDeclaration.getAnnotations()) {
-                                if ("Autowired".equals(annotation.getNameAsString())) {
+                                if ("Autowired".equals(annotation.getNameAsString()) || "DubboReference".equals(annotation.getNameAsString()) || "Resource".equals(annotation.getNameAsString())) {
                                     fields.put(fieldDeclaration.getVariable(0).getNameAsString(), fieldDeclaration.getVariable(0).getTypeAsString());
                                 }
                             }
@@ -501,5 +538,23 @@ public class JavaParserUtils {
             }
         }
         return dtoClasses;
+    }
+
+    public static boolean isStartupClass(String javaFile) throws FileNotFoundException {
+        CompilationUnit compilationUnit = StaticJavaParser.parse(new File(javaFile));
+        Set<Object> flag = new LinkedHashSet<>();
+        new StartupClassVisitor().visit(compilationUnit, flag);
+        return !flag.isEmpty();
+    }
+
+    private static class StartupClassVisitor extends VoidVisitorAdapter<Set<Object>> {
+        @Override
+        public void visit(ClassOrInterfaceDeclaration n, Set<Object> arg) {
+            for (AnnotationExpr annotation : n.getAnnotations()) {
+                if ("SpringBootApplication".equals(annotation.getNameAsString())) {
+                    arg.add(n);
+                }
+            }
+        }
     }
 }

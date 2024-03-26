@@ -1,9 +1,6 @@
 package com.smelldetection.controller;
 
-import com.smelldetection.entity.smell.detail.HardCodeDetail;
-import com.smelldetection.entity.smell.detail.SharedDatabasesAndServiceIntimacyDetail;
-import com.smelldetection.entity.smell.detail.TooManyStandardsDetail;
-import com.smelldetection.entity.smell.detail.SharedLibraryDetail;
+import com.smelldetection.entity.smell.detail.*;
 import com.smelldetection.entity.system.component.Configuration;
 import com.smelldetection.entity.system.component.Pom;
 import com.smelldetection.service.*;
@@ -13,6 +10,7 @@ import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,6 +28,9 @@ import java.util.*;
 @RestController
 @RequestMapping("/home")
 public class HomeController {
+
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
 
     @Autowired
     private SharedLibraryService sharedLibraryService;
@@ -78,8 +79,13 @@ public class HomeController {
          */
         Map<String, String> filePathToMicroserviceName = new HashMap<>();
         List<String> services = FileUtils.getServices(request.getParameter("path"));
+        // 存储所有微服务模块路径
+        redisTemplate.opsForValue().set("microservices", services);
         for (String service : services) {
             List<String> applicationYamlOrProperties = FileUtils.getApplicationYamlOrProperties(service);
+            // 存储微服务模块路径及其配置文件路径集合
+            redisTemplate.opsForValue().set(service, applicationYamlOrProperties);
+            redisTemplate.opsForValue().set(service, applicationYamlOrProperties);
             String microserviceName = "";
             List<Configuration> configurations = new ArrayList<>();
             for (String applicationYamlOrProperty : applicationYamlOrProperties) {
@@ -110,14 +116,21 @@ public class HomeController {
                 pom.setMavenModel(model);
                 poms.add(pom);
             }
-            apiVersionService.getNoApiVersion(service);
         }
+        apiVersionService.getNoApiVersion(filePathToMicroserviceName);
         return "static";
     }
 
     @GetMapping("/configuration")
     public String configuration(HttpServletRequest request) throws IOException {
-        List<String> applicationYamlOrProperties = FileUtils.getApplicationYamlOrProperties(request.getParameter("path"));
+        List<String> microservices = (List<String>) redisTemplate.opsForValue().get("microservices");
+        List<String> applicationYamlOrProperties = new ArrayList<>();
+        for (String microservice : microservices) {
+            List<String> app = (List<String>) redisTemplate.opsForValue().get(microservice);
+            assert app != null;
+            applicationYamlOrProperties.addAll(app);
+        }
+        // List<String> applicationYamlOrProperties = FileUtils.getApplicationYamlOrProperties(request.getParameter("path"));
         List<Configuration> configurations = new ArrayList<>();
         for (String application : applicationYamlOrProperties) {
             Configuration configuration = new Configuration();
@@ -152,64 +165,54 @@ public class HomeController {
             poms.add(pom);
         }
         SharedLibraryDetail sharedLibraries = sharedLibraryService.getSharedLibraries(poms);
-        return "dependency";
+        System.out.println(sharedLibraries);
+        return "dependency\n" + sharedLibraries.toString();
     }
 
     @GetMapping("/api")
-    public String api(HttpServletRequest request) throws IOException {
-        List<String> services = FileUtils.getServices(request.getParameter("path"));
-        for (String service : services) {
-            System.out.println("[service] " + service);
-            apiVersionService.getNoApiVersion(service);
-        }
-        return "api";
+    public ApiVersionDetail api(HttpServletRequest request) throws IOException {
+        Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(request.getParameter("path"));
+        ApiVersionDetail apiVersion = apiVersionService.getNoApiVersion(filePathToMicroserviceName);
+        return apiVersion;
     }
 
-    @GetMapping("/gateway")
-    public String gateway(HttpServletRequest request) throws IOException, XmlPullParserException {
+    @GetMapping("/sharedLibraries")
+    public SharedLibraryDetail sharedLibraries(HttpServletRequest request) throws IOException, XmlPullParserException {
         List<String> services = FileUtils.getServices(request.getParameter("path"));
+        List<Pom> poms = new ArrayList<>();
+        System.out.println(services);
         for (String service : services) {
-            List<String> applicationYamlOrProperties = FileUtils.getApplicationYamlOrProperties(service);
-            List<Configuration> configurations = new ArrayList<>();
-            for (String application : applicationYamlOrProperties) {
-                Configuration configuration = new Configuration();
-                if (application.endsWith("yaml") || application.endsWith("yml")) {
-                    Yaml yaml = new Yaml();
-                    Map<String, Object> yml = yaml.load(new FileInputStream(application));
-                    FileUtils.resolveYaml(new Stack<>(), configuration.getItems(), yml);
-                } else {
-                    FileUtils.resolveProperties(application, configuration.getItems());
-                }
-                configurations.add(configuration);
-                configuration.getItems().forEach((key, value) -> {
-                    System.out.println(key + "=" + value);
-                });
-            }
-            List<String> pomXml = FileUtils.getPomXml(service);
-            List<Pom> poms = new ArrayList<>();
-            for (String p : pomXml) {
-                Pom pom = new Pom();
-                MavenXpp3Reader mavenXpp3Reader = new MavenXpp3Reader();
-                Model model = mavenXpp3Reader.read(new FileInputStream(p));
-                for (Dependency dependency : model.getDependencies()) {
-                    System.out.println(dependency);
-                }
-                pom.setMavenModel(model);
-                poms.add(pom);
-            }
-            noGatewayService.getGateway(configurations, poms);
+            Pom pomXml = new Pom();
+            MavenXpp3Reader mavenXpp3Reader = new MavenXpp3Reader();
+            Model model = mavenXpp3Reader.read(new FileInputStream(service + "pom.xml"));
+            pomXml.setMavenModel(model);
+            poms.add(pomXml);
         }
-        return "gateway";
+        return sharedLibraryService.getSharedLibraries(poms);
+    }
+
+    @GetMapping("/noGateway")
+    public NoGatewayDetail gateway(HttpServletRequest request) throws IOException, XmlPullParserException {
+        Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(request.getParameter("path"));
+        NoGatewayDetail noGatewayDetail = noGatewayService.getGateway(filePathToMicroserviceName);
+        return noGatewayDetail;
+    }
+
+    @GetMapping("/scatteredService")
+    public ScatteredServiceDetail scatteredService(HttpServletRequest request) throws IOException {
+        Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(request.getParameter("path"));
+        ScatteredServiceDetail scatteredServiceDetail = scatteredService.getScatteredFunctionalityServices(filePathToMicroserviceName);
+        return scatteredServiceDetail;
     }
 
     @GetMapping("/hardCode")
-    public String hardCode(HttpServletRequest request) throws IOException {
-        List<String> services = FileUtils.getServices(request.getParameter("path"));
-        List<HardCodeDetail> hardCode = hardCodeService.getHardCode(services);
+    public List<HardCodeDetail> hardCode(HttpServletRequest request) throws IOException {
+        Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(request.getParameter("path"));
+        List<HardCodeDetail> hardCode = hardCodeService.getHardCode(filePathToMicroserviceName);
         for (HardCodeDetail hardCodeDetail : hardCode) {
             System.out.println(hardCodeDetail);
         }
-        return "hardCode";
+        return hardCode;
     }
 
     @GetMapping("/tooManyStandards")

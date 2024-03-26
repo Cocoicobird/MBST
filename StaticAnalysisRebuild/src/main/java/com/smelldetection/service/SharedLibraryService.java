@@ -26,16 +26,16 @@ public class SharedLibraryService {
                     for (Dependency dependency2 : mavenModel2.getDependencies()) {
                         if (dependency1.getGroupId().equals(dependency2.getGroupId())
                                 && dependency1.getArtifactId().equals(dependency2.getArtifactId())) {
-                            if (dependency1.getGroupId().startsWith("org.springframework.boot")) {
+                            if (dependency1.getGroupId().startsWith("org.springframework")) {
                                 continue;
                             }
                             String sharedLibrary = dependency1.getGroupId() + "." + dependency2.getArtifactId();
                             if (dependency1.getVersion() != null
-                                    &&dependency1.getVersion().equals(dependency2.getVersion())) {
+                                    && dependency1.getVersion().equals(dependency2.getVersion())) {
                                 sharedLibrary += "." + dependency1.getVersion();
                             }
-                            String service1 = mavenModel1.getGroupId() + mavenModel2.getArtifactId();
-                            String service2 = mavenModel2.getGroupId() + mavenModel2.getArtifactId();
+                            String service1 = mavenModel2.getArtifactId();
+                            String service2 = mavenModel2.getArtifactId();
                             sharedLibraryDetail.put(sharedLibrary, service1);
                             sharedLibraryDetail.put(sharedLibrary, service2);
                         }

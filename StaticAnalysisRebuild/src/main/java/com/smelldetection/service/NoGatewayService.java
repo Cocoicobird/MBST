@@ -24,6 +24,7 @@ public class NoGatewayService {
         NoGatewayDetail noGatewayDetail = new NoGatewayDetail();
         boolean hasDependency = false;
         boolean hasConfiguration = false;
+        Map<String, Configuration> configurations = FileUtils.getConfiguration(filePathToMicroserviceName);
         for (String filePath : filePathToMicroserviceName.keySet()) {
             // 一般一个微服务模块中只有一个 pom 文件
             List<String> pomXml = FileUtils.getPomXml(filePath);
@@ -44,16 +45,14 @@ public class NoGatewayService {
                 }
             }
             // 当前微服务的配置项
-            List<Configuration> configurations = FileUtils.getConfiguration(filePathToMicroserviceName);
-            for (Configuration configuration : configurations) {
-                for (String key : configuration.getItems().keySet()) {
-                    if ((key.startsWith("spring.cloud.gateway") && configuration.getItems().get(key) != null)
-                            || (key.startsWith("zuul.routes") && configuration.getItems().get(key) != null)) {
-                        hasConfiguration = true;
-                    }
-                    if (hasConfiguration) {
-                        break;
-                    }
+            Configuration configuration = configurations.get(filePath);
+            for (String key : configuration.getItems().keySet()) {
+                if ((key.startsWith("spring.cloud.gateway") && configuration.getItems().get(key) != null)
+                        || (key.startsWith("zuul.routes") && configuration.getItems().get(key) != null)) {
+                    hasConfiguration = true;
+                }
+                if (hasConfiguration) {
+                    break;
                 }
             }
         }

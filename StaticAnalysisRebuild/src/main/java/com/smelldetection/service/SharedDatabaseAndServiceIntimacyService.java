@@ -2,6 +2,7 @@ package com.smelldetection.service;
 
 import com.smelldetection.entity.smell.detail.SharedDatabasesAndServiceIntimacyDetail;
 import com.smelldetection.entity.system.component.Configuration;
+import org.checkerframework.checker.units.qual.A;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -10,14 +11,16 @@ import java.util.*;
 /**
  * @author Cocoicobird
  * @version 1.0
- * @description 共享数据库和服务亲密
+ * @description 共享数据库（一个数据库被多个微服务模块访问）和服务亲密（一个微服务模块访问其他模块数据库）
  */
 @Service
 public class SharedDatabaseAndServiceIntimacyService {
 
     public SharedDatabasesAndServiceIntimacyDetail getSharedDatabasesAndServiceIntimacy(List<Configuration> configurations) throws IOException {
         String pattern = "mysql://";
+        // key 为数据库 value 为使用该数据库的微服务模块
         Map<String, List<String>> sharedDatabases = new HashMap<>();
+        // key 为微服务模块 value 为其数据库
         Map<String, List<String>> serviceIntimacy = new HashMap<>();
         for (Configuration configuration : configurations) {
             for (String key : configuration.getItems().keySet()) {
@@ -50,23 +53,20 @@ public class SharedDatabaseAndServiceIntimacyService {
             }
         }
         SharedDatabasesAndServiceIntimacyDetail sharedDatabasesAndServiceIntimacyDetail = new SharedDatabasesAndServiceIntimacyDetail();
-        Set<String> keys = sharedDatabases.keySet();
-        for (String database : keys) {
+        for (String database : sharedDatabases.keySet()) {
             if (sharedDatabases.get(database).size() > 1) {
-                boolean shared = true;
-                List<String> microservices = sharedDatabases.get(database);
-                for (String microservice : microservices) {
-                    if (serviceIntimacy.get(microservice).size() > 1) {
-                        shared = false;
-                    }
-                    break;
-                }
-                if (shared) {
-                    sharedDatabasesAndServiceIntimacyDetail.addSharedDatabases(database, microservices);
-                } else {
-                    sharedDatabasesAndServiceIntimacyDetail.addServiceIntimacy(database, microservices);
-                }
+                sharedDatabasesAndServiceIntimacyDetail.addSharedDatabases(database, sharedDatabases.get(database));
             }
+        }
+        for (String microservice : serviceIntimacy.keySet()) {
+            List<String> databases = serviceIntimacy.get(microservice);
+            List<String> microservices = new ArrayList<>();
+            for (String database : databases) {
+                for (String ms : sharedDatabases.get(database))
+                    if (!microservices.contains(ms))
+                        microservices.add(ms);
+            }
+            sharedDatabasesAndServiceIntimacyDetail.addServiceIntimacy(microservice, microservices);
         }
         return sharedDatabasesAndServiceIntimacyDetail;
     }

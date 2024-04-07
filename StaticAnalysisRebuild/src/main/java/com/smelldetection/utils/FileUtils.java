@@ -36,8 +36,8 @@ public class FileUtils {
      * @return 配置项
      * @throws IOException
      */
-    public static List<Configuration> getConfiguration(Map<String, String> filePathToMicroserviceName) throws IOException {
-        List<Configuration> configurations = new ArrayList<>();
+    public static Map<String, Configuration> getConfiguration(Map<String, String> filePathToMicroserviceName) throws IOException {
+        Map<String, Configuration> configurations = new HashMap<>();
         for (String filePath : filePathToMicroserviceName.keySet()) {
             List<String> applicationYamlOrProperties = FileUtils.getApplicationYamlOrProperties(filePath);
             for (String application : applicationYamlOrProperties) {
@@ -52,7 +52,7 @@ public class FileUtils {
                     FileUtils.resolveProperties(application, configuration.getItems());
                 }
                 configuration.setMicroserviceName(filePathToMicroserviceName.get(filePath));
-                configurations.add(configuration);
+                configurations.put(filePath, configuration);
             }
         }
         return configurations;
@@ -126,6 +126,19 @@ public class FileUtils {
                     && !String.valueOf(filepath).toLowerCase().contains("gradle");
         }).collect(Collectors.toList());
         return  pomXml;
+    }
+
+    /**
+     * 解析出父项目的 pom 文件路径
+     * @param filePathToMicroserviceName 微服务模块路径与名称的映射
+     * @param systemPath 微服务整个系统路径
+     */
+    public static List<String> getParentPomXml(Map<String, String> filePathToMicroserviceName, String systemPath) throws IOException {
+        List<String> pomXmls = FileUtils.getPomXml(systemPath);
+        for (String filePath : filePathToMicroserviceName.keySet()) {
+            pomXmls.removeAll(FileUtils.getPomXml(filePath));
+        }
+        return pomXmls;
     }
 
     /**

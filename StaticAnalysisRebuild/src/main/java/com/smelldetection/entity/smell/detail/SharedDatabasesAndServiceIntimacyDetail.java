@@ -15,7 +15,7 @@ import java.util.Map;
 @AllArgsConstructor
 public class SharedDatabasesAndServiceIntimacyDetail {
     private Map<String, List<String>> sharedDatabases; // key 为数据库 value 为使用该数据库的微服务集合
-    public Map<String, List<String>> serviceIntimacy;
+    public Map<String, List<String>> serviceIntimacy; // key 为微服务 value 为与其亲密的微服务
 
 
     public SharedDatabasesAndServiceIntimacyDetail() {

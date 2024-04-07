@@ -2,12 +2,11 @@ package com.smelldetection.utils;
 
 import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.StaticJavaParser;
-import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.Node;
-import com.github.javaparser.ast.NodeList;
+import com.github.javaparser.ast.*;
 import com.github.javaparser.ast.body.*;
 import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
+import com.github.javaparser.ast.type.Type;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import com.github.javaparser.symbolsolver.JavaSymbolSolver;
 import com.github.javaparser.symbolsolver.model.resolution.TypeSolver;
@@ -42,7 +41,7 @@ public class JavaParserUtils {
         CompilationUnit compilationUnit = StaticJavaParser.parse(javaFile);
         UrlItem urlItem = new UrlItem();
         new ClassVisitor().visit(compilationUnit, urlItem);
-        new MethodVisitor().visit(compilationUnit, urlItem);
+        new MethodAnnotationVisitor().visit(compilationUnit, urlItem);
         String preUrl = "";
         if (urlItem.getUrl1() != null) {
             preUrl = urlItem.getUrl1().substring(1, urlItem.getUrl1().length() - 1);
@@ -65,13 +64,19 @@ public class JavaParserUtils {
         }
     }
 
+    /**
+     * 筛选 java 文件列表中的 api 存储到 apis 中并且筛选出 api 中的版本号
+     * @param javaFiles java 文件列表
+     * @param apis 存储 api
+     * @return apis 中出现的版本号
+     */
     public static Set<String> getApiVersions(List<String> javaFiles, Set<String> apis) throws FileNotFoundException {
         Set<String> apiVersions = new LinkedHashSet<>();
         for (String javaFile : javaFiles) {
             CompilationUnit compilationUnit = StaticJavaParser.parse(new File(javaFile));
             UrlItem urlItem = new UrlItem();
             new ClassVisitor().visit(compilationUnit, urlItem);
-            new MethodVisitor().visit(compilationUnit, urlItem);
+            new MethodAnnotationVisitor().visit(compilationUnit, urlItem);
             String preUrl = "";
             if (urlItem.getUrl1() != null) {
                 preUrl = urlItem.getUrl1().substring(1, urlItem.getUrl1().length() - 1);
@@ -89,6 +94,10 @@ public class JavaParserUtils {
         return apiVersions;
     }
 
+    /**
+     * api 版本匹配
+     * @param url 单个 api
+     */
     private static List<String> matchApiVersion(String url) {
         // String pattern = "/v[0-9]+/";
         String pattern = "/v\\d+(\\.\\d+)?/";
@@ -99,6 +108,27 @@ public class JavaParserUtils {
             apiVersions.add(m.group());
         }
         return apiVersions;
+    }
+
+    /**
+     * 获取一个 java 文件中所有方法的返回值类型
+     * @param javaFile 单个 java 文件
+     * @return 方法名和返回值的映射
+     */
+    public static Map<String, MethodDeclaration> getMethodDeclaration(String javaFile) throws FileNotFoundException {
+        CompilationUnit compilationUnit = StaticJavaParser.parse(new File(javaFile));
+        Map<String, MethodDeclaration> returnType = new HashMap<>();
+        new MethodDeclarationVisitor().visit(compilationUnit, returnType);
+        return returnType;
+    }
+
+    private static class MethodDeclarationVisitor extends VoidVisitorAdapter<Object> {
+
+        @Override
+        public void visit(MethodDeclaration n, Object arg) {
+            Map<String, MethodDeclaration> result = (Map<String, MethodDeclaration>) arg;
+            result.put(n.getDeclarationAsString(false, false, true), n);
+        }
     }
 
     private static class ClassVisitor extends VoidVisitorAdapter<Object> {
@@ -139,7 +169,7 @@ public class JavaParserUtils {
         }
     }
 
-    private static class MethodVisitor extends VoidVisitorAdapter<Object> {
+    private static class MethodAnnotationVisitor extends VoidVisitorAdapter<Object> {
 
         @Override
         public void visit(MethodDeclaration n, Object arg) {
@@ -218,6 +248,11 @@ public class JavaParserUtils {
         }
     }
 
+    /**
+     * 判断是否符合 api
+     * @param url api
+     * @return 匹配为 true
+     */
     public static boolean matchApiPattern(String url) {
         String pattern = "^(?!.*v\\.\\d+).*\\/v([0-9]*[a-z]*\\.*)+([0-9]|[a-z])+\\/.*$";
         Pattern p = Pattern.compile(pattern);
@@ -226,7 +261,7 @@ public class JavaParserUtils {
 
     /**
      * 判断是否为实体类
-     * @param javaFile .java 文件
+     * @param javaFile 单个 .java 文件
      */
     public static boolean isEntityClass(String directory, File javaFile, Set<String> dependencies) throws IOException, DocumentException {
         CompilationUnit compilationUnit = StaticJavaParser.parse(javaFile);
@@ -269,7 +304,7 @@ public class JavaParserUtils {
 
     /**
      * 统计一个 .java 中声明的成员属性的个数 注：如果一个 .java 文件中有多个类声明，则会都被统计
-     * @param javaFile .java 文件
+     * @param javaFile 单个 .java 文件
      * @return 一个 .java 成员属性个数
      */
     public static int getEntityClassFieldCount(File javaFile) throws FileNotFoundException {
@@ -377,8 +412,9 @@ public class JavaParserUtils {
     }
 
     /**
-     * 判断一个 .java 文件是抽象类还是接口
-     * @param javaFile .java 文件
+     * 判断一个 java 文件是抽象类还是接口
+     * @param javaFile 单个 java 文件
+     * @return 字符串 抽象类返回值为 abstract 接口返回值为 interface
      */
     public static String isAbstractClassOrInterface(File javaFile) throws FileNotFoundException {
         Set<String> type = new LinkedHashSet<>();
@@ -404,9 +440,9 @@ public class JavaParserUtils {
     }
 
     /**
-     * 判断一个 .java 文件是否为服务实现类
-     * @param javaFile .java 文件
-     * @return "ServiceImpl" 表示该 .java 文件为服务实现类
+     * 判断一个 java 文件是否为服务实现类
+     * @param javaFile 单个 java 文件
+     * @return "ServiceImpl" 表示该 java 文件为服务实现类
      */
     public static String isServiceImplementationClass(File javaFile) throws FileNotFoundException {
         Set<String> type = new LinkedHashSet<>();
@@ -480,7 +516,7 @@ public class JavaParserUtils {
 
     /**
      * 简单过滤
-     * @param compilationUnit
+     * @param compilationUnit 编译单元
      */
     public static Map<String, Map<String, Integer>> getServiceMethodCallOfController(CompilationUnit compilationUnit) {
         Map<String, Map<String, Integer>> allMethodCallOfController = getAllMethodCallOfController(compilationUnit);
@@ -512,6 +548,11 @@ public class JavaParserUtils {
         return serviceMethodCallOfController;
     }
 
+    /**
+     * 判断 java 文件是否为控制器类
+     * @param javaFile 单个 java 文件
+     * @return 为其控制器类为 true
+     */
     public static boolean isControllerClass(File javaFile) throws FileNotFoundException {
         CompilationUnit compilationUnit = StaticJavaParser.parse(javaFile);
         Set<Object> flag = new LinkedHashSet<>();
@@ -530,6 +571,11 @@ public class JavaParserUtils {
         }
     }
 
+    /**
+     * 根据路径筛选数据传输类
+     * @param javaFiles java 文件路径列表
+     * @return 筛选出的数据传输类路径列表
+     */
     public static List<String> getDtoClasses(List<String> javaFiles) {
         List<String> dtoClasses = new ArrayList<>();
         for (String javaFile : javaFiles) {
@@ -540,6 +586,11 @@ public class JavaParserUtils {
         return dtoClasses;
     }
 
+    /**
+     * 判断是否为启动类
+     * @param javaFile 单个 java 文件路径
+     * @return 启动类为 true 否则为 false
+     */
     public static boolean isStartupClass(String javaFile) throws FileNotFoundException {
         CompilationUnit compilationUnit = StaticJavaParser.parse(new File(javaFile));
         Set<Object> flag = new LinkedHashSet<>();
@@ -556,5 +607,36 @@ public class JavaParserUtils {
                 }
             }
         }
+    }
+
+    /**
+     * 获取该 java 文件引入的库
+     * @param javaFile 单个 java 文件
+     * @return 引入的库列表
+     */
+    public static List<String> getImports(File javaFile) throws FileNotFoundException {
+        List<String> imports = new ArrayList<>();
+        CompilationUnit compilationUnit = StaticJavaParser.parse(javaFile);
+        NodeList<ImportDeclaration> compilationUnitImports = compilationUnit.getImports();
+        for (ImportDeclaration importDeclaration : compilationUnitImports) {
+            String importDeclarationNameAsString = importDeclaration.getNameAsString();
+            imports.add(importDeclarationNameAsString);
+        }
+        return imports;
+    }
+
+    /**
+     * 获取单个文件的所在包名
+     * @param javaFile 单个 java 文件
+     * @return 包名
+     */
+    public static String getPackageName(File javaFile) throws FileNotFoundException {
+        CompilationUnit compilationUnit = StaticJavaParser.parse(javaFile);
+        String packageName = "";
+        if (compilationUnit.getPackageDeclaration().isPresent()) {
+            PackageDeclaration packageDeclaration = compilationUnit.getPackageDeclaration().get();
+            packageName = packageDeclaration.getNameAsString();
+        }
+        return packageName;
     }
 }

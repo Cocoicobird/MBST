@@ -68,6 +68,12 @@ public class HomeController {
     @Autowired
     private GodService godService;
 
+    @Autowired
+    private WhateverTypesService whateverTypesService;
+
+    @Autowired
+    private BloatedService bloatedService;
+
     @GetMapping("/static")
     public String staticAnalysis(HttpServletRequest request) throws IOException, XmlPullParserException {
         /**
@@ -105,6 +111,7 @@ public class HomeController {
             }
             filePathToMicroserviceName.put(service, microserviceName);
             List<String> pomXml = FileUtils.getPomXml(request.getParameter("path"));
+            System.out.println(pomXml);
             List<Pom> poms = new ArrayList<>();
             for (String p : pomXml) {
                 Pom pom = new Pom();
@@ -220,5 +227,19 @@ public class HomeController {
         TooManyStandardsDetail tooManyStandardsDetail = tooManyStandardsService.TooManyStandards(request.getParameter("path"));
         System.out.println(tooManyStandardsDetail);
         return "tooManyStandards";
+    }
+
+    @GetMapping("/whateverTypes")
+    public List<WhateverTypesDetail> whateverTypes(HttpServletRequest request) throws IOException {
+        Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(request.getParameter("path"));
+        List<WhateverTypesDetail> whateverTypesDetails = whateverTypesService.getWhateverTypes(filePathToMicroserviceName);
+        return whateverTypesDetails;
+    }
+
+    @GetMapping("/bloatedService")
+    public String bloatedService(HttpServletRequest request) throws IOException {
+        Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(request.getParameter("path"));
+        bloatedService.getBloatedService(filePathToMicroserviceName);
+        return "bloatedService";
     }
 }

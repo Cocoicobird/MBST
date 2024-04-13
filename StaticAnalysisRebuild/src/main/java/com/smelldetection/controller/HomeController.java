@@ -74,6 +74,12 @@ public class HomeController {
     @Autowired
     private BloatedService bloatedService;
 
+    @Autowired
+    private ChattyService chattyService;
+
+    @Autowired
+    private PoorRestfulApiDesignService poorRestfulApiDesignService;
+
     @GetMapping("/static")
     public String staticAnalysis(HttpServletRequest request) throws IOException, XmlPullParserException {
         /**
@@ -241,5 +247,19 @@ public class HomeController {
         Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(request.getParameter("path"));
         bloatedService.getBloatedService(filePathToMicroserviceName);
         return "bloatedService";
+    }
+
+    @GetMapping("/chattyService")
+    public String chattyService(HttpServletRequest request) throws IOException {
+        Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(request.getParameter("path"));
+        chattyService.getChattyService(filePathToMicroserviceName);
+        return "chattyService";
+    }
+
+    @GetMapping("")
+    public String poorRestfulApiDesign(HttpServletRequest request) throws IOException {
+        Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(request.getParameter("path"));
+        poorRestfulApiDesignService.getPoorRestfulApiDesign(filePathToMicroserviceName);
+        return "poorRestfulApiDesign";
     }
 }

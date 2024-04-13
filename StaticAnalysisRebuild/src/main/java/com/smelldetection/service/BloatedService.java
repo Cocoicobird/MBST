@@ -31,7 +31,6 @@ public class BloatedService {
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
-    // TODO: 待完成
     public void getBloatedService(Map<String, String> filePathToMicroserviceName) throws IOException {
         // 微服务调用结果，每个微服务调用了哪些微服务以及次数
         Map<String, Map<String, Integer>> microserviceCallResults = ServiceCallParserUtils.getMicroserviceCallResults(filePathToMicroserviceName);
@@ -42,6 +41,7 @@ public class BloatedService {
             Map<String, MethodDeclaration> methodDeclarations = new HashMap<>();
             // 该微服务模块的总代码行数
             int codeSize = 0;
+            // 该微服务模块中控制器层中所有业务层调用情况
             Map<String, Map<String, Integer>> serviceMethodCallOfControllers = new HashMap<>();
             for (String javaFile : javaFiles) {
                 methodDeclarations.putAll(JavaParserUtils.getMethodDeclaration(javaFile));
@@ -50,7 +50,21 @@ public class BloatedService {
                     CompilationUnit compilationUnit = StaticJavaParser.parse(new File(javaFile));
                     // <对象名:<方法名:次数>>
                     Map<String, Map<String, Integer>> serviceMethodCallOfOneController = JavaParserUtils.getServiceMethodCallOfController(compilationUnit);
-                    serviceMethodCallOfControllers.putAll(serviceMethodCallOfOneController);
+                    for (String serviceObject : serviceMethodCallOfOneController.keySet()) {
+                        Map<String, Integer> result = serviceMethodCallOfOneController.get(serviceObject);
+                        // 该对象未统计过
+                        if (!serviceMethodCallOfControllers.containsKey(serviceObject)) {
+                            serviceMethodCallOfControllers.put(serviceObject, new HashMap<>());
+                        }
+                        for (String methodName : result.keySet()) {
+                            // 该对象的方法未统计过
+                            if (!serviceMethodCallOfControllers.get(serviceObject).containsKey(methodName)) {
+                                serviceMethodCallOfControllers.get(serviceObject).put(methodName, 0);
+                            }
+                            int count = serviceMethodCallOfControllers.get(serviceObject).get(methodName);
+                            serviceMethodCallOfControllers.get(serviceObject).put(methodName, count + result.get(methodName));
+                        }
+                    }
                 }
             }
             // Controller 调用 Service 方法总次数

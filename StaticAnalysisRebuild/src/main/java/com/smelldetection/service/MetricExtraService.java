@@ -1,9 +1,12 @@
 package com.smelldetection.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
+import com.smelldetection.entity.MetricSummary;
 import com.smelldetection.entity.system.component.Configuration;
 import com.smelldetection.entity.system.component.Pom;
+import com.smelldetection.mapper.MetricSummaryMapper;
 import com.smelldetection.utils.FileUtils;
 import com.smelldetection.utils.JavaParserUtils;
 import com.smelldetection.utils.ServiceCallParserUtils;
@@ -12,6 +15,8 @@ import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.dom4j.DocumentException;
+import org.springframework.beans.MethodInvocationException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.yaml.snakeyaml.Yaml;
 
@@ -27,11 +32,19 @@ import java.util.*;
 @Service
 public class MetricExtraService {
 
+    @Autowired
+    private MetricSummaryMapper metricSummaryMapper;
+
     public void extraMetric(String microserviceSystemPath) throws IOException, XmlPullParserException, DocumentException {
         System.out.println("----------------------------------------------------------------");
         System.out.println("当前项目地址: " + microserviceSystemPath);
         List<String> microservicePaths = FileUtils.getServices(microserviceSystemPath);
         Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(microserviceSystemPath);
+        Map<String, Map<String, Integer>> microserviceCallResults = ServiceCallParserUtils.getMicroserviceCallResults(filePathToMicroserviceName); // 微服务间调用
+        Map<String, Map<String, Integer>> microserviceCalledResults = new HashMap<>();
+        for (String microserviceName : microserviceCallResults.keySet()) {
+
+        }
         // 针对每一个微服务
         Set<String> dataBases = new LinkedHashSet<>();
         for (String microservicePath : microservicePaths) {
@@ -136,6 +149,22 @@ public class MetricExtraService {
                     serviceImplementationClasses.add(javaFile);
                 }
             }
+            MetricSummary metricSummary = new MetricSummary();
+            metricSummary.setSystemName(microserviceSystemPath);
+            metricSummary.setMicroserviceName(microserviceName);
+            metricSummary.setCodeSize(linesOfCode);
+            metricSummary.setEntityNumber(entityClasses.size());
+            metricSummary.setEntityAttributeNumber(entitiesFieldCount);
+            metricSummary.setAverageEntityAttribute((entityClasses.isEmpty() ? 0 : entitiesFieldCount * 1.0 / entityClasses.size()));
+            metricSummary.setControllerNumber(controllerClasses.size());
+            metricSummary.setInterfaceNumber(interfaces.size());
+            metricSummary.setAbstractClassNumber(abstractClasses.size());
+            metricSummary.setServiceClassNumber(serviceImplementationClasses.size());
+            metricSummary.setDtoObjectNumber(dtoClasses.size());
+            metricSummary.setApiNumber(apis.size());
+            metricSummary.setApiVersionNumber(apiVersions.size());
+            metricSummary.setDatabaseNumber(dataBases.size());
+            metricSummary.setMicroserviceCall(serviceMethodCallResults.get(microserviceName).toString());
             System.out.println("当前微服务: " + microserviceName);
             System.out.println("代码行数: " + linesOfCode);
             System.out.println("实体类集合(个数:" + entityClasses.size() + "): " + entityClasses);
@@ -151,8 +180,12 @@ public class MetricExtraService {
             System.out.println("使用的数据库(个数:" + dataBases.size() + "): " + dataBases);
             System.out.println("服务层方法调用: " + serviceMethodCallResults.get(microserviceName));
         }
-        Map<String, Map<String, Integer>> microserviceCallResults = ServiceCallParserUtils.getMicroserviceCallResults(filePathToMicroserviceName); // 微服务间调用
         System.out.println("微服务间调用: " + microserviceCallResults);
+    }
+
+    public List<MetricSummary> getMetricSummaries() {
+        LambdaQueryWrapper<MetricSummary> metricSummaryLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        return metricSummaryMapper.selectList(metricSummaryLambdaQueryWrapper);
     }
 
     private void getDataBases(Set<String> dataBases, List<Configuration> configurations) {

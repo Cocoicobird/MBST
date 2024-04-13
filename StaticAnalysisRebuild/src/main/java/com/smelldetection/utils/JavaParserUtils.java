@@ -40,6 +40,7 @@ public class JavaParserUtils {
     public static void resolveApiFromJavaFile(File javaFile, ApiVersionDetail apiVersionDetail, String microserviceName) throws IOException {
         CompilationUnit compilationUnit = StaticJavaParser.parse(javaFile);
         UrlItem urlItem = new UrlItem();
+        urlItem.setFullQualifiedName(getPackageName(javaFile));
         new ClassVisitor().visit(compilationUnit, urlItem);
         new MethodAnnotationVisitor().visit(compilationUnit, urlItem);
         String preUrl = "";
@@ -48,7 +49,7 @@ public class JavaParserUtils {
         }
         for (String methodName : urlItem.getUrl2().keySet()) {
             String sufUrl = urlItem.getUrl2().get(methodName);
-            if ("".equals(sufUrl)) {
+            if ("\"\"".equals(sufUrl) && "".equals(urlItem.getHttpMethod().get(methodName))) {
                 apiVersionDetail.getMissingUrl().get(microserviceName).put(methodName, preUrl);
                 if (!matchApiPattern(preUrl)) {
                     apiVersionDetail.getNoVersion().get(microserviceName).put(methodName, preUrl);
@@ -94,6 +95,31 @@ public class JavaParserUtils {
         return apiVersions;
     }
 
+    public static Map<String, String> getMethodToApi(File javaFile) throws FileNotFoundException {
+        Map<String, String> methodToApi = new HashMap<>();
+        CompilationUnit compilationUnit = StaticJavaParser.parse(javaFile);
+        UrlItem urlItem = new UrlItem();
+        urlItem.setFullQualifiedName(getPackageName(javaFile));
+        new ClassVisitor().visit(compilationUnit, urlItem);
+        new MethodAnnotationVisitor().visit(compilationUnit, urlItem);
+        String preUrl = "";
+        if (urlItem.getUrl1() != null) {
+            preUrl = urlItem.getUrl1().substring(1, urlItem.getUrl1().length() - 1);
+        }
+        for (String methodName : urlItem.getUrl2().keySet()) {
+            String sufUrl = urlItem.getUrl2().get(methodName);
+            if ("\"\"".equals(sufUrl) && "".equals(urlItem.getHttpMethod().get(methodName))) {
+                methodToApi.put(methodName, preUrl);
+                continue;
+            }
+            sufUrl = sufUrl.substring(1, sufUrl.length() - 1);
+            String httpMethod = urlItem.getHttpMethod().get(methodName);
+            String url = preUrl + sufUrl + ("".equals(httpMethod) ? "" : " " + httpMethod);
+            methodToApi.put(methodName, url);
+        }
+        return methodToApi;
+    }
+
     /**
      * api 版本匹配
      * @param url 单个 api
@@ -135,6 +161,8 @@ public class JavaParserUtils {
 
         @Override
         public void visit(ClassOrInterfaceDeclaration n, Object arg) {
+            UrlItem urlItem = (UrlItem) arg;
+            urlItem.setFullQualifiedName(urlItem.getFullQualifiedName() + "." + n.getNameAsString());
             if (n.getAnnotations() != null) {
                 for (AnnotationExpr annotation : n.getAnnotations()) {
                     if (annotation.getClass().equals(SingleMemberAnnotationExpr.class)) {
@@ -144,7 +172,6 @@ public class JavaParserUtils {
                                 annotation.getName().asString().equals("PutMapping") ||
                                 annotation.getName().asString().equals("DeleteMapping") ||
                                 annotation.getName().asString().equals("PatchMapping")) {
-                            UrlItem urlItem = (UrlItem) arg;
                             urlItem.setUrl1(((SingleMemberAnnotationExpr) annotation).getMemberValue().toString());
                             return;
                         }
@@ -157,7 +184,6 @@ public class JavaParserUtils {
                                 annotation.getName().asString().equals("PatchMapping")) {
                             for (MemberValuePair pair : ((NormalAnnotationExpr) annotation).getPairs()) {
                                 if (pair.getName().asString().equals("value") || pair.getName().asString().equals("path")) {
-                                    UrlItem urlItem = (UrlItem) arg;
                                     urlItem.setUrl1(pair.getValue().toString());
                                     return;
                                 }
@@ -188,8 +214,9 @@ public class JavaParserUtils {
                             if (method == null)
                                 method = "";
                             // urlItem.getUrl2().put(n.getName().asString(), url2 + "+" + method);
-                            urlItem.getUrl2().put(n.getName().asString(), url2);
-                            urlItem.getHttpMethod().put(n.getName().asString(), method);
+                            String fullQualifiedName = urlItem.getFullQualifiedName();
+                            urlItem.getUrl2().put(fullQualifiedName + "-" + n.getName().asString(), url2);
+                            urlItem.getHttpMethod().put(fullQualifiedName + "-" + n.getName().asString(), method);
                         }
                     } else if (annotation.getClass().equals(NormalAnnotationExpr.class)) {
                         if (annotation.getName().asString().equals("RequestMapping") ||
@@ -204,8 +231,9 @@ public class JavaParserUtils {
                                 if (method == null)
                                     method = "";
                                 // urlItem.getUrl2().put(n.getName().asString(), "+" + method);
-                                urlItem.getUrl2().put(n.getName().asString(), "");
-                                urlItem.getHttpMethod().put(n.getName().asString(), method);
+                                String fullQualifiedName = urlItem.getFullQualifiedName();
+                                urlItem.getUrl2().put(fullQualifiedName + "-" + n.getName().asString(), "");
+                                urlItem.getHttpMethod().put(fullQualifiedName + "-" + n.getName().asString(), method);
                                 return;
                             }
                             String method = getHttpMethodByAnnotationType(annotation.getName().asString());
@@ -219,9 +247,10 @@ public class JavaParserUtils {
                             for (MemberValuePair pair : ((NormalAnnotationExpr) annotation).getPairs()) {
                                 if (pair.getName().asString().equals("value") || pair.getName().asString().equals("path")) {
                                     UrlItem urlItem = (UrlItem) arg;
+                                    String fullQualifiedName = urlItem.getFullQualifiedName();
                                     // urlItem.getUrl2().put(n.getName().asString(), pair.getValue().toString() + "+" + (method == null ? "" : method));
-                                    urlItem.getUrl2().put(n.getName().asString(), pair.getValue().toString());
-                                    urlItem.getHttpMethod().put(n.getName().asString(), method);
+                                    urlItem.getUrl2().put(fullQualifiedName + "-" + n.getName().asString(), pair.getValue().toString());
+                                    urlItem.getHttpMethod().put(fullQualifiedName + "-" + n.getName().asString(), method);
                                     return;
                                 }
                             }

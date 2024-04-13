@@ -42,6 +42,7 @@ public class ServiceCallParserUtils {
         checkCallResult(microserviceCallResults);
         Map<String, ServiceCallItem> results = new HashMap<>();
         for (String microserviceName : microserviceCallResults.keySet()) {
+            // 当前微服务调用的微服务及其调用次数
             Map<String, Integer> microserviceCallItem = microserviceCallResults.get(microserviceName);
             if (!results.containsKey(microserviceName)) {
                 results.put(microserviceName, new ServiceCallItem());

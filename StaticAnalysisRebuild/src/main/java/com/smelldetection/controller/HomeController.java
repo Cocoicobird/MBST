@@ -80,6 +80,9 @@ public class HomeController {
     @Autowired
     private PoorRestfulApiDesignService poorRestfulApiDesignService;
 
+    @Autowired
+    private UnnecessarySettingsService unnecessarySettingsService;
+
     @GetMapping("/static")
     public String staticAnalysis(HttpServletRequest request) throws IOException, XmlPullParserException {
         /**
@@ -256,10 +259,17 @@ public class HomeController {
         return "chattyService";
     }
 
-    @GetMapping("")
+    @GetMapping("/poorRestfulApiDesign")
     public String poorRestfulApiDesign(HttpServletRequest request) throws IOException {
         Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(request.getParameter("path"));
         poorRestfulApiDesignService.getPoorRestfulApiDesign(filePathToMicroserviceName);
         return "poorRestfulApiDesign";
+    }
+
+    @GetMapping("/unnecessarySettings")
+    public String unnecessarySettings(HttpServletRequest request) throws IOException {
+        Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(request.getParameter("path"));
+        unnecessarySettingsService.getUnnecessarySettings(filePathToMicroserviceName, request.getParameter("path"));
+        return "unnecessarySettings";
     }
 }

@@ -3,6 +3,7 @@ package com.smelldetection.entity.system.component;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,7 +14,9 @@ import java.util.Map;
  */
 @Data
 @AllArgsConstructor
-public class Configuration {
+public class Configuration implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private String microserviceName;
 
     private Map<String, String> items;

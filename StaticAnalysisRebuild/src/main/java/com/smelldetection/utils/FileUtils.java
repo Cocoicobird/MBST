@@ -70,7 +70,8 @@ public class FileUtils {
         List<String> applicationYamlOrProperties = stream.sorted().map(String::valueOf).filter(filePath -> {
             return (String.valueOf(filePath).toLowerCase().endsWith("application.yml")
                     || String.valueOf(filePath).toLowerCase().endsWith("application.yaml")
-                    || String.valueOf(filePath).toLowerCase().endsWith("application.properties"))
+                    || String.valueOf(filePath).toLowerCase().endsWith("application.properties")
+                    || String.valueOf(filePath).toLowerCase().endsWith("bootstrap.yml"))
                     && !String.valueOf(filePath).toLowerCase().contains("target");
         }).collect(Collectors.toList());
         return applicationYamlOrProperties;

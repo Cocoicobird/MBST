@@ -83,6 +83,12 @@ public class HomeController {
     @Autowired
     private UnnecessarySettingsService unnecessarySettingsService;
 
+    @Autowired
+    private HubService hubService;
+
+    @Autowired
+    private DuplicatedServicesService duplicatedServicesService;
+
     @GetMapping("/static")
     public String staticAnalysis(HttpServletRequest request) throws IOException, XmlPullParserException {
         /**
@@ -271,5 +277,18 @@ public class HomeController {
         Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(request.getParameter("path"));
         unnecessarySettingsService.getUnnecessarySettings(filePathToMicroserviceName, request.getParameter("path"));
         return "unnecessarySettings";
+    }
+
+    @GetMapping("/hubService")
+    public HubServiceDetail hubService(HttpServletRequest request) throws IOException {
+        Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(request.getParameter("path"));
+        return hubService.getHubClass(filePathToMicroserviceName);
+    }
+
+    @GetMapping("/duplicatedService")
+    public String duplicatedService(HttpServletRequest request) throws IOException {
+        Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(request.getParameter("path"));
+        duplicatedServicesService.getDuplicatedService(filePathToMicroserviceName);
+        return "duplicatedService";
     }
 }

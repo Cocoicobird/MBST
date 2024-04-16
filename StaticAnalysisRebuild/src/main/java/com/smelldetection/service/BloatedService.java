@@ -35,6 +35,7 @@ public class BloatedService {
         // 微服务调用结果，每个微服务调用了哪些微服务以及次数
         Map<String, Map<String, Integer>> microserviceCallResults = ServiceCallParserUtils.getMicroserviceCallResults(filePathToMicroserviceName);
         for (String filePath : filePathToMicroserviceName.keySet()) {
+            System.out.println(filePath);
             String microserviceName = filePathToMicroserviceName.get(filePath);
             List<String> javaFiles = FileUtils.getJavaFiles(filePath);
             // 该微服务模块所有方法声明

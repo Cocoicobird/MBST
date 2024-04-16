@@ -6,11 +6,11 @@ import com.github.javaparser.ast.*;
 import com.github.javaparser.ast.body.*;
 import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
-import com.github.javaparser.ast.type.Type;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import com.github.javaparser.symbolsolver.JavaSymbolSolver;
 import com.github.javaparser.symbolsolver.model.resolution.TypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
+import com.smelldetection.entity.item.DependCount;
 import com.smelldetection.entity.smell.detail.ApiVersionDetail;
 import com.smelldetection.entity.item.UrlItem;
 import com.smelldetection.entity.smell.detail.CyclicReferenceDetail;
@@ -41,7 +41,7 @@ public class JavaParserUtils {
         CompilationUnit compilationUnit = StaticJavaParser.parse(javaFile);
         UrlItem urlItem = new UrlItem();
         urlItem.setFullQualifiedName(getPackageName(javaFile));
-        new ClassVisitor().visit(compilationUnit, urlItem);
+        new ClassAnnotationVisitor().visit(compilationUnit, urlItem);
         new MethodAnnotationVisitor().visit(compilationUnit, urlItem);
         String preUrl = "";
         if (urlItem.getUrl1() != null) {
@@ -76,7 +76,7 @@ public class JavaParserUtils {
         for (String javaFile : javaFiles) {
             CompilationUnit compilationUnit = StaticJavaParser.parse(new File(javaFile));
             UrlItem urlItem = new UrlItem();
-            new ClassVisitor().visit(compilationUnit, urlItem);
+            new ClassAnnotationVisitor().visit(compilationUnit, urlItem);
             new MethodAnnotationVisitor().visit(compilationUnit, urlItem);
             String preUrl = "";
             if (urlItem.getUrl1() != null) {
@@ -95,12 +95,31 @@ public class JavaParserUtils {
         return apiVersions;
     }
 
+    public static Map<String, Map<String, MethodDeclaration>> getMethodNameArgumentsAndReturnType(List<String> javaFiles) throws FileNotFoundException {
+        // <文件路径:<方法名:方法信息>>
+        Map<String, Map<String, MethodDeclaration>> collections = new HashMap<>();
+        for (String javaFile : javaFiles) {
+            collections.put(javaFile, new HashMap<>());
+            File file = new File(javaFile);
+            CompilationUnit compilationUnit = StaticJavaParser.parse(file);
+            new MethodInformationCollector().visit(compilationUnit, collections.get(javaFile));
+        }
+        return collections;
+    }
+
+    private static class MethodInformationCollector extends VoidVisitorAdapter<Map<String, MethodDeclaration>> {
+        @Override
+        public void visit(MethodDeclaration n, Map<String, MethodDeclaration> arg) {
+            arg.put(n.getNameAsString(), n);
+        }
+    }
+
     public static Map<String, String> getMethodToApi(File javaFile) throws FileNotFoundException {
         Map<String, String> methodToApi = new HashMap<>();
         CompilationUnit compilationUnit = StaticJavaParser.parse(javaFile);
         UrlItem urlItem = new UrlItem();
         urlItem.setFullQualifiedName(getPackageName(javaFile));
-        new ClassVisitor().visit(compilationUnit, urlItem);
+        new ClassAnnotationVisitor().visit(compilationUnit, urlItem);
         new MethodAnnotationVisitor().visit(compilationUnit, urlItem);
         String preUrl = "";
         if (urlItem.getUrl1() != null) {
@@ -148,6 +167,44 @@ public class JavaParserUtils {
         return returnType;
     }
 
+    public static void resolveImportAndOutput(File file,
+                                     Map<String, DependCount> importsAndOutputs,
+                                     Set<String> classNames) throws FileNotFoundException {
+        String packageName = getPackageName(file) + ".";
+        CompilationUnit compilationUnit = StaticJavaParser.parse(file);
+        NodeList<ImportDeclaration> compilationUnitImports = compilationUnit.getImports();
+        NodeList<TypeDeclaration<?>> compilationUnitTypes = compilationUnit.getTypes();
+        for (ImportDeclaration importDeclaration : compilationUnitImports) {
+            if (classNames.contains(importDeclaration.getNameAsString())) {
+                // 被引用的类
+                String importClassName = importDeclaration.getNameAsString();
+                int outputCount = importsAndOutputs.get(importClassName).getOutputCount() + 1;
+                importsAndOutputs.get(importClassName).setOutputCount(outputCount);
+                for (TypeDeclaration<?> compilationUnitType : compilationUnitTypes) {
+                    // 引用的类
+                    String className = packageName + compilationUnitType.getNameAsString();
+                    int importCount = importsAndOutputs.get(className).getImportCount() + 1;
+                    importsAndOutputs.get(className).setImportCount(importCount);
+                }
+            }
+        }
+    }
+
+    public static void initDependCount(File file, Set<String> classNames, Map<String, DependCount> importsAndOutputs, String microserviceName) throws FileNotFoundException {
+        String packageName = getPackageName(file) + ".";
+        CompilationUnit compilationUnit = StaticJavaParser.parse(file);
+        NodeList<TypeDeclaration<?>> compilationUnitTypes = compilationUnit.getTypes();
+        for (TypeDeclaration<?> typeDeclaration : compilationUnitTypes) {
+            if (typeDeclaration.isClassOrInterfaceDeclaration()) {
+                String className = packageName + typeDeclaration.getNameAsString();
+                classNames.add(className);
+                DependCount dependCount = new DependCount(className);
+                dependCount.setMicroserviceName(microserviceName);
+                importsAndOutputs.put(className, dependCount);
+            }
+        }
+    }
+
     private static class MethodDeclarationVisitor extends VoidVisitorAdapter<Object> {
 
         @Override
@@ -157,7 +214,7 @@ public class JavaParserUtils {
         }
     }
 
-    private static class ClassVisitor extends VoidVisitorAdapter<Object> {
+    private static class ClassAnnotationVisitor extends VoidVisitorAdapter<Object> {
 
         @Override
         public void visit(ClassOrInterfaceDeclaration n, Object arg) {

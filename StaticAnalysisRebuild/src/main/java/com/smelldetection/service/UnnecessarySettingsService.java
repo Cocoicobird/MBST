@@ -37,7 +37,7 @@ public class UnnecessarySettingsService {
                 if (columns.length == 4) {
                     defaultConfiguration.put(columns[1], columns[3]);
                 }
-                System.out.println("Configuration["+ String.join(", ", columns) +"]" + columns.length);
+                System.out.println("Configuration["+ String.join(", ", columns) +"]");
             }
         } catch (IOException e) {
             e.printStackTrace();

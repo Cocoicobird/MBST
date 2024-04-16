@@ -2,6 +2,7 @@ package com.smelldetection.service;
 
 import com.smelldetection.utils.FileUtils;
 import com.smelldetection.utils.JavaParserUtils;
+import com.smelldetection.utils.NlpUtils;
 import edu.stanford.nlp.ling.CoreAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
@@ -104,10 +105,7 @@ public class PoorRestfulApiDesignService {
                 String[] levels = apiAndHttpMethod[0].split("/");
                 if (apiAndHttpMethod.length < 2)
                     hasHttpMethod = false;
-                // 定义使用的组件 tokenize分词 ssplit断句 pos词性标注 lemma词元化 ner命名实体识别 parse语法分析 dcoref同义词分辨
-                Properties properties = new Properties();
-                properties.setProperty("annotators", "tokenize, ssplit, pos");
-                StanfordCoreNLP pipeline = new StanfordCoreNLP(properties);
+                StanfordCoreNLP pipeline = NlpUtils.pipeline;
                 for (String level : levels) { // API 的每一级
                     if (level.length() > 0 && level.charAt(0) == '{' && level.charAt(level.length() - 1) == '}') {
                         level = level.substring(1, level.length() - 1);

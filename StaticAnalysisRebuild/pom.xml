@@ -151,6 +151,16 @@
             <version>3.9.2</version>
             <classifier>models</classifier>
         </dependency>
+        <dependency>
+            <groupId>com.hankcs</groupId>
+            <artifactId>hanlp</artifactId>
+            <version>portable-1.8.2</version>
+        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.baidu.aip</groupId>-->
+<!--            <artifactId>java-sdk</artifactId>-->
+<!--            <version>4.16.1</version>-->
+<!--        </dependency>-->
     </dependencies>
 
     <build>

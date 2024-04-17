@@ -4,6 +4,7 @@ import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.hankcs.hanlp.HanLP;
+import com.smelldetection.entity.smell.detail.DuplicatedServiceDetail;
 import com.smelldetection.utils.FileUtils;
 import com.smelldetection.utils.JavaParserUtils;
 import com.smelldetection.utils.NlpUtils;
@@ -22,7 +23,7 @@ import java.util.*;
 @Service
 public class DuplicatedServicesService {
 
-    public void getDuplicatedService(Map<String, String> filePathToMicroserviceName) throws IOException {
+    public Map<String, List<List<DuplicatedServiceDetail>>> getDuplicatedService(Map<String, String> filePathToMicroserviceName) throws IOException {
         Map<String, Map<String, MethodDeclaration>> filePathToControllerMethod = new HashMap<>();
         Map<String, Map<String, MethodDeclaration>> filePathToServiceImplMethod = new HashMap<>();
         for (String filePath : filePathToMicroserviceName.keySet()) {
@@ -48,6 +49,8 @@ public class DuplicatedServicesService {
             }
         }
         List<String> microserviceNames = new ArrayList<>(filePathToMicroserviceName.values());
+        List<List<DuplicatedServiceDetail>> serviceImpls = new ArrayList<>();
+        List<List<DuplicatedServiceDetail>> controllers = new ArrayList<>();
         for (int i = 0; i < microserviceNames.size(); i++) {
             // 微服务模块 1 中的业务层方法声明
             String microserviceName1 = microserviceNames.get(i);
@@ -55,15 +58,27 @@ public class DuplicatedServicesService {
             for (int j = i + 1; j < microserviceNames.size(); j++) {
                 String microserviceName2 = microserviceNames.get(j);
                 // 微服务模块 2 中的业务层方法声明
-                Map<String, MethodDeclaration> serviceImplmethodDeclarations2 = filePathToServiceImplMethod.get(microserviceName2);
+                Map<String, MethodDeclaration> serviceImplMethodDeclarations2 = filePathToServiceImplMethod.get(microserviceName2);
                 for (String methodName1 : serviceImplMethodDeclarations1.keySet()) {
                     MethodDeclaration methodDeclaration1 = serviceImplMethodDeclarations1.get(methodName1);
-                    for (String methodName2 : serviceImplmethodDeclarations2.keySet()) {
-                        MethodDeclaration methodDeclaration2 = serviceImplmethodDeclarations2.get(methodName2);
+                    DuplicatedServiceDetail duplicatedServiceDetail1 = new DuplicatedServiceDetail();
+                    duplicatedServiceDetail1.setMicroserviceName(microserviceName1);
+                    duplicatedServiceDetail1.setMethodDeclaration(methodDeclaration1.getDeclarationAsString(false, false, true));
+                    for (String methodName2 : serviceImplMethodDeclarations2.keySet()) {
+                        MethodDeclaration methodDeclaration2 = serviceImplMethodDeclarations2.get(methodName2);
                         System.out.println(convert(methodDeclaration1.getNameAsString()) + " " + convert(methodDeclaration2.getNameAsString()));
-                        System.out.println(NlpUtils.getSimilarity(convert(methodDeclaration1.getNameAsString()), convert(methodDeclaration2.getNameAsString())));
-                        System.out.println(NlpUtils.getSimilarity(methodDeclaration1.getTypeAsString(), methodDeclaration2.getTypeAsString()));
-                        System.out.println(NlpUtils.getSimilarity(methodDeclaration1.getParameters().toString(), methodDeclaration2.getParameters().toString()));
+                        double value1 = NlpUtils.getSimilarity(convert(methodDeclaration1.getNameAsString()), convert(methodDeclaration2.getNameAsString()));
+                        double value2 = NlpUtils.getSimilarity(methodDeclaration1.getTypeAsString(), methodDeclaration2.getTypeAsString());
+                        double value3 = NlpUtils.getSimilarity(methodDeclaration1.getParameters().toString(), methodDeclaration2.getParameters().toString());
+                        if (value1 >= 0.85 && value2 >= 0.85 && value3 >= 0.85) {
+                            DuplicatedServiceDetail duplicatedServiceDetail2 = new DuplicatedServiceDetail();
+                            duplicatedServiceDetail2.setMicroserviceName(microserviceName2);
+                            duplicatedServiceDetail2.setMethodDeclaration(methodDeclaration2.getDeclarationAsString(false, false, true));
+                            List<DuplicatedServiceDetail> duplicatedServiceDetails = new ArrayList<>();
+                            duplicatedServiceDetails.add(duplicatedServiceDetail1);
+                            duplicatedServiceDetails.add(duplicatedServiceDetail2);
+                            serviceImpls.add(duplicatedServiceDetails);
+                        }
                     }
                 }
             }
@@ -75,16 +90,32 @@ public class DuplicatedServicesService {
                 Map<String, MethodDeclaration> controllerMethodDeclarations2 = filePathToControllerMethod.get(microserviceName2);
                 for (String methodName1 : controllerMethodDeclarations1.keySet()) {
                     MethodDeclaration methodDeclaration1 = controllerMethodDeclarations1.get(methodName1);
+                    DuplicatedServiceDetail duplicatedServiceDetail1 = new DuplicatedServiceDetail();
+                    duplicatedServiceDetail1.setMicroserviceName(microserviceName1);
+                    duplicatedServiceDetail1.setMethodDeclaration(methodDeclaration1.getDeclarationAsString(false, false, true));
                     for (String methodName2 : controllerMethodDeclarations2.keySet()) {
                         MethodDeclaration methodDeclaration2 = controllerMethodDeclarations2.get(methodName2);
                         System.out.println(convert(methodDeclaration1.getNameAsString()) + " " + convert(methodDeclaration2.getNameAsString()));
-                        System.out.println(NlpUtils.getSimilarity(convert(methodDeclaration1.getNameAsString()), convert(methodDeclaration2.getNameAsString())));
-                        System.out.println(NlpUtils.getSimilarity(methodDeclaration1.getTypeAsString(), methodDeclaration2.getTypeAsString()));
-                        System.out.println(NlpUtils.getSimilarity(methodDeclaration1.getParameters().toString(), methodDeclaration2.getParameters().toString()));
+                        double value1 = NlpUtils.getSimilarity(convert(methodDeclaration1.getNameAsString()), convert(methodDeclaration2.getNameAsString()));
+                        double value2 = NlpUtils.getSimilarity(methodDeclaration1.getTypeAsString(), methodDeclaration2.getTypeAsString());
+                        double value3 = NlpUtils.getSimilarity(methodDeclaration1.getParameters().toString(), methodDeclaration2.getParameters().toString());
+                        if (value1 >= 0.85 && value2 >= 0.85 && value3 >= 0.85) {
+                            DuplicatedServiceDetail duplicatedServiceDetail2 = new DuplicatedServiceDetail();
+                            duplicatedServiceDetail2.setMicroserviceName(microserviceName2);
+                            duplicatedServiceDetail2.setMethodDeclaration(methodDeclaration2.getDeclarationAsString(false, false, true));
+                            List<DuplicatedServiceDetail> duplicatedServiceDetails = new ArrayList<>();
+                            duplicatedServiceDetails.add(duplicatedServiceDetail1);
+                            duplicatedServiceDetails.add(duplicatedServiceDetail2);
+                            controllers.add(duplicatedServiceDetails);
+                        }
                     }
                 }
             }
         }
+        Map<String, List<List<DuplicatedServiceDetail>>> results = new HashMap<>();
+        results.put("serviceImpl", serviceImpls);
+        results.put("controllers", controllers);
+        return results;
     }
 
     private String convert(String methodName) {

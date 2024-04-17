@@ -4,7 +4,9 @@ import com.smelldetection.entity.item.HardCodeItem;
 import lombok.Data;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Cocoicobird
@@ -13,14 +15,23 @@ import java.util.List;
  */
 @Data
 public class HardCodeDetail {
-    private String microserviceName;
-    private List<HardCodeItem> hardCodes;
+    private Map<String, List<HardCodeItem>> hardCodes;
 
     public HardCodeDetail() {
-        this.hardCodes = new ArrayList<>();
+        this.hardCodes = new HashMap<>();
     }
 
-    public void add(HardCodeItem hardCodeItem) {
-        this.hardCodes.add(hardCodeItem);
+    public void add(String microserviceName, HardCodeItem hardCodeItem) {
+        if (!this.hardCodes.containsKey(microserviceName)) {
+            this.hardCodes.put(microserviceName, new ArrayList<>());
+        }
+        this.hardCodes.get(microserviceName).add(hardCodeItem);
+    }
+
+    public void addAll(String microserviceName, List<HardCodeItem> hardCodeItems) {
+        if (!this.hardCodes.containsKey(microserviceName)) {
+            this.hardCodes.put(microserviceName, new ArrayList<>());
+        }
+        this.hardCodes.get(microserviceName).addAll(hardCodeItems);
     }
 }

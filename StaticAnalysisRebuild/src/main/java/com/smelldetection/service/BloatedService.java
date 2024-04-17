@@ -3,7 +3,9 @@ package com.smelldetection.service;
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
+import com.smelldetection.entity.item.BloatedServiceItem;
 import com.smelldetection.entity.item.ServiceCallItem;
+import com.smelldetection.entity.smell.detail.BloatedServiceDetail;
 import com.smelldetection.utils.FileUtils;
 import com.smelldetection.utils.JavaParserUtils;
 import com.smelldetection.utils.ServiceCallParserUtils;
@@ -31,8 +33,9 @@ public class BloatedService {
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
-    public void getBloatedService(Map<String, String> filePathToMicroserviceName) throws IOException {
+    public BloatedServiceDetail getBloatedService(Map<String, String> filePathToMicroserviceName) throws IOException {
         // 微服务调用结果，每个微服务调用了哪些微服务以及次数
+        BloatedServiceDetail bloatedServiceDetail = new BloatedServiceDetail();
         Map<String, Map<String, Integer>> microserviceCallResults = ServiceCallParserUtils.getMicroserviceCallResults(filePathToMicroserviceName);
         for (String filePath : filePathToMicroserviceName.keySet()) {
             System.out.println(filePath);
@@ -87,6 +90,17 @@ public class BloatedService {
             System.out.println(maxParameterNumber + " " + microserviceCall.size() + "/" + filePathToMicroserviceName.size() + " " + totalServiceMethodCallNumber + " " + codeSize);
             boolean status = maxParameterNumber >= 6 && (percent >= 0.2 || totalServiceMethodCallNumber > 10 || codeSize > 5000);
             System.out.println(status);
+            if (status) {
+                BloatedServiceItem bloatedServiceItem = new BloatedServiceItem();
+                bloatedServiceItem.setMaxParameterNumber(maxParameterNumber);
+                bloatedServiceItem.setMicroserviceCallPercent(percent);
+                bloatedServiceItem.setTotalServiceImplMethodCallCount(totalServiceMethodCallNumber);
+                bloatedServiceItem.setCodeSize(codeSize);
+                bloatedServiceDetail.put(microserviceName, bloatedServiceItem);
+            }
         }
+        if (!bloatedServiceDetail.getBloatedServices().isEmpty())
+            bloatedServiceDetail.setStatus(true);
+        return bloatedServiceDetail;
     }
 }

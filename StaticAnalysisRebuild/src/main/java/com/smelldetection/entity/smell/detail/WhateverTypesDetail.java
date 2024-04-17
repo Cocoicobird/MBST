@@ -2,26 +2,30 @@ package com.smelldetection.entity.smell.detail;
 
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
  * @author Cocoicobird
  * @version 1.0
  * @description 存储 WhateverTypes 异味相关信息
- * 形式为 1.微服务模块名 2.Map 的 key 为 类名 + 方法 字符串 value 为 返回类型
+ * 形式为 Map 的 key 为微服务名称 value 类名 + 方法
  */
 @Data
 public class WhateverTypesDetail {
-    private String microserviceName;
-    private Map<String, String> returnTypes;
+    private boolean status;
+    private Map<String, List<String>> returnTypes;
 
     public WhateverTypesDetail() {
         this.returnTypes = new HashMap<>();
     }
 
-    public void put(String method, String returnType) {
-        this.returnTypes.put(method, returnType);
+    public void put(String microserviceName, String returnType) {
+        if (this.returnTypes.containsKey(microserviceName))
+            this.returnTypes.put(microserviceName, new ArrayList<>());
+        this.returnTypes.get(microserviceName).add(returnType);
     }
 
     public boolean isEmpty() {

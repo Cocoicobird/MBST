@@ -1,5 +1,6 @@
 package com.smelldetection.service;
 
+import com.smelldetection.entity.smell.detail.ApiDesignDetail;
 import com.smelldetection.utils.FileUtils;
 import com.smelldetection.utils.JavaParserUtils;
 import com.smelldetection.utils.NlpUtils;
@@ -36,10 +37,8 @@ import java.util.Properties;
 @Service
 public class PoorRestfulApiDesignService {
 
-    public void getPoorRestfulApiDesign(Map<String, String> filePathToMicroserviceName) throws IOException {
-        // Path path = Paths.get("StaticAnalysisRebuild", "src", "main", "resources", "model", "en-sent.bin");
-        // InputStream inputStream = new FileInputStream(path.toFile());
-        // SentenceDetectorME sentenceDetectorME = new SentenceDetectorME(new SentenceModel(inputStream));
+    public ApiDesignDetail getPoorRestfulApiDesign(Map<String, String> filePathToMicroserviceName) throws IOException {
+        ApiDesignDetail apiDesignDetail = new ApiDesignDetail();
         for (String filePath : filePathToMicroserviceName.keySet()) {
             String microserviceName = filePathToMicroserviceName.get(filePath);
             System.out.println(microserviceName);
@@ -49,13 +48,13 @@ public class PoorRestfulApiDesignService {
                 File file = new File(javaFile);
                 methodToApi.putAll(JavaParserUtils.getMethodToApi(file));
             }
-            Path tokenPath = Paths.get("StaticAnalysisRebuild", "src", "main", "resources", "model", "en-token.bin");
-            InputStream tokeInputStream = new FileInputStream(tokenPath.toFile());
-            TokenizerME tokenizer = new TokenizerME(new TokenizerModel(tokeInputStream));
-            Path posPath = Paths.get("StaticAnalysisRebuild", "src", "main", "resources", "model", "en-pos-perceptron.bin");
-            InputStream posInputStream = new FileInputStream(posPath.toFile());
-            POSModel posModel = new POSModel(posInputStream);
-            POSTaggerME posTagger = new POSTaggerME(posModel);
+//            Path tokenPath = Paths.get("StaticAnalysisRebuild", "src", "main", "resources", "model", "en-token.bin");
+//            InputStream tokeInputStream = new FileInputStream(tokenPath.toFile());
+//            TokenizerME tokenizer = new TokenizerME(new TokenizerModel(tokeInputStream));
+//            Path posPath = Paths.get("StaticAnalysisRebuild", "src", "main", "resources", "model", "en-pos-perceptron.bin");
+//            InputStream posInputStream = new FileInputStream(posPath.toFile());
+//            POSModel posModel = new POSModel(posInputStream);
+//            POSTaggerME posTagger = new POSTaggerME(posModel);
             // 针对每一个 API
             /*
             for (String methodName : methodToApi.keySet()) {
@@ -128,8 +127,15 @@ public class PoorRestfulApiDesignService {
                         System.out.println(word + " " + pos);
                     }
                 }
+                if (noVersion)
+                    apiDesignDetail.putNoVersion(microserviceName, methodName, api);
+                if (!hasHttpMethod)
+                    apiDesignDetail.putMissingHttpMethod(microserviceName, methodName, api);
+                if (hasVerb)
+                    apiDesignDetail.putNoStandard(microserviceName, methodName, api);
                 System.out.println(api + " " + "noVersion:" + noVersion + " hasHttpMethod:" + hasHttpMethod + " hasVerb:" + hasVerb);
             }
         }
+        return apiDesignDetail;
     }
 }

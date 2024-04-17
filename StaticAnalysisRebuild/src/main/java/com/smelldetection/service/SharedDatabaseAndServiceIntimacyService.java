@@ -16,13 +16,14 @@ import java.util.*;
 @Service
 public class SharedDatabaseAndServiceIntimacyService {
 
-    public SharedDatabasesAndServiceIntimacyDetail getSharedDatabasesAndServiceIntimacy(List<Configuration> configurations) throws IOException {
+    public SharedDatabasesAndServiceIntimacyDetail getSharedDatabasesAndServiceIntimacy(Map<String, Configuration> configurations) throws IOException {
         String pattern = "mysql://";
         // key 为数据库 value 为使用该数据库的微服务模块
         Map<String, List<String>> sharedDatabases = new HashMap<>();
         // key 为微服务模块 value 为其数据库
         Map<String, List<String>> serviceIntimacy = new HashMap<>();
-        for (Configuration configuration : configurations) {
+        for (String microserviceName : configurations.keySet()) {
+            Configuration configuration = configurations.get(microserviceName);
             for (String key : configuration.getItems().keySet()) {
                 String value = configuration.get(key);
                 String database = "";

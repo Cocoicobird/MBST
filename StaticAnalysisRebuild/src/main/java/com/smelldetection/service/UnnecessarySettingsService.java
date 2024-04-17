@@ -1,5 +1,6 @@
 package com.smelldetection.service;
 
+import com.smelldetection.entity.smell.detail.UnnecessarySettingsDetail;
 import com.smelldetection.entity.system.component.Configuration;
 import com.smelldetection.utils.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +48,7 @@ public class UnnecessarySettingsService {
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
-    public void getUnnecessarySettings(Map<String, String> filePathToMicroserviceName, String systemDirectory) throws IOException {
+    public UnnecessarySettingsDetail getUnnecessarySettings(Map<String, String> filePathToMicroserviceName, String systemDirectory) throws IOException {
         Map<String, Configuration> filePathToConfiguration;
         if (redisTemplate.opsForValue().get(systemDirectory + "Configuration") != null) {
             filePathToConfiguration = (Map<String, Configuration>) redisTemplate.opsForValue().get(systemDirectory + "Configuration");
@@ -55,6 +56,7 @@ public class UnnecessarySettingsService {
             filePathToConfiguration = FileUtils.getConfiguration(filePathToMicroserviceName);
             redisTemplate.opsForValue().set(systemDirectory + "Configuration", filePathToConfiguration);
         }
+        UnnecessarySettingsDetail unnecessarySettingsDetail = new UnnecessarySettingsDetail();
         for (String filePath : filePathToMicroserviceName.keySet()) {
             String microserviceName = filePathToMicroserviceName.get(filePath);
             Configuration configuration = filePathToConfiguration.get(filePath);
@@ -62,9 +64,10 @@ public class UnnecessarySettingsService {
             for (String key : configuration.getItems().keySet()) {
                 String value = configuration.get(key);
                 if (defaultConfiguration.containsKey(key) && defaultConfiguration.get(key).equals(value)) {
-                    System.out.println(key + ": " + value);
+                    unnecessarySettingsDetail.put(microserviceName, key + "=" + value);
                 }
             }
         }
+        return unnecessarySettingsDetail;
     }
 }

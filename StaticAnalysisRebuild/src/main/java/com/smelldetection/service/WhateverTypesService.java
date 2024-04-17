@@ -29,12 +29,10 @@ public class WhateverTypesService {
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
-    public List<WhateverTypesDetail> getWhateverTypes(Map<String, String> filePathToMicroserviceName) throws IOException {
-        List<WhateverTypesDetail> whateverTypesDetails = new ArrayList<>();
+    public WhateverTypesDetail getWhateverTypes(Map<String, String> filePathToMicroserviceName) throws IOException {
+        WhateverTypesDetail whateverTypesDetail = new WhateverTypesDetail();
         for (String filePath : filePathToMicroserviceName.keySet()) {
-            WhateverTypesDetail whateverTypesDetail = new WhateverTypesDetail();
             String microserviceName = filePathToMicroserviceName.get(filePath);
-            whateverTypesDetail.setMicroserviceName(microserviceName);
             List<String> javaFiles = FileUtils.getJavaFiles(filePath);
             Map<String, MethodDeclaration> returnTypes = new HashMap<>();
             for (String javaFile : javaFiles) {
@@ -48,13 +46,13 @@ public class WhateverTypesService {
             for (String method : returnTypes.keySet()) {
                 MethodDeclaration methodDeclaration = returnTypes.get(method);
                 if (methodDeclaration.getTypeParameters().size() > 0) {
-                    whateverTypesDetail.put(method, methodDeclaration.getType().asString());
+                    whateverTypesDetail.put(microserviceName, method);
                 }
             }
-            if (!whateverTypesDetail.isEmpty()) {
-                whateverTypesDetails.add(whateverTypesDetail);
-            }
         }
-        return whateverTypesDetails;
+        if (!whateverTypesDetail.isEmpty()) {
+            whateverTypesDetail.setStatus(true);
+        }
+        return whateverTypesDetail;
     }
 }

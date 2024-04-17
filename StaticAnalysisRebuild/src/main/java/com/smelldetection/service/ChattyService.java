@@ -1,10 +1,13 @@
 package com.smelldetection.service;
 
+import com.smelldetection.entity.item.ChattyServiceItem;
+import com.smelldetection.entity.smell.detail.ChattyServiceDetail;
 import com.smelldetection.utils.FileUtils;
 import com.smelldetection.utils.ServiceCallParserUtils;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -17,8 +20,9 @@ import java.util.Map;
  */
 @Service
 public class ChattyService {
-    public void getChattyService(Map<String, String> filePathToMicroserviceName) throws IOException {
+    public ChattyServiceDetail getChattyService(Map<String, String> filePathToMicroserviceName) throws IOException {
         // 微服务调用结果，每个微服务调用了哪些微服务以及次数
+        ChattyServiceDetail chattyServiceDetail = new ChattyServiceDetail();
         Map<String, Map<String, Integer>> microserviceCallResults = ServiceCallParserUtils.getMicroserviceCallResults(filePathToMicroserviceName);
         for (String filePath: filePathToMicroserviceName.keySet()) {
             String microserviceName = filePathToMicroserviceName.get(filePath);
@@ -33,9 +37,13 @@ public class ChattyService {
             // entity 相关目录下的 .java 文件，一般是实体类，有些项目中也会将 DTO 置于该目录
             List<String> entityClasses = FileUtils.getJavaFilesUnderEntity(filePath);
             boolean status = maxCallNumber > 5 && entityClasses.size() >= 1;
-            System.out.println(microserviceCallResult);
-            System.out.println(entityClasses);
-            System.out.println(microserviceName + " " + maxCallNumber + " " + entityClasses.size() + " " + status);
+            if (status) {
+                ChattyServiceItem chattyServiceItem = new ChattyServiceItem();
+                chattyServiceItem.setMaxCallNumber(maxCallNumber);
+                chattyServiceItem.setEntityNumber(entityClasses.size());
+                chattyServiceDetail.put(microserviceName, chattyServiceItem);
+            }
         }
+        return chattyServiceDetail;
     }
 }

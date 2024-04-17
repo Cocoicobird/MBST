@@ -37,15 +37,16 @@ public class HubService {
                 JavaParserUtils.resolveImportAndOutput(file, importsAndOutputs, classNames);
             }
         }
+        HubServiceDetail hubServiceDetail = new HubServiceDetail();
         for (String className : importsAndOutputs.keySet()) {
             DependCount dependCount = importsAndOutputs.get(className);
-            System.out.println(dependCount);
             int importCount = dependCount.getImportCount();
             int outputCount = dependCount.getOutputCount();
             if (importCount >= 10 && outputCount >= 10 && Math.max(importCount, outputCount) * 0.9 <= Math.min(importCount, outputCount)) {
                 boolean status = true;
+                hubServiceDetail.put(dependCount.getMicroserviceName(), dependCount);
             }
         }
-        return null;
+        return hubServiceDetail;
     }
 }

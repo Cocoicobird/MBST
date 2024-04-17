@@ -1,5 +1,6 @@
 package com.smelldetection.service;
 
+import com.smelldetection.entity.smell.detail.NoHealthCheckAndNoServiceDiscoveryPatternDetail;
 import com.smelldetection.entity.system.component.Configuration;
 import com.smelldetection.entity.system.component.Pom;
 import com.smelldetection.utils.FileUtils;
@@ -27,24 +28,42 @@ public class NoHealthCheckAndNoServiceDiscoveryPatternService {
      * @param systemPath 整个微服务系统的路径
      * 相关依赖比如 Consul、ZooKeeper、etcd、Eureka、Linkerd
      */
-    public void getNoHealthCheckAndNoServiceDiscoveryPattern(Map<String, String> filePathToMicroserviceName, String systemPath) throws IOException, XmlPullParserException {
+    public NoHealthCheckAndNoServiceDiscoveryPatternDetail getNoHealthCheckAndNoServiceDiscoveryPattern(Map<String, String> filePathToMicroserviceName, String systemPath) throws IOException, XmlPullParserException {
         List<Pom> parentPom = FileUtils.getPomObject(FileUtils.getParentPomXml(filePathToMicroserviceName, systemPath));
-        Map<String, Boolean> actuatorStatus = hasActuator(filePathToMicroserviceName);
+        boolean nacos = false, consul = false;
+        for (Pom pom : parentPom) {
+            for (Dependency dependency : pom.getMavenModel().getDependencies()) {
+                if ("com.alibaba.cloud".equals(dependency.getGroupId()) && "spring-cloud-starter-alibaba-nacos-discovery".equals(dependency.getArtifactId())) {
+                    nacos = true;
+                }
+                if ("org.springframework.cloud".equals(dependency.getGroupId())
+                        && "spring-cloud-starter-consul-discovery".equals(dependency.getArtifactId())) {
+                    consul = true;
+                }
+            }
+        }
         Map<String, String> eurekaStatus = hasEureka(filePathToMicroserviceName);
         Map<String, Boolean> consulStatus = hasConsul(filePathToMicroserviceName);
         Map<String, Configuration> filePathToConfiguration = FileUtils.getConfiguration(filePathToMicroserviceName);
+        NoHealthCheckAndNoServiceDiscoveryPatternDetail result = new NoHealthCheckAndNoServiceDiscoveryPatternDetail();
         for (String filePath : filePathToMicroserviceName.keySet()) {
             String microserviceName = filePathToMicroserviceName.get(filePath);
             Configuration configuration = filePathToConfiguration.get(filePath);
-            if (consulStatus.get(microserviceName) && configuration.getItems().containsKey("spring.cloud.consul.host")) {
-                boolean status = true;
+            boolean status = false;
+            if ((consul || consulStatus.get(microserviceName)) && configuration.getItems().containsKey("spring.cloud.consul.host")) {
+                status = true;
             }
             if ("client".equals(eurekaStatus.get(microserviceName)) && configuration.getItems().containsKey("eureka.client.service-url.defaultZone")) {
-                boolean status = true;
+                status = true;
             } else if ("server".equals(eurekaStatus.get(microserviceName)) && configuration.getItems().containsKey("eureka.client.fetch-registry")) {
-                boolean hasServer = true;
+                status = true;
             }
+            if (nacos && configuration.getItems().containsKey("spring.cloud.nacos.discovery.server-addr")) {
+                status = true;
+            }
+            result.put(microserviceName, status);
         }
+        return result;
     }
 
     /**

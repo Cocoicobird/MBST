@@ -20,19 +20,16 @@ import java.util.Map;
 @Service
 public class HardCodeService {
 
-    public List<HardCodeDetail> getHardCode(Map<String, String> filePathToMicroserviceName) throws IOException {
-        List<HardCodeDetail> hardCodeDetails = new ArrayList<>();
-        for (String service : filePathToMicroserviceName.keySet()) {
-            String microserviceName = filePathToMicroserviceName.get(service);
-            List<String> javaFiles = FileUtils.getJavaFiles(service);
+    public HardCodeDetail getHardCode(Map<String, String> filePathToMicroserviceName) throws IOException {
+        HardCodeDetail hardCodeDetail = new HardCodeDetail();
+        for (String filePath : filePathToMicroserviceName.keySet()) {
+            String microserviceName = filePathToMicroserviceName.get(filePath);
+            List<String> javaFiles = FileUtils.getJavaFiles(filePath);
             List<HardCodeItem> hardCodeItems = new ArrayList<>();
             HardCodeUtils.resolveHardCodeFromJavaFiles(javaFiles, hardCodeItems);
-            HardCodeDetail hardCodeDetail = new HardCodeDetail();
-            hardCodeDetail.setMicroserviceName(microserviceName);
-            hardCodeDetail.setHardCodes(hardCodeItems);
-            hardCodeDetails.add(hardCodeDetail);
+            hardCodeDetail.addAll(microserviceName, hardCodeItems);
         }
-        return hardCodeDetails;
+        return hardCodeDetail;
     }
 
 }

@@ -1,6 +1,9 @@
 package com.smelldetection.entity.smell.detail;
 
+import com.smelldetection.entity.item.DependCount;
 import lombok.Data;
+
+import java.util.Map;
 
 /**
  * @author Cocoicobird
@@ -8,4 +11,8 @@ import lombok.Data;
  */
 @Data
 public class HubServiceDetail {
+    Map<String, DependCount> hubClasses;
+    public void put(String microserviceName, DependCount dependCount) {
+        hubClasses.put(microserviceName, dependCount);
+    }
 }

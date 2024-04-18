@@ -23,23 +23,23 @@ import java.util.*;
 @Service
 public class DuplicatedServicesService {
 
-    public Map<String, List<List<DuplicatedServiceDetail>>> getDuplicatedService(Map<String, String> filePathToMicroserviceName) throws IOException {
-        Map<String, Map<String, MethodDeclaration>> filePathToControllerMethod = new HashMap<>();
+    public Map<String, Set<List<DuplicatedServiceDetail>>> getDuplicatedService(Map<String, String> filePathToMicroserviceName) throws IOException {
+        // Map<String, Map<String, MethodDeclaration>> filePathToControllerMethod = new HashMap<>();
         Map<String, Map<String, MethodDeclaration>> filePathToServiceImplMethod = new HashMap<>();
         for (String filePath : filePathToMicroserviceName.keySet()) {
             String microserviceName = filePathToMicroserviceName.get(filePath);
-            filePathToControllerMethod.put(microserviceName, new HashMap<>());
+            // filePathToControllerMethod.put(microserviceName, new HashMap<>());
             filePathToServiceImplMethod.put(microserviceName, new HashMap<>());
             List<String> javaFiles = FileUtils.getJavaFiles(filePath);
             // 主要收集控制层和业务层进行判断
             for (String javaFile : javaFiles) {
                 File file = new File(javaFile);
-                if (JavaParserUtils.isControllerClass(file)) {
-                    Map<String, MethodDeclaration> methodDeclarations = JavaParserUtils.getMethodDeclaration(javaFile);
-                    for (String methodName : methodDeclarations.keySet()) {
-                        filePathToControllerMethod.get(microserviceName).put(javaFile + "-" + methodName, methodDeclarations.get(methodName));
-                    }
-                }
+//                if (JavaParserUtils.isControllerClass(file)) {
+//                    Map<String, MethodDeclaration> methodDeclarations = JavaParserUtils.getMethodDeclaration(javaFile);
+//                    for (String methodName : methodDeclarations.keySet()) {
+//                        filePathToControllerMethod.get(microserviceName).put(javaFile + "-" + methodName, methodDeclarations.get(methodName));
+//                    }
+//                }
                 if ("ServiceImpl".equals(JavaParserUtils.isServiceImplementationClass(file))) {
                     Map<String, MethodDeclaration> methodDeclarations = JavaParserUtils.getMethodDeclaration(javaFile);
                     for (String methodName : methodDeclarations.keySet()) {
@@ -49,24 +49,26 @@ public class DuplicatedServicesService {
             }
         }
         List<String> microserviceNames = new ArrayList<>(filePathToMicroserviceName.values());
-        List<List<DuplicatedServiceDetail>> serviceImpls = new ArrayList<>();
-        List<List<DuplicatedServiceDetail>> controllers = new ArrayList<>();
+        Set<List<DuplicatedServiceDetail>> serviceImpls = new LinkedHashSet<>();
+        // List<List<DuplicatedServiceDetail>> controllers = new ArrayList<>();
         for (int i = 0; i < microserviceNames.size(); i++) {
-            // 微服务模块 1 中的业务层方法声明
+            // 微服务模块 1 中的所有业务层方法声明
             String microserviceName1 = microserviceNames.get(i);
             Map<String, MethodDeclaration> serviceImplMethodDeclarations1 = filePathToServiceImplMethod.get(microserviceName1);
-            for (int j = i + 1; j < microserviceNames.size(); j++) {
-                String microserviceName2 = microserviceNames.get(j);
-                // 微服务模块 2 中的业务层方法声明
-                Map<String, MethodDeclaration> serviceImplMethodDeclarations2 = filePathToServiceImplMethod.get(microserviceName2);
-                for (String methodName1 : serviceImplMethodDeclarations1.keySet()) {
-                    MethodDeclaration methodDeclaration1 = serviceImplMethodDeclarations1.get(methodName1);
-                    DuplicatedServiceDetail duplicatedServiceDetail1 = new DuplicatedServiceDetail();
-                    duplicatedServiceDetail1.setMicroserviceName(microserviceName1);
-                    duplicatedServiceDetail1.setMethodDeclaration(methodDeclaration1.getDeclarationAsString(false, false, true));
+            for (String methodName1 : serviceImplMethodDeclarations1.keySet()) {
+                MethodDeclaration methodDeclaration1 = serviceImplMethodDeclarations1.get(methodName1);
+                DuplicatedServiceDetail duplicatedServiceDetail1 = new DuplicatedServiceDetail();
+                duplicatedServiceDetail1.setMicroserviceName(microserviceName1);
+                duplicatedServiceDetail1.setMethodDeclaration(methodDeclaration1.getDeclarationAsString(false, false, true));
+                List<DuplicatedServiceDetail> duplicatedServiceDetails = new ArrayList<>();
+                duplicatedServiceDetails.add(duplicatedServiceDetail1);
+                for (int j = i + 1; j < microserviceNames.size(); j++) {
+                    String microserviceName2 = microserviceNames.get(j);
+                    // 微服务模块 2 中的所有业务层方法声明
+                    Map<String, MethodDeclaration> serviceImplMethodDeclarations2 = filePathToServiceImplMethod.get(microserviceName2);
                     for (String methodName2 : serviceImplMethodDeclarations2.keySet()) {
                         MethodDeclaration methodDeclaration2 = serviceImplMethodDeclarations2.get(methodName2);
-                        System.out.println(convert(methodDeclaration1.getNameAsString()) + " " + convert(methodDeclaration2.getNameAsString()));
+                        // System.out.println(convert(methodDeclaration1.getNameAsString()) + " " + convert(methodDeclaration2.getNameAsString()));
                         double value1 = NlpUtils.getSimilarity(convert(methodDeclaration1.getNameAsString()), convert(methodDeclaration2.getNameAsString()));
                         double value2 = NlpUtils.getSimilarity(methodDeclaration1.getTypeAsString(), methodDeclaration2.getTypeAsString());
                         double value3 = NlpUtils.getSimilarity(methodDeclaration1.getParameters().toString(), methodDeclaration2.getParameters().toString());
@@ -74,28 +76,31 @@ public class DuplicatedServicesService {
                             DuplicatedServiceDetail duplicatedServiceDetail2 = new DuplicatedServiceDetail();
                             duplicatedServiceDetail2.setMicroserviceName(microserviceName2);
                             duplicatedServiceDetail2.setMethodDeclaration(methodDeclaration2.getDeclarationAsString(false, false, true));
-                            List<DuplicatedServiceDetail> duplicatedServiceDetails = new ArrayList<>();
-                            duplicatedServiceDetails.add(duplicatedServiceDetail1);
                             duplicatedServiceDetails.add(duplicatedServiceDetail2);
-                            serviceImpls.add(duplicatedServiceDetails);
                         }
                     }
                 }
+                if (duplicatedServiceDetails.size() > 1) {
+                    serviceImpls.add(duplicatedServiceDetails);
+                }
             }
+            /*
             // 微服务模块 1 中的控制层方法声明
             Map<String, MethodDeclaration> controllerMethodDeclarations1 = filePathToControllerMethod.get(microserviceName1);
             for (int j = i + 1; j < microserviceNames.size(); j++) {
                 String microserviceName2 = microserviceNames.get(j);
                 // 微服务模块 2 中的控制层方法声明
                 Map<String, MethodDeclaration> controllerMethodDeclarations2 = filePathToControllerMethod.get(microserviceName2);
+                List<DuplicatedServiceDetail> duplicatedServiceDetails = new ArrayList<>();
                 for (String methodName1 : controllerMethodDeclarations1.keySet()) {
                     MethodDeclaration methodDeclaration1 = controllerMethodDeclarations1.get(methodName1);
                     DuplicatedServiceDetail duplicatedServiceDetail1 = new DuplicatedServiceDetail();
                     duplicatedServiceDetail1.setMicroserviceName(microserviceName1);
                     duplicatedServiceDetail1.setMethodDeclaration(methodDeclaration1.getDeclarationAsString(false, false, true));
+                    duplicatedServiceDetails.add(duplicatedServiceDetail1);
                     for (String methodName2 : controllerMethodDeclarations2.keySet()) {
                         MethodDeclaration methodDeclaration2 = controllerMethodDeclarations2.get(methodName2);
-                        System.out.println(convert(methodDeclaration1.getNameAsString()) + " " + convert(methodDeclaration2.getNameAsString()));
+                        // System.out.println(convert(methodDeclaration1.getNameAsString()) + " " + convert(methodDeclaration2.getNameAsString()));
                         double value1 = NlpUtils.getSimilarity(convert(methodDeclaration1.getNameAsString()), convert(methodDeclaration2.getNameAsString()));
                         double value2 = NlpUtils.getSimilarity(methodDeclaration1.getTypeAsString(), methodDeclaration2.getTypeAsString());
                         double value3 = NlpUtils.getSimilarity(methodDeclaration1.getParameters().toString(), methodDeclaration2.getParameters().toString());
@@ -103,19 +108,34 @@ public class DuplicatedServicesService {
                             DuplicatedServiceDetail duplicatedServiceDetail2 = new DuplicatedServiceDetail();
                             duplicatedServiceDetail2.setMicroserviceName(microserviceName2);
                             duplicatedServiceDetail2.setMethodDeclaration(methodDeclaration2.getDeclarationAsString(false, false, true));
-                            List<DuplicatedServiceDetail> duplicatedServiceDetails = new ArrayList<>();
-                            duplicatedServiceDetails.add(duplicatedServiceDetail1);
                             duplicatedServiceDetails.add(duplicatedServiceDetail2);
-                            controllers.add(duplicatedServiceDetails);
                         }
+                    }
+                    if (duplicatedServiceDetails.size() > 1) {
+                        controllers.add(duplicatedServiceDetails);
                     }
                 }
             }
+             */
         }
-        Map<String, List<List<DuplicatedServiceDetail>>> results = new HashMap<>();
+        List<List<DuplicatedServiceDetail>> temp = new ArrayList<>(serviceImpls);
+        serviceImpls.clear();
+        for (int i = 0; i < temp.size(); i++) {
+            List<DuplicatedServiceDetail> duplicatedServiceDetails = new ArrayList<>(temp.get(i));
+            if (!check(serviceImpls, duplicatedServiceDetails))
+                serviceImpls.add(duplicatedServiceDetails);
+        }
+        Map<String, Set<List<DuplicatedServiceDetail>>> results = new HashMap<>();
         results.put("serviceImpl", serviceImpls);
-        results.put("controllers", controllers);
+        // results.put("controllers", controllers);
         return results;
+    }
+
+    private boolean check(Set<List<DuplicatedServiceDetail>> serviceImpls, List<DuplicatedServiceDetail> duplicatedServiceDetails) {
+        for (List<DuplicatedServiceDetail> serviceDetails : serviceImpls)
+            if (serviceDetails.containsAll(duplicatedServiceDetails))
+                return true;
+        return false;
     }
 
     private String convert(String methodName) {

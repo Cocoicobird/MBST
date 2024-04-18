@@ -93,6 +93,9 @@ public class HomeController {
     @Autowired
     private NoHealthCheckAndNoServiceDiscoveryPatternService noHealthCheckAndNoServiceDiscoveryPatternService;
 
+    @Autowired
+    private LocalLoggingService localLoggingService;
+
     @GetMapping("/static")
     public Map<String, Object> staticAnalysis(HttpServletRequest request) throws IOException, XmlPullParserException, DocumentException {
         /**
@@ -240,8 +243,20 @@ public class HomeController {
     }
 
     @GetMapping("/duplicatedService")
-    public Map<String, List<List<DuplicatedServiceDetail>>> duplicatedService(HttpServletRequest request) throws IOException {
+    public Map<String, Set<List<DuplicatedServiceDetail>>> duplicatedService(HttpServletRequest request) throws IOException {
         Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(request.getParameter("path"));
         return duplicatedServicesService.getDuplicatedService(filePathToMicroserviceName);
+    }
+
+    @GetMapping("/noHealthCheckAndNoServiceDiscoveryPattern")
+    public NoHealthCheckAndNoServiceDiscoveryPatternDetail noHealthCheckAndNoServiceDiscoveryPattern(HttpServletRequest request) throws IOException, XmlPullParserException {
+        Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(request.getParameter("path"));
+        return noHealthCheckAndNoServiceDiscoveryPatternService.getNoHealthCheckAndNoServiceDiscoveryPattern(filePathToMicroserviceName, request.getParameter("path"));
+    }
+
+    @GetMapping("/localLogging")
+    public LocalLoggingDetail localLogging(HttpServletRequest request) throws IOException, DocumentException {
+        Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(request.getParameter("path"));
+        return localLoggingService.getLocalLoggingService(filePathToMicroserviceName);
     }
 }

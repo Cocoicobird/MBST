@@ -1,6 +1,5 @@
 package com.smelldetection.utils;
 
-import ch.qos.logback.core.rolling.helper.FileStoreUtil;
 import com.smelldetection.entity.item.ServiceCutItem;
 import com.smelldetection.entity.system.component.Configuration;
 import com.smelldetection.entity.system.component.Pom;
@@ -13,7 +12,6 @@ import org.dom4j.DocumentException;
 import org.dom4j.io.SAXReader;
 import org.yaml.snakeyaml.Yaml;
 
-import javax.xml.parsers.SAXParser;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -56,6 +54,18 @@ public class FileUtils {
             }
         }
         return configurations;
+    }
+
+    public static List<String> getLogs(String directory) throws IOException {
+        Path parent = Paths.get(directory);
+        int maxDepth = 10;
+        Stream<Path> stream = Files.find(parent, maxDepth, (filePath, attributes) -> true);
+        List<String> logs = stream.sorted().map(String::valueOf).filter(filePath -> {
+            return (String.valueOf(filePath).toLowerCase().endsWith("logback.xml")
+                    || String.valueOf(filePath).toLowerCase().endsWith("logback-spring.xml")
+                    && !String.valueOf(filePath).toLowerCase().contains("target"));
+        }).collect(Collectors.toList());
+        return logs;
     }
 
     /**

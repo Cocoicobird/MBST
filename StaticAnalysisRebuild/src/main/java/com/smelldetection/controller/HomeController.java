@@ -118,10 +118,14 @@ public class HomeController {
         result.put("localLogging", localLoggingService.getLocalLoggingService(filePathToMicroserviceName, systemPath, changed));
         result.put("noApiVersion", apiVersionService.getNoApiVersion(filePathToMicroserviceName, systemPath, changed));
         result.put("noGateway", noGatewayService.getGateway(filePathToMicroserviceName, systemPath, changed));
-        result.put("noHealthCheckAndNoServiceDiscoveryPattern", noHealthCheckAndNoServiceDiscoveryPatternService.getNoHealthCheckAndNoServiceDiscoveryPattern(filePathToMicroserviceName, systemPath, changed));
+        NoHealthCheckAndNoServiceDiscoveryPatternDetail noHealthCheckAndNoServiceDiscoveryPattern = noHealthCheckAndNoServiceDiscoveryPatternService.getNoHealthCheckAndNoServiceDiscoveryPattern(filePathToMicroserviceName, systemPath, changed);
+        result.put("noHealthCheck", noHealthCheckAndNoServiceDiscoveryPattern);
+        result.put("noServiceDiscoveryPattern", noHealthCheckAndNoServiceDiscoveryPattern);
         result.put("scatteredService", scatteredService.getScatteredFunctionalityServices(filePathToMicroserviceName, systemPath, changed));
         result.put("GreedyService", greedyService.getGreedyService(filePathToMicroserviceName, systemPath, changed));
-        result.put("sharedDatabasesAndServiceIntimacy", sharedDatabaseService.getSharedDatabasesAndServiceIntimacy(configuration, systemPath, changed));
+        SharedDatabasesAndServiceIntimacyDetail sharedDatabasesAndServiceIntimacy = sharedDatabaseService.getSharedDatabasesAndServiceIntimacy(configuration, systemPath, changed);
+        result.put("sharedDatabases", sharedDatabasesAndServiceIntimacy.getSharedDatabases());
+        result.put("serviceIntimacy", sharedDatabasesAndServiceIntimacy.getServiceIntimacy());
         result.put("sharedLibraries", sharedLibraryService.getSharedLibraries(filePathToMicroserviceName, systemPath, changed));
         result.put("unnecessarySettings", unnecessarySettingsService.getUnnecessarySettings(filePathToMicroserviceName, systemPath, changed));
         result.put("whateverTypes", whateverTypesService.getWhateverTypes(filePathToMicroserviceName, systemPath, changed));
@@ -239,10 +243,6 @@ public class HomeController {
         return bloatedService.getBloatedService(filePathToMicroserviceName, systemPath, changed);
     }
 
-    @GetMapping("/bloatedService/history")
-    public List<BloatedServiceDetail> bloatedServiceHistory(HttpServletRequest request) {
-        return bloatedService.getBloatedServiceHistory(request.getParameter("path"));
-    }
 
     @GetMapping("/chattyService")
     public ChattyServiceDetail chattyService(HttpServletRequest request) throws IOException {

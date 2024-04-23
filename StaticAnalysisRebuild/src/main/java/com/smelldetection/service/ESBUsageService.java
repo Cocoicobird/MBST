@@ -46,7 +46,7 @@ public class ESBUsageService {
         return esbUsageDetail;
     }
 
-    public List<ESBUsageDetail> getDuplicatedServiceHistory(String systemPath) {
+    public List<ESBUsageDetail> getESBUsageHistory(String systemPath) {
         String key = systemPath + "_esbUsage_*";
         Set<String> keys = redisTemplate.keys(key);
         List<ESBUsageDetail> esbUsageDetails = new ArrayList<>();

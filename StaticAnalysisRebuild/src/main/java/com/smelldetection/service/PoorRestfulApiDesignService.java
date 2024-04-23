@@ -44,10 +44,10 @@ public class PoorRestfulApiDesignService {
         long start = System.currentTimeMillis();
         ApiDesignDetail apiDesignDetail = new ApiDesignDetail();
         Map<String, Map<String, String>> urls;
-        if (redisTemplate.opsForValue().get(systemPath + "_urls") != null || "true".equals(changed)) {
-            urls = (Map<String, Map<String, String>>) redisTemplate.opsForValue().get(systemPath + "_urls");
-        } else {
+        if (redisTemplate.opsForValue().get(systemPath + "_urls") == null || "true".equals(changed)) {
             urls = new HashMap<>();
+        } else {
+            urls = (Map<String, Map<String, String>>) redisTemplate.opsForValue().get(systemPath + "_urls");
         }
         for (String filePath : filePathToMicroserviceName.keySet()) {
             String microserviceName = filePathToMicroserviceName.get(filePath);
@@ -60,6 +60,7 @@ public class PoorRestfulApiDesignService {
                     File file = new File(javaFile);
                     methodToApi.putAll(JavaParserUtils.getMethodToApi(file));
                 }
+                urls.put(microserviceName, methodToApi);
             } else {
                 methodToApi = urls.get(microserviceName);
             }

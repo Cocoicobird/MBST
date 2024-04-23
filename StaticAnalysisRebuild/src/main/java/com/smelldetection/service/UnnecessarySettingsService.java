@@ -51,11 +51,11 @@ public class UnnecessarySettingsService {
     public UnnecessarySettingsDetail getUnnecessarySettings(Map<String, String> filePathToMicroserviceName, String systemDirectory, String changed) throws IOException {
         long start = System.currentTimeMillis();
         Map<String, Configuration> filePathToConfiguration;
-        if (redisTemplate.opsForValue().get(systemDirectory + "_filePathToConfiguration") != null || "true".equals(changed)) {
-            filePathToConfiguration = (Map<String, Configuration>) redisTemplate.opsForValue().get(systemDirectory + "Configuration");
-        } else {
+        if (redisTemplate.opsForValue().get(systemDirectory + "_filePathToConfiguration") == null || "true".equals(changed)) {
             filePathToConfiguration = FileUtils.getConfiguration(filePathToMicroserviceName);
             redisTemplate.opsForValue().set(systemDirectory + "_filePathToConfiguration", filePathToConfiguration);
+        } else {
+            filePathToConfiguration = (Map<String, Configuration>) redisTemplate.opsForValue().get(systemDirectory + "_filePathToConfiguration");
         }
         UnnecessarySettingsDetail unnecessarySettingsDetail = new UnnecessarySettingsDetail();
         for (String filePath : filePathToMicroserviceName.keySet()) {

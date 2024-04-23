@@ -50,11 +50,11 @@ public class NoHealthCheckAndNoServiceDiscoveryPatternService {
         Map<String, String> eurekaStatus = hasEureka(filePathToMicroserviceName, systemPath, changed);
         Map<String, Boolean> consulStatus = hasConsul(filePathToMicroserviceName, systemPath, changed);
         Map<String, Configuration> filePathToConfiguration;
-        if (redisTemplate.opsForValue().get(systemPath + "_filePathToConfiguration") != null || "true".equals(changed)) {
-            filePathToConfiguration = (Map<String, Configuration>) redisTemplate.opsForValue().get(systemPath + "Configuration");
-        } else {
+        if (redisTemplate.opsForValue().get(systemPath + "_filePathToConfiguration") == null || "true".equals(changed)) {
             filePathToConfiguration = FileUtils.getConfiguration(filePathToMicroserviceName);
             redisTemplate.opsForValue().set(systemPath + "_filePathToConfiguration", filePathToConfiguration);
+        } else {
+            filePathToConfiguration = (Map<String, Configuration>) redisTemplate.opsForValue().get(systemPath + "_filePathToConfiguration");
         }
         NoHealthCheckAndNoServiceDiscoveryPatternDetail result = new NoHealthCheckAndNoServiceDiscoveryPatternDetail();
         for (String filePath : filePathToMicroserviceName.keySet()) {
@@ -88,14 +88,7 @@ public class NoHealthCheckAndNoServiceDiscoveryPatternService {
             actuatorStatus.put(filePathToMicroserviceName.get(filePath), false);
             // 一般单个模块只有一个 pom 文件
             String microserviceName = filePathToMicroserviceName.get(filePath);
-            List<Pom> pomList;
-            if (redisTemplate.opsForValue().get(systemPath + "_" + microserviceName + "_pom") == null || "true".equals(changed)) {
-                List<String> pomXml = FileUtils.getPomXml(filePath);
-                pomList = FileUtils.getPomObject(pomXml);
-                redisTemplate.opsForValue().set(systemPath + "_" + microserviceName + "_pom", pomList);
-            } else {
-                pomList = (List<Pom>) redisTemplate.opsForValue().get(systemPath + "_" + microserviceName + "_pom");
-            }
+            List<Pom> pomList = FileUtils.getPomObject(FileUtils.getPomXml(filePath));
             for (Pom pom : pomList) {
                 pom.setMicroserviceName(filePathToMicroserviceName.get(filePath));
                 List<Dependency> dependencies = pom.getMavenModel().getDependencies();
@@ -119,14 +112,7 @@ public class NoHealthCheckAndNoServiceDiscoveryPatternService {
         for (String filePath : filePathToMicroserviceName.keySet()) {
             eurekaStatus.put(filePathToMicroserviceName.get(filePath), "");
             String microserviceName = filePathToMicroserviceName.get(filePath);
-            List<Pom> pomList;
-            if (redisTemplate.opsForValue().get(systemPath + "_" + microserviceName + "_pom") == null || "true".equals(changed)) {
-                List<String> pomXml = FileUtils.getPomXml(filePath);
-                pomList = FileUtils.getPomObject(pomXml);
-                redisTemplate.opsForValue().set(systemPath + "_" + microserviceName + "_pom", pomList);
-            } else {
-                pomList = (List<Pom>) redisTemplate.opsForValue().get(systemPath + "_" + microserviceName + "_pom");
-            }
+            List<Pom> pomList = FileUtils.getPomObject(FileUtils.getPomXml(filePath));
             for (Pom pom : pomList) {
                 pom.setMicroserviceName(filePathToMicroserviceName.get(filePath));
                 List<Dependency> dependencies = pom.getMavenModel().getDependencies();
@@ -153,14 +139,7 @@ public class NoHealthCheckAndNoServiceDiscoveryPatternService {
         for (String filePath : filePathToMicroserviceName.keySet()) {
             consulStatus.put(filePathToMicroserviceName.get(filePath), false);
             String microserviceName = filePathToMicroserviceName.get(filePath);
-            List<Pom> pomList;
-            if (redisTemplate.opsForValue().get(systemPath + "_" + microserviceName + "_pom") == null || "true".equals(changed)) {
-                List<String> pomXml = FileUtils.getPomXml(filePath);
-                pomList = FileUtils.getPomObject(pomXml);
-                redisTemplate.opsForValue().set(systemPath + "_" + microserviceName + "_pom", pomList);
-            } else {
-                pomList = (List<Pom>) redisTemplate.opsForValue().get(systemPath + "_" + microserviceName + "_pom");
-            }
+            List<Pom> pomList = FileUtils.getPomObject(FileUtils.getPomXml(filePath));
             for (Pom pom : pomList) {
                 pom.setMicroserviceName(filePathToMicroserviceName.get(filePath));
                 List<Dependency> dependencies = pom.getMavenModel().getDependencies();

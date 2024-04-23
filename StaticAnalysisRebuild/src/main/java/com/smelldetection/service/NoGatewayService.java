@@ -37,14 +37,7 @@ public class NoGatewayService {
         for (String filePath : filePathToMicroserviceName.keySet()) {
             // 一般一个微服务模块中只有一个 pom 文件
             String microserviceName = filePathToMicroserviceName.get(filePath);
-            List<Pom> pomObject;
-            if (redisTemplate.opsForValue().get(systemPath + "_" + microserviceName + "_pom") == null || "true".equals(changed)) {
-                List<String> pomXml = FileUtils.getPomXml(filePath);
-                pomObject = FileUtils.getPomObject(pomXml);
-                redisTemplate.opsForValue().set(systemPath + "_" + microserviceName + "_pom", pomObject);
-            } else {
-                pomObject = (List<Pom>) redisTemplate.opsForValue().get(systemPath + "_" + microserviceName + "_pom");
-            }
+            List<Pom> pomObject = FileUtils.getPomObject(FileUtils.getPomXml(filePath));
             for (Pom pom :pomObject) {
                 List<Dependency> dependencies = pom.getMavenModel().getDependencies();
                 for (Dependency dependency : dependencies) {

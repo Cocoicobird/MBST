@@ -5,6 +5,8 @@ import com.smelldetection.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -15,7 +17,8 @@ import java.util.Set;
  * @author Cocoicobird
  * @version 1.0
  */
-@Controller("/history")
+@RestController
+@RequestMapping("/history")
 public class HistoryController {
 
     @Autowired

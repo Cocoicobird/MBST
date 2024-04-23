@@ -33,17 +33,11 @@ public class SharedLibraryService {
         List<Pom> poms = new ArrayList<>();
         for (String filePath : filePathToMicroserviceName.keySet()) {
             String microserviceName = filePathToMicroserviceName.get(filePath);
-            if (redisTemplate.opsForValue().get(systemPath + "_" + microserviceName + "_pom") == null || "true".equals(changed)) {
-                List<Pom> pomList = FileUtils.getPomObject(FileUtils.getPomXml(filePath));
-                for (Pom pom : pomList) {
-                    pom.setMicroserviceName(microserviceName);
-                }
-                poms.addAll(pomList);
-                redisTemplate.opsForValue().set(systemPath + "_" + microserviceName + "_pom", pomList);
-            } else {
-                List<Pom> pomList = (List<Pom>) redisTemplate.opsForValue().get(systemPath + "_" + microserviceName + "_pom");
-                poms.addAll(pomList);
+            List<Pom> pomObject = FileUtils.getPomObject(FileUtils.getPomXml(filePath));
+            for (Pom pom : pomObject) {
+                pom.setMicroserviceName(microserviceName);
             }
+            poms.addAll(pomObject);
         }
         int num = poms.size();
         for (int i = 0; i < num; i++) {

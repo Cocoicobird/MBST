@@ -98,7 +98,7 @@ public class HistoryController {
         return duplicatedServicesService.getDuplicatedServiceHistory(request.getParameter("path"));
     }
 
-    @GetMapping("/duplicatedService")
+    @GetMapping("/esbUsage")
     public List<ESBUsageDetail> esbUsageHistory(HttpServletRequest request) {
         return esbUsageService.getESBUsageHistory(request.getParameter("path"));
     }

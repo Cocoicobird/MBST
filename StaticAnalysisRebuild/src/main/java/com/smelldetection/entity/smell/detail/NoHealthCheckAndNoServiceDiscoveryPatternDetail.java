@@ -2,6 +2,7 @@ package com.smelldetection.entity.smell.detail;
 
 import lombok.Data;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,7 +11,9 @@ import java.util.Map;
  * @version 1.0
  */
 @Data
-public class NoHealthCheckAndNoServiceDiscoveryPatternDetail {
+public class NoHealthCheckAndNoServiceDiscoveryPatternDetail implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     Map<String, Boolean> hasDiscovery;
 
     public NoHealthCheckAndNoServiceDiscoveryPatternDetail() {

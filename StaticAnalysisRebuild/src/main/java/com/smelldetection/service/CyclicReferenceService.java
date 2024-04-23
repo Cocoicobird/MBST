@@ -5,9 +5,12 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.ImportDeclaration;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.TypeDeclaration;
+import com.smelldetection.entity.smell.detail.BloatedServiceDetail;
 import com.smelldetection.entity.smell.detail.CyclicReferenceDetail;
 import com.smelldetection.utils.FileUtils;
 import com.smelldetection.utils.JavaParserUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -22,7 +25,11 @@ import java.util.stream.Collectors;
 @Service
 public class CyclicReferenceService {
 
-    public CyclicReferenceDetail getCyclicReference(Map<String, String> filePathToMicroserviceName) throws IOException {
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+
+    public CyclicReferenceDetail getCyclicReference(Map<String, String> filePathToMicroserviceName, String systemPath, String changed) throws IOException {
+        long start = System.currentTimeMillis();
         CyclicReferenceDetail cyclicReferenceDetail = new CyclicReferenceDetail();
         for (String filePath : filePathToMicroserviceName.keySet()) {
             List<String> classNames = new ArrayList<>();
@@ -70,6 +77,22 @@ public class CyclicReferenceService {
                 }
             }
         }
+        if (!cyclicReferenceDetail.getCyclicReferences().isEmpty()) {
+            cyclicReferenceDetail.setStatus(true);
+        }
+        redisTemplate.opsForValue().set(systemPath + "_cyclicReference_" + start, cyclicReferenceDetail);
         return cyclicReferenceDetail;
+    }
+
+    public List<CyclicReferenceDetail> getCyclicReferenceHistory(String systemPath) {
+        String key = systemPath + "_cyclicReference_*";
+        Set<String> keys = redisTemplate.keys(key);
+        List<CyclicReferenceDetail> cyclicReferenceDetails = new ArrayList<>();
+        if (keys != null) {
+            for (String k : keys) {
+                cyclicReferenceDetails.add((CyclicReferenceDetail) redisTemplate.opsForValue().get(k));
+            }
+        }
+        return cyclicReferenceDetails;
     }
 }

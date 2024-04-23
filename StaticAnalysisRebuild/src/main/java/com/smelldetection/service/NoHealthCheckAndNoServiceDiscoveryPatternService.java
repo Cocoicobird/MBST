@@ -1,17 +1,18 @@
 package com.smelldetection.service;
 
+import com.smelldetection.entity.smell.detail.NoGatewayDetail;
 import com.smelldetection.entity.smell.detail.NoHealthCheckAndNoServiceDiscoveryPatternDetail;
 import com.smelldetection.entity.system.component.Configuration;
 import com.smelldetection.entity.system.component.Pom;
 import com.smelldetection.utils.FileUtils;
 import org.apache.maven.model.Dependency;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Cocoicobird
@@ -21,6 +22,9 @@ import java.util.Map;
 @Service
 public class NoHealthCheckAndNoServiceDiscoveryPatternService {
 
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+
     /**
      * 解析健康检查情况，同时微服务中的健康检查机制与服务发现注册关联
      * 实现思路：针对 Eureka 需要一个服务端依赖，其余服务引入客户端依赖即可；Consul、Zookeeper、Nacos 等一般只需要引入客户端，服务端单独部署
@@ -28,7 +32,8 @@ public class NoHealthCheckAndNoServiceDiscoveryPatternService {
      * @param systemPath 整个微服务系统的路径
      * 相关依赖比如 Consul、ZooKeeper、etcd、Eureka、Linkerd
      */
-    public NoHealthCheckAndNoServiceDiscoveryPatternDetail getNoHealthCheckAndNoServiceDiscoveryPattern(Map<String, String> filePathToMicroserviceName, String systemPath) throws IOException, XmlPullParserException {
+    public NoHealthCheckAndNoServiceDiscoveryPatternDetail getNoHealthCheckAndNoServiceDiscoveryPattern(Map<String, String> filePathToMicroserviceName, String systemPath, String changed) throws IOException, XmlPullParserException {
+        long start = System.currentTimeMillis();
         List<Pom> parentPom = FileUtils.getPomObject(FileUtils.getParentPomXml(filePathToMicroserviceName, systemPath));
         boolean nacos = false, consul = false;
         for (Pom pom : parentPom) {
@@ -42,9 +47,15 @@ public class NoHealthCheckAndNoServiceDiscoveryPatternService {
                 }
             }
         }
-        Map<String, String> eurekaStatus = hasEureka(filePathToMicroserviceName);
-        Map<String, Boolean> consulStatus = hasConsul(filePathToMicroserviceName);
-        Map<String, Configuration> filePathToConfiguration = FileUtils.getConfiguration(filePathToMicroserviceName);
+        Map<String, String> eurekaStatus = hasEureka(filePathToMicroserviceName, systemPath, changed);
+        Map<String, Boolean> consulStatus = hasConsul(filePathToMicroserviceName, systemPath, changed);
+        Map<String, Configuration> filePathToConfiguration;
+        if (redisTemplate.opsForValue().get(systemPath + "_filePathToConfiguration") != null || "true".equals(changed)) {
+            filePathToConfiguration = (Map<String, Configuration>) redisTemplate.opsForValue().get(systemPath + "Configuration");
+        } else {
+            filePathToConfiguration = FileUtils.getConfiguration(filePathToMicroserviceName);
+            redisTemplate.opsForValue().set(systemPath + "_filePathToConfiguration", filePathToConfiguration);
+        }
         NoHealthCheckAndNoServiceDiscoveryPatternDetail result = new NoHealthCheckAndNoServiceDiscoveryPatternDetail();
         for (String filePath : filePathToMicroserviceName.keySet()) {
             String microserviceName = filePathToMicroserviceName.get(filePath);
@@ -63,6 +74,7 @@ public class NoHealthCheckAndNoServiceDiscoveryPatternService {
             }
             result.put(microserviceName, status);
         }
+        redisTemplate.opsForValue().set(systemPath + "_noHealthCheckAndNoServiceDiscoveryPattern_" + start, result);
         return result;
     }
 
@@ -70,12 +82,20 @@ public class NoHealthCheckAndNoServiceDiscoveryPatternService {
      * 每个微服务模块是否含有 actuator
      * @param filePathToMicroserviceName 微服务模块路径与微服务名称的映射
      */
-    private Map<String, Boolean> hasActuator(Map<String, String> filePathToMicroserviceName) throws IOException, XmlPullParserException {
+    private Map<String, Boolean> hasActuator(Map<String, String> filePathToMicroserviceName, String systemPath, String changed) throws IOException, XmlPullParserException {
         Map<String, Boolean> actuatorStatus = new HashMap<>();
         for (String filePath : filePathToMicroserviceName.keySet()) {
             actuatorStatus.put(filePathToMicroserviceName.get(filePath), false);
             // 一般单个模块只有一个 pom 文件
-            List<Pom> pomList = FileUtils.getPomObject(FileUtils.getPomXml(filePath));
+            String microserviceName = filePathToMicroserviceName.get(filePath);
+            List<Pom> pomList;
+            if (redisTemplate.opsForValue().get(systemPath + "_" + microserviceName + "_pom") == null || "true".equals(changed)) {
+                List<String> pomXml = FileUtils.getPomXml(filePath);
+                pomList = FileUtils.getPomObject(pomXml);
+                redisTemplate.opsForValue().set(systemPath + "_" + microserviceName + "_pom", pomList);
+            } else {
+                pomList = (List<Pom>) redisTemplate.opsForValue().get(systemPath + "_" + microserviceName + "_pom");
+            }
             for (Pom pom : pomList) {
                 pom.setMicroserviceName(filePathToMicroserviceName.get(filePath));
                 List<Dependency> dependencies = pom.getMavenModel().getDependencies();
@@ -94,11 +114,19 @@ public class NoHealthCheckAndNoServiceDiscoveryPatternService {
      * 是否引入 Eureka
      * @param filePathToMicroserviceName 微服务模块路径与微服务名称的映射
      */
-    private Map<String, String> hasEureka(Map<String, String> filePathToMicroserviceName) throws IOException, XmlPullParserException {
+    private Map<String, String> hasEureka(Map<String, String> filePathToMicroserviceName, String systemPath, String changed) throws IOException, XmlPullParserException {
         Map<String, String> eurekaStatus = new HashMap<>();
         for (String filePath : filePathToMicroserviceName.keySet()) {
             eurekaStatus.put(filePathToMicroserviceName.get(filePath), "");
-            List<Pom> pomList = FileUtils.getPomObject(FileUtils.getPomXml(filePath));
+            String microserviceName = filePathToMicroserviceName.get(filePath);
+            List<Pom> pomList;
+            if (redisTemplate.opsForValue().get(systemPath + "_" + microserviceName + "_pom") == null || "true".equals(changed)) {
+                List<String> pomXml = FileUtils.getPomXml(filePath);
+                pomList = FileUtils.getPomObject(pomXml);
+                redisTemplate.opsForValue().set(systemPath + "_" + microserviceName + "_pom", pomList);
+            } else {
+                pomList = (List<Pom>) redisTemplate.opsForValue().get(systemPath + "_" + microserviceName + "_pom");
+            }
             for (Pom pom : pomList) {
                 pom.setMicroserviceName(filePathToMicroserviceName.get(filePath));
                 List<Dependency> dependencies = pom.getMavenModel().getDependencies();
@@ -120,11 +148,19 @@ public class NoHealthCheckAndNoServiceDiscoveryPatternService {
      * 判断是否引入 Consul 服务发现组件
      * @param filePathToMicroserviceName 微服务模块路径与微服务名称的映射
      */
-    private Map<String, Boolean> hasConsul(Map<String, String> filePathToMicroserviceName) throws IOException, XmlPullParserException {
+    private Map<String, Boolean> hasConsul(Map<String, String> filePathToMicroserviceName, String systemPath, String changed) throws IOException, XmlPullParserException {
         Map<String, Boolean> consulStatus = new HashMap<>();
         for (String filePath : filePathToMicroserviceName.keySet()) {
             consulStatus.put(filePathToMicroserviceName.get(filePath), false);
-            List<Pom> pomList = FileUtils.getPomObject(FileUtils.getPomXml(filePath));
+            String microserviceName = filePathToMicroserviceName.get(filePath);
+            List<Pom> pomList;
+            if (redisTemplate.opsForValue().get(systemPath + "_" + microserviceName + "_pom") == null || "true".equals(changed)) {
+                List<String> pomXml = FileUtils.getPomXml(filePath);
+                pomList = FileUtils.getPomObject(pomXml);
+                redisTemplate.opsForValue().set(systemPath + "_" + microserviceName + "_pom", pomList);
+            } else {
+                pomList = (List<Pom>) redisTemplate.opsForValue().get(systemPath + "_" + microserviceName + "_pom");
+            }
             for (Pom pom : pomList) {
                 pom.setMicroserviceName(filePathToMicroserviceName.get(filePath));
                 List<Dependency> dependencies = pom.getMavenModel().getDependencies();
@@ -137,5 +173,18 @@ public class NoHealthCheckAndNoServiceDiscoveryPatternService {
             }
         }
         return consulStatus;
+    }
+
+    public List<NoHealthCheckAndNoServiceDiscoveryPatternDetail> getNoHealthCheckAndNoServiceDiscoveryPatternHistory(String systemPath) {
+        String key = systemPath + "_noHealthCheckAndNoServiceDiscoveryPattern_*";
+        Set<String> keys = redisTemplate.keys(key);
+        List<NoHealthCheckAndNoServiceDiscoveryPatternDetail> noHealthCheckAndNoServiceDiscoveryPatternDetails = new ArrayList<>();
+        if (keys != null) {
+            for (String k : keys) {
+                noHealthCheckAndNoServiceDiscoveryPatternDetails
+                        .add((NoHealthCheckAndNoServiceDiscoveryPatternDetail) redisTemplate.opsForValue().get(k));
+            }
+        }
+        return noHealthCheckAndNoServiceDiscoveryPatternDetails;
     }
 }

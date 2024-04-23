@@ -2,6 +2,7 @@ package com.smelldetection.entity.item;
 
 import lombok.Data;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,7 +14,9 @@ import java.util.Map;
  * url2 为方法上注解配置的 url
  */
 @Data
-public class UrlItem {
+public class UrlItem implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private String fullQualifiedName;
     private String url1;
     private Map<String, String> url2; // key 为方法名 value 为 url

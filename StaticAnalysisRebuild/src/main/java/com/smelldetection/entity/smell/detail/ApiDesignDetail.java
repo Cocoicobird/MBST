@@ -2,6 +2,7 @@ package com.smelldetection.entity.smell.detail;
 
 import lombok.Data;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,11 +11,13 @@ import java.util.Map;
  * @version 1.0
  */
 @Data
-public class ApiDesignDetail {
+public class ApiDesignDetail implements Serializable {
+    private static final long serialVersionUID = 1L;
     /**
      * key 为微服务名称
      * value 为对应方法和 url
      */
+    private boolean status;
     private Map<String, Map<String, String>> noVersion;
     private Map<String, Map<String, String>> noStandard;
     private Map<String, Map<String, String>> missingHttpMethod;

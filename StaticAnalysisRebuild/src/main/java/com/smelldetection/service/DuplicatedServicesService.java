@@ -1,13 +1,13 @@
 package com.smelldetection.service;
 
-import com.github.javaparser.StaticJavaParser;
-import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
-import com.hankcs.hanlp.HanLP;
+import com.smelldetection.entity.smell.detail.CyclicReferenceDetail;
 import com.smelldetection.entity.smell.detail.DuplicatedServiceDetail;
 import com.smelldetection.utils.FileUtils;
 import com.smelldetection.utils.JavaParserUtils;
 import com.smelldetection.utils.NlpUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -23,7 +23,11 @@ import java.util.*;
 @Service
 public class DuplicatedServicesService {
 
-    public Map<String, Set<List<DuplicatedServiceDetail>>> getDuplicatedService(Map<String, String> filePathToMicroserviceName) throws IOException {
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+
+    public Map<String, Set<List<DuplicatedServiceDetail>>> getDuplicatedService(Map<String, String> filePathToMicroserviceName, String systemPath, String changed) throws IOException {
+        long start = System.currentTimeMillis();
         // Map<String, Map<String, MethodDeclaration>> filePathToControllerMethod = new HashMap<>();
         Map<String, Map<String, MethodDeclaration>> filePathToServiceImplMethod = new HashMap<>();
         for (String filePath : filePathToMicroserviceName.keySet()) {
@@ -128,6 +132,7 @@ public class DuplicatedServicesService {
         Map<String, Set<List<DuplicatedServiceDetail>>> results = new HashMap<>();
         results.put("serviceImpl", serviceImpls);
         // results.put("controllers", controllers);
+        redisTemplate.opsForValue().set(systemPath + "_duplicatedService_" + start, results);
         return results;
     }
 
@@ -147,5 +152,17 @@ public class DuplicatedServicesService {
             stringBuilder.append(Character.toLowerCase(methodName.charAt(i)));
         }
         return stringBuilder.toString();
+    }
+
+    public List<Map<String, Set<List<DuplicatedServiceDetail>>>> getDuplicatedServiceHistory(String systemPath) {
+        String key = systemPath + "_duplicatedService_*";
+        Set<String> keys = redisTemplate.keys(key);
+        List<Map<String, Set<List<DuplicatedServiceDetail>>>> duplicatedServiceDetails = new ArrayList<>();
+        if (keys != null) {
+            for (String k : keys) {
+                duplicatedServiceDetails.add((Map<String, Set<List<DuplicatedServiceDetail>>>) redisTemplate.opsForValue().get(k));
+            }
+        }
+        return duplicatedServiceDetails;
     }
 }

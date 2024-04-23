@@ -2,6 +2,7 @@ package com.smelldetection.entity.item;
 
 import lombok.Data;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -11,7 +12,9 @@ import java.util.Map;
  * @description 硬编码的信息
  */
 @Data
-public class HardCodeItem {
+public class HardCodeItem implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private String fileName;
     private String filePath;
     /**

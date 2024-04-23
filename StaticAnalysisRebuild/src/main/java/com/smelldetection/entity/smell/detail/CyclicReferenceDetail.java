@@ -3,6 +3,7 @@ package com.smelldetection.entity.smell.detail;
 import com.smelldetection.entity.item.CyclicReferenceItem;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -11,7 +12,10 @@ import java.util.Map;
  * @version 1.0
  */
 @Data
-public class CyclicReferenceDetail {
+public class CyclicReferenceDetail implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    private boolean status;
     public Map<String, CyclicReferenceItem> cyclicReferences;
     public CyclicReferenceDetail(){
         this.cyclicReferences = new HashMap<>();

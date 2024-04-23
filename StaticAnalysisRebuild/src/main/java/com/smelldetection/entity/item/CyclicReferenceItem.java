@@ -2,6 +2,7 @@ package com.smelldetection.entity.item;
 
 import lombok.Data;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -12,7 +13,8 @@ import java.util.Set;
  * @description 类及其直接引用
  */
 @Data
-public class CyclicReferenceItem {
+public class CyclicReferenceItem implements Serializable {
+    private static final long serialVersionUID = 1L;
     /**
      * 超类
      */

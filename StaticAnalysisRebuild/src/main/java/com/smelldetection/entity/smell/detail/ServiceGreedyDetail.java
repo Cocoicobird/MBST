@@ -3,6 +3,7 @@ package com.smelldetection.entity.smell.detail;
 import com.smelldetection.entity.item.ServiceGreedyItem;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,7 +13,9 @@ import java.util.List;
  * @description 整个系统的服务贪婪情况
  */
 @Data
-public class ServiceGreedyDetail {
+public class ServiceGreedyDetail implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     // 是否存在服务贪婪
     private boolean existed;
     private List<ServiceGreedyItem> greedyServices;

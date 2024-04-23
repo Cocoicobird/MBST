@@ -2,6 +2,7 @@ package com.smelldetection.entity.item;
 
 import lombok.Data;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,7 +12,9 @@ import java.util.List;
  * @description 语言使用情况
  */
 @Data
-public class ProgrammingLanguageItem {
+public class ProgrammingLanguageItem implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     /**
      * 语言名称
      */

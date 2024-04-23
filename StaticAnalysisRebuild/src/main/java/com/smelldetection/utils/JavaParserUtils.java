@@ -17,6 +17,9 @@ import com.smelldetection.entity.smell.detail.CyclicReferenceDetail;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -36,33 +39,47 @@ public class JavaParserUtils {
      * @param javaFile 待解析的 .java 文件
      * @param apiVersionDetail 存储 API 细节
      * @param microserviceName 待解析的 .java 所属的微服务名称
+     * @param urls
      */
-    public static void resolveApiFromJavaFile(File javaFile, ApiVersionDetail apiVersionDetail, String microserviceName) throws IOException {
-        CompilationUnit compilationUnit = StaticJavaParser.parse(javaFile);
-        UrlItem urlItem = new UrlItem();
-        urlItem.setFullQualifiedName(getPackageName(javaFile));
-        new ClassAnnotationVisitor().visit(compilationUnit, urlItem);
-        new MethodAnnotationVisitor().visit(compilationUnit, urlItem);
-        String preUrl = "";
-        if (urlItem.getUrl1() != null) {
-            preUrl = urlItem.getUrl1().substring(1, urlItem.getUrl1().length() - 1);
-        }
-        for (String methodName : urlItem.getUrl2().keySet()) {
-            String sufUrl = urlItem.getUrl2().get(methodName);
-            if ("\"\"".equals(sufUrl) && "".equals(urlItem.getHttpMethod().get(methodName))) {
-                apiVersionDetail.getMissingUrl().get(microserviceName).put(methodName, preUrl);
-                if (!matchApiPattern(preUrl)) {
-                    apiVersionDetail.getNoVersion().get(microserviceName).put(methodName, preUrl);
-                }
-                continue;
-            }
-            sufUrl = sufUrl.substring(1, sufUrl.length() - 1);
-            String httpMethod = urlItem.getHttpMethod().get(methodName);
-            String url = preUrl + sufUrl + ("".equals(httpMethod) ? "" : " " + httpMethod);
-            if (!matchApiPattern(url)) {
-                apiVersionDetail.getNoVersion().get(microserviceName).put(methodName, url);
+    public static void resolveApiFromJavaFile(File javaFile, ApiVersionDetail apiVersionDetail,
+                                              String microserviceName, Map<String, Map<String, String>> urls) throws IOException {
+        urls.put(microserviceName, new HashMap<>());
+//        CompilationUnit compilationUnit = StaticJavaParser.parse(javaFile);
+//        UrlItem urlItem = new UrlItem();
+//        urlItem.setFullQualifiedName(getPackageName(javaFile));
+//        new ClassAnnotationVisitor().visit(compilationUnit, urlItem);
+//        new MethodAnnotationVisitor().visit(compilationUnit, urlItem);
+        Map<String, String> methodToApi = getMethodToApi(javaFile);
+        for (String methodName : methodToApi.keySet()) {
+            String api = methodToApi.get(methodName);
+            if ("".equals(api)) {
+                apiVersionDetail.getMissingUrl().get(microserviceName).put(methodName, api);
+            } else if (!matchApiPattern(api)) {
+                apiVersionDetail.getNoVersion().get(microserviceName).put(methodName, api);
             }
         }
+        urls.get(microserviceName).putAll(methodToApi);
+//        String preUrl = "";
+//        if (urlItem.getUrl1() != null) {
+//            preUrl = urlItem.getUrl1().substring(1, urlItem.getUrl1().length() - 1);
+//        }
+//        for (String methodName : urlItem.getUrl2().keySet()) {
+//            String sufUrl = urlItem.getUrl2().get(methodName);
+//            if ("\"\"".equals(sufUrl) && "".equals(urlItem.getHttpMethod().get(methodName))) {
+//                apiVersionDetail.getMissingUrl().get(microserviceName).put(methodName, preUrl);
+//                if (!matchApiPattern(preUrl)) {
+//                    apiVersionDetail.getNoVersion().get(microserviceName).put(methodName, preUrl);
+//                }
+//                continue;
+//            }
+//            sufUrl = sufUrl.substring(1, sufUrl.length() - 1);
+//            String httpMethod = urlItem.getHttpMethod().get(methodName);
+//            String url = preUrl + sufUrl + ("".equals(httpMethod) ? "" : " " + httpMethod);
+//            if (!matchApiPattern(url)) {
+//                apiVersionDetail.getNoVersion().get(microserviceName).put(methodName, url);
+//            }
+//            urls.get(microserviceName).put(methodName, url);
+//        }
     }
 
     /**

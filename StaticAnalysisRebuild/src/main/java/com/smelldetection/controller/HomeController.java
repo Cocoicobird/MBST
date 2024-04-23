@@ -2,12 +2,8 @@ package com.smelldetection.controller;
 
 import com.smelldetection.entity.smell.detail.*;
 import com.smelldetection.entity.system.component.Configuration;
-import com.smelldetection.entity.system.component.Pom;
 import com.smelldetection.service.*;
 import com.smelldetection.utils.FileUtils;
-import org.apache.maven.model.Dependency;
-import org.apache.maven.model.Model;
-import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.dom4j.DocumentException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,10 +11,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.yaml.snakeyaml.Yaml;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.*;
 
@@ -106,97 +100,112 @@ public class HomeController {
          *   2.3.解析 .java 文件
          */
         String systemPath = request.getParameter("path");
+        String changed = request.getParameter("changed");
         Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
-        Map<String, Object> result = new HashMap<>();
-        result.put("bloatedService", bloatedService.getBloatedService(filePathToMicroserviceName));
-        result.put("chattyService", chattyService.getChattyService(filePathToMicroserviceName));
-        result.put("cyclicReference", cyclicReferenceService.getCyclicReference(filePathToMicroserviceName));
-        result.put("duplicatedService", duplicatedServicesService.getDuplicatedService(filePathToMicroserviceName));
-        result.put("ESBUsage", esbUsageService.getESBUsageServices(filePathToMicroserviceName));
-        result.put("godService", godService.getGodService(filePathToMicroserviceName));
-        result.put("hardCode", hardCodeService.getHardCode(filePathToMicroserviceName));
-        result.put("hubService", hubService.getHubClass(filePathToMicroserviceName));
-        result.put("noApiVersion", apiVersionService.getNoApiVersion(filePathToMicroserviceName));
-        result.put("noGateway", noGatewayService.getGateway(filePathToMicroserviceName));
-        result.put("noHealthCheckAndNoServiceDiscoveryPattern", noHealthCheckAndNoServiceDiscoveryPatternService.getNoHealthCheckAndNoServiceDiscoveryPattern(filePathToMicroserviceName, systemPath));
-        result.put("scatteredService", scatteredService.getScatteredFunctionalityServices(filePathToMicroserviceName));
-        result.put("GreedyService", greedyService.getGreedyService(filePathToMicroserviceName));
         Map<String, Configuration> configuration = FileUtils.getConfiguration(filePathToMicroserviceName);
-        result.put("sharedDatabasesAndServiceIntimacy", sharedDatabaseService.getSharedDatabasesAndServiceIntimacy(configuration));
-        result.put("sharedLibraries", sharedLibraries(request));
-        result.put("unnecessarySettings", unnecessarySettingsService.getUnnecessarySettings(filePathToMicroserviceName, systemPath));
-        result.put("whateverTypes", whateverTypesService.getWhateverTypes(filePathToMicroserviceName));
-        result.put("wrongCut", wrongCutService.getWrongCut(filePathToMicroserviceName));
+        redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
+        redisTemplate.opsForValue().set(systemPath + "_filePathToConfiguration", configuration);
+        Map<String, Object> result = new HashMap<>();
+        result.put("bloatedService", bloatedService.getBloatedService(filePathToMicroserviceName, systemPath, changed));
+        result.put("chattyService", chattyService.getChattyService(filePathToMicroserviceName, systemPath, changed));
+        result.put("cyclicReference", cyclicReferenceService.getCyclicReference(filePathToMicroserviceName, systemPath, changed));
+        result.put("duplicatedService", duplicatedServicesService.getDuplicatedService(filePathToMicroserviceName, systemPath, changed));
+        result.put("ESBUsage", esbUsageService.getESBUsageServices(filePathToMicroserviceName, systemPath, changed));
+        result.put("godService", godService.getGodService(filePathToMicroserviceName, systemPath, changed));
+        result.put("greedyService", greedyService.getGreedyService(filePathToMicroserviceName, systemPath, changed));
+        result.put("hardCode", hardCodeService.getHardCode(filePathToMicroserviceName, systemPath, changed));
+        result.put("hubService", hubService.getHubClass(filePathToMicroserviceName, systemPath, changed));
+        result.put("localLogging", localLoggingService.getLocalLoggingService(filePathToMicroserviceName, systemPath, changed));
+        result.put("noApiVersion", apiVersionService.getNoApiVersion(filePathToMicroserviceName, systemPath, changed));
+        result.put("noGateway", noGatewayService.getGateway(filePathToMicroserviceName, systemPath, changed));
+        result.put("noHealthCheckAndNoServiceDiscoveryPattern", noHealthCheckAndNoServiceDiscoveryPatternService.getNoHealthCheckAndNoServiceDiscoveryPattern(filePathToMicroserviceName, systemPath, changed));
+        result.put("scatteredService", scatteredService.getScatteredFunctionalityServices(filePathToMicroserviceName, systemPath, changed));
+        result.put("GreedyService", greedyService.getGreedyService(filePathToMicroserviceName, systemPath, changed));
+        result.put("sharedDatabasesAndServiceIntimacy", sharedDatabaseService.getSharedDatabasesAndServiceIntimacy(configuration, systemPath, changed));
+        result.put("sharedLibraries", sharedLibraryService.getSharedLibraries(filePathToMicroserviceName, systemPath, changed));
+        result.put("unnecessarySettings", unnecessarySettingsService.getUnnecessarySettings(filePathToMicroserviceName, systemPath, changed));
+        result.put("whateverTypes", whateverTypesService.getWhateverTypes(filePathToMicroserviceName, systemPath, changed));
+        result.put("wrongCut", wrongCutService.getWrongCut(filePathToMicroserviceName, systemPath, changed));
         return result;
     }
 
     @GetMapping("/sharedDatabasesAndServiceIntimacy")
     public SharedDatabasesAndServiceIntimacyDetail sharedDatabasesAndServiceIntimacy(HttpServletRequest request) throws IOException {
-        Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(request.getParameter("path"));
-        Map<String, Configuration> configuration = FileUtils.getConfiguration(filePathToMicroserviceName);
-        SharedDatabasesAndServiceIntimacyDetail sharedDatabases = sharedDatabaseService.getSharedDatabasesAndServiceIntimacy(configuration);
+        String systemPath = request.getParameter("path");
+        String changed = request.getParameter("changed");
+        Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
+        Map<String, Configuration> filePathToConfiguration;
+        if (redisTemplate.opsForValue().get(systemPath + "_filePathToConfiguration") == null) {
+            filePathToConfiguration = FileUtils.getConfiguration(filePathToMicroserviceName);
+            redisTemplate.opsForValue().set(systemPath + "_filePathToConfiguration", filePathToConfiguration);
+        } else {
+            filePathToConfiguration = (Map<String, Configuration>) redisTemplate.opsForValue().get(systemPath + "_filePathToConfiguration");
+        }
+        SharedDatabasesAndServiceIntimacyDetail sharedDatabases = sharedDatabaseService.getSharedDatabasesAndServiceIntimacy(filePathToConfiguration, systemPath, changed);
         return sharedDatabases;
     }
 
-    @GetMapping("/dependency")
-    public String dependency(HttpServletRequest request) throws IOException, XmlPullParserException {
-        List<String> pomXml = FileUtils.getPomXml(request.getParameter("path"));
-        List<Pom> poms = new ArrayList<>();
-        for (String p : pomXml) {
-            Pom pom = new Pom();
-            MavenXpp3Reader mavenXpp3Reader = new MavenXpp3Reader();
-            Model model = mavenXpp3Reader.read(new FileInputStream(p));
-            for (Dependency dependency : model.getDependencies()) {
-                System.out.println(dependency);
-            }
-            pom.setMavenModel(model);
-            poms.add(pom);
+    @GetMapping("/noApiVersion")
+    public ApiVersionDetail noApiVersion(HttpServletRequest request) throws IOException {
+        String systemPath = request.getParameter("path");
+        String changed = request.getParameter("changed");
+        Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);
+        if (filePathToMicroserviceName == null) {
+            filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
+            redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
         }
-        SharedLibraryDetail sharedLibraries = sharedLibraryService.getSharedLibraries(poms);
-        System.out.println(sharedLibraries);
-        return "dependency\n" + sharedLibraries.toString();
-    }
-
-    @GetMapping("/api")
-    public ApiVersionDetail api(HttpServletRequest request) throws IOException {
-        Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(request.getParameter("path"));
-        ApiVersionDetail apiVersion = apiVersionService.getNoApiVersion(filePathToMicroserviceName);
+        ApiVersionDetail apiVersion = apiVersionService.getNoApiVersion(filePathToMicroserviceName, systemPath, changed);
         return apiVersion;
     }
 
     @GetMapping("/sharedLibraries")
     public SharedLibraryDetail sharedLibraries(HttpServletRequest request) throws IOException, XmlPullParserException {
-        List<String> services = FileUtils.getServices(request.getParameter("path"));
-        List<Pom> poms = new ArrayList<>();
-        System.out.println(services);
-        for (String service : services) {
-            Pom pomXml = new Pom();
-            MavenXpp3Reader mavenXpp3Reader = new MavenXpp3Reader();
-            Model model = mavenXpp3Reader.read(new FileInputStream(service + "pom.xml"));
-            pomXml.setMavenModel(model);
-            poms.add(pomXml);
+        String systemPath = request.getParameter("path");
+        String changed = request.getParameter("changed");
+        Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);
+        if (filePathToMicroserviceName == null) {
+            filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
+            redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
         }
-        return sharedLibraryService.getSharedLibraries(poms);
+        return sharedLibraryService.getSharedLibraries(filePathToMicroserviceName, systemPath, changed);
     }
 
     @GetMapping("/noGateway")
     public NoGatewayDetail gateway(HttpServletRequest request) throws IOException, XmlPullParserException {
-        Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(request.getParameter("path"));
-        NoGatewayDetail noGatewayDetail = noGatewayService.getGateway(filePathToMicroserviceName);
+        String systemPath = request.getParameter("path");
+        String changed = request.getParameter("changed");
+        Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);
+        if (filePathToMicroserviceName == null) {
+            filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
+            redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
+        }
+        NoGatewayDetail noGatewayDetail = noGatewayService.getGateway(filePathToMicroserviceName, systemPath, changed);
         return noGatewayDetail;
     }
 
     @GetMapping("/scatteredService")
     public ScatteredServiceDetail scatteredService(HttpServletRequest request) throws IOException {
-        Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(request.getParameter("path"));
-        ScatteredServiceDetail scatteredServiceDetail = scatteredService.getScatteredFunctionalityServices(filePathToMicroserviceName);
+        String systemPath = request.getParameter("path");
+        String changed = request.getParameter("changed");
+        Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);
+        if (filePathToMicroserviceName == null) {
+            filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
+            redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
+        }
+        ScatteredServiceDetail scatteredServiceDetail = scatteredService.getScatteredFunctionalityServices(filePathToMicroserviceName, systemPath, changed);
         return scatteredServiceDetail;
     }
 
     @GetMapping("/hardCode")
     public HardCodeDetail hardCode(HttpServletRequest request) throws IOException {
-        Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(request.getParameter("path"));
-        return hardCodeService.getHardCode(filePathToMicroserviceName);
+        String systemPath = request.getParameter("path");
+        String changed = request.getParameter("changed");
+        Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);
+        if (filePathToMicroserviceName == null) {
+            filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
+            redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
+        }
+        return hardCodeService.getHardCode(filePathToMicroserviceName, systemPath, changed);
     }
 
     @GetMapping("/tooManyStandards")
@@ -208,55 +217,170 @@ public class HomeController {
 
     @GetMapping("/whateverTypes")
     public WhateverTypesDetail whateverTypes(HttpServletRequest request) throws IOException {
-        Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(request.getParameter("path"));
-        return whateverTypesService.getWhateverTypes(filePathToMicroserviceName);
+        String systemPath = request.getParameter("path");
+        String changed = request.getParameter("changed");
+        Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);
+        if (filePathToMicroserviceName == null) {
+            filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
+            redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
+        }
+        return whateverTypesService.getWhateverTypes(filePathToMicroserviceName, systemPath, changed);
     }
 
     @GetMapping("/bloatedService")
     public BloatedServiceDetail bloatedService(HttpServletRequest request) throws IOException {
-        Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(request.getParameter("path"));
-        return bloatedService.getBloatedService(filePathToMicroserviceName);
+        String systemPath = request.getParameter("path");
+        String changed = request.getParameter("changed");
+        Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);
+        if (filePathToMicroserviceName == null) {
+            filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
+            redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
+        }
+        return bloatedService.getBloatedService(filePathToMicroserviceName, systemPath, changed);
+    }
+
+    @GetMapping("/bloatedService/history")
+    public List<BloatedServiceDetail> bloatedServiceHistory(HttpServletRequest request) {
+        return bloatedService.getBloatedServiceHistory(request.getParameter("path"));
     }
 
     @GetMapping("/chattyService")
     public ChattyServiceDetail chattyService(HttpServletRequest request) throws IOException {
-        Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(request.getParameter("path"));
-        return chattyService.getChattyService(filePathToMicroserviceName);
+        String systemPath = request.getParameter("path");
+        String changed = request.getParameter("changed");
+        Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);
+        if (filePathToMicroserviceName == null) {
+            filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
+            redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
+        }
+        return chattyService.getChattyService(filePathToMicroserviceName, systemPath, changed);
     }
 
     @GetMapping("/poorRestfulApiDesign")
     public ApiDesignDetail poorRestfulApiDesign(HttpServletRequest request) throws IOException {
-        Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(request.getParameter("path"));
-        return poorRestfulApiDesignService.getPoorRestfulApiDesign(filePathToMicroserviceName);
+        String systemPath = request.getParameter("path");
+        String changed = request.getParameter("changed");
+        Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);
+        if (filePathToMicroserviceName == null) {
+            filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
+            redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
+        }
+        return poorRestfulApiDesignService.getPoorRestfulApiDesign(filePathToMicroserviceName, systemPath, changed);
     }
 
     @GetMapping("/unnecessarySettings")
     public UnnecessarySettingsDetail unnecessarySettings(HttpServletRequest request) throws IOException {
-        Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(request.getParameter("path"));
-        return unnecessarySettingsService.getUnnecessarySettings(filePathToMicroserviceName, request.getParameter("path"));
+        String systemPath = request.getParameter("path");
+        String changed = request.getParameter("changed");
+        Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);
+        if (filePathToMicroserviceName == null) {
+            filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
+            redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
+        }
+        return unnecessarySettingsService.getUnnecessarySettings(filePathToMicroserviceName, systemPath, changed);
     }
 
     @GetMapping("/hubService")
     public HubServiceDetail hubService(HttpServletRequest request) throws IOException {
-        Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(request.getParameter("path"));
-        return hubService.getHubClass(filePathToMicroserviceName);
+        String systemPath = request.getParameter("path");
+        String changed = request.getParameter("changed");
+        Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
+        return hubService.getHubClass(filePathToMicroserviceName, systemPath, changed);
     }
 
     @GetMapping("/duplicatedService")
     public Map<String, Set<List<DuplicatedServiceDetail>>> duplicatedService(HttpServletRequest request) throws IOException {
-        Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(request.getParameter("path"));
-        return duplicatedServicesService.getDuplicatedService(filePathToMicroserviceName);
+        String systemPath = request.getParameter("path");
+        String changed = request.getParameter("changed");
+        Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);
+        if (filePathToMicroserviceName == null) {
+            filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
+            redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
+        }
+        return duplicatedServicesService.getDuplicatedService(filePathToMicroserviceName, systemPath, changed);
     }
 
     @GetMapping("/noHealthCheckAndNoServiceDiscoveryPattern")
     public NoHealthCheckAndNoServiceDiscoveryPatternDetail noHealthCheckAndNoServiceDiscoveryPattern(HttpServletRequest request) throws IOException, XmlPullParserException {
-        Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(request.getParameter("path"));
-        return noHealthCheckAndNoServiceDiscoveryPatternService.getNoHealthCheckAndNoServiceDiscoveryPattern(filePathToMicroserviceName, request.getParameter("path"));
+        String systemPath = request.getParameter("path");
+        String changed = request.getParameter("changed");
+        Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);
+        if (filePathToMicroserviceName == null) {
+            filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
+            redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
+        }
+        return noHealthCheckAndNoServiceDiscoveryPatternService.getNoHealthCheckAndNoServiceDiscoveryPattern(filePathToMicroserviceName, systemPath, changed);
     }
 
     @GetMapping("/localLogging")
     public LocalLoggingDetail localLogging(HttpServletRequest request) throws IOException, DocumentException {
-        Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(request.getParameter("path"));
-        return localLoggingService.getLocalLoggingService(filePathToMicroserviceName);
+        String systemPath = request.getParameter("path");
+        String changed = request.getParameter("changed");
+        Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);
+        if (filePathToMicroserviceName == null) {
+            filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
+            redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
+        }
+        return localLoggingService.getLocalLoggingService(filePathToMicroserviceName, systemPath, changed);
+    }
+
+    @GetMapping("/cyclicReference")
+    public CyclicReferenceDetail cyclicReference(HttpServletRequest request) throws IOException {
+        String systemPath = request.getParameter("path");
+        String changed = request.getParameter("changed");
+        Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);
+        if (filePathToMicroserviceName == null) {
+            filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
+            redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
+        }
+        return cyclicReferenceService.getCyclicReference(filePathToMicroserviceName, systemPath, changed);
+    }
+
+    @GetMapping("/esbUsage")
+    public ESBUsageDetail esbUsage(HttpServletRequest request) throws IOException {
+        String systemPath = request.getParameter("path");
+        String changed = request.getParameter("changed");
+        Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);
+        if (filePathToMicroserviceName == null) {
+            filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
+            redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
+        }
+        return esbUsageService.getESBUsageServices(filePathToMicroserviceName, systemPath, changed);
+    }
+
+    @GetMapping("/godService")
+    public GodServiceDetail godService(HttpServletRequest request) throws IOException, DocumentException, XmlPullParserException {
+        String systemPath = request.getParameter("path");
+        String changed = request.getParameter("changed");
+        Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);
+        if (filePathToMicroserviceName == null) {
+            filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
+            redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
+        }
+        return godService.getGodService(filePathToMicroserviceName, systemPath, changed);
+    }
+
+    @GetMapping("/greedyService")
+    public ServiceGreedyDetail greedyService(HttpServletRequest request) throws IOException, DocumentException, XmlPullParserException {
+        String systemPath = request.getParameter("path");
+        String changed = request.getParameter("changed");
+        Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);
+        if (filePathToMicroserviceName == null) {
+            filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
+            redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
+        }
+        return greedyService.getGreedyService(filePathToMicroserviceName, systemPath, changed);
+    }
+
+    @GetMapping("/wrongCut")
+    public WrongCutDetail wrongCut(HttpServletRequest request) throws IOException, DocumentException, XmlPullParserException {
+        String systemPath = request.getParameter("path");
+        String changed = request.getParameter("changed");
+        Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);
+        if (filePathToMicroserviceName == null) {
+            filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
+            redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
+        }
+        return wrongCutService.getWrongCut(filePathToMicroserviceName, systemPath, changed);
     }
 }

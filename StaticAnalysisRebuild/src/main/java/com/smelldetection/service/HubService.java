@@ -4,6 +4,8 @@ import com.smelldetection.entity.item.DependCount;
 import com.smelldetection.entity.smell.detail.HubServiceDetail;
 import com.smelldetection.utils.FileUtils;
 import com.smelldetection.utils.JavaParserUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -17,7 +19,11 @@ import java.util.*;
 @Service
 public class HubService {
 
-    public HubServiceDetail getHubClass(Map<String, String> filePathToMicroserviceName) throws IOException {
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+
+    public HubServiceDetail getHubClass(Map<String, String> filePathToMicroserviceName, String systemPath, String changed) throws IOException {
+        long start = System.currentTimeMillis();
         Map<String, DependCount> importsAndOutputs = new HashMap<>();
         Set<String> classNames = new LinkedHashSet<>();
         // 收集本系统自身所有的类声明
@@ -42,11 +48,27 @@ public class HubService {
             DependCount dependCount = importsAndOutputs.get(className);
             int importCount = dependCount.getImportCount();
             int outputCount = dependCount.getOutputCount();
+            System.out.println(dependCount);
             if (importCount >= 10 && outputCount >= 10 && Math.max(importCount, outputCount) * 0.9 <= Math.min(importCount, outputCount)) {
-                boolean status = true;
                 hubServiceDetail.put(dependCount.getMicroserviceName(), dependCount);
             }
         }
+        if (!hubServiceDetail.getHubClasses().isEmpty()) {
+            hubServiceDetail.setStatus(true);
+        }
+        redisTemplate.opsForValue().set(systemPath + "_hubService_" + start, hubServiceDetail);
         return hubServiceDetail;
+    }
+
+    public List<HubServiceDetail> getHubServiceHistory(String systemPath) {
+        String key = systemPath + "_hubService_*";
+        Set<String> keys = redisTemplate.keys(key);
+        List<HubServiceDetail> hubServiceDetails = new ArrayList<>();
+        if (keys != null) {
+            for (String k : keys) {
+                hubServiceDetails.add((HubServiceDetail) redisTemplate.opsForValue().get(k));
+            }
+        }
+        return hubServiceDetails;
     }
 }

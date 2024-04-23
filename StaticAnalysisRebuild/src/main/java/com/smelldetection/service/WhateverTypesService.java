@@ -3,6 +3,7 @@ package com.smelldetection.service;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.serialization.JavaParserJsonSerializer;
+import com.smelldetection.entity.smell.detail.UnnecessarySettingsDetail;
 import com.smelldetection.entity.smell.detail.WhateverTypesDetail;
 import com.smelldetection.utils.FileUtils;
 import com.smelldetection.utils.JavaParserUtils;
@@ -14,10 +15,7 @@ import org.springframework.stereotype.Service;
 import javax.json.stream.JsonGenerator;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Cocoicobird
@@ -29,7 +27,8 @@ public class WhateverTypesService {
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
-    public WhateverTypesDetail getWhateverTypes(Map<String, String> filePathToMicroserviceName) throws IOException {
+    public WhateverTypesDetail getWhateverTypes(Map<String, String> filePathToMicroserviceName, String systemPath, String changed) throws IOException {
+        long start = System.currentTimeMillis();
         WhateverTypesDetail whateverTypesDetail = new WhateverTypesDetail();
         for (String filePath : filePathToMicroserviceName.keySet()) {
             String microserviceName = filePathToMicroserviceName.get(filePath);
@@ -53,6 +52,19 @@ public class WhateverTypesService {
         if (!whateverTypesDetail.isEmpty()) {
             whateverTypesDetail.setStatus(true);
         }
+        redisTemplate.opsForValue().set(systemPath + "_whateverTypes_" + start, whateverTypesDetail);
         return whateverTypesDetail;
+    }
+
+    public List<WhateverTypesDetail> getWhateverTypesHistory(String systemPath) {
+        String key = systemPath + "_whateverTypes_*";
+        Set<String> keys = redisTemplate.keys(key);
+        List<WhateverTypesDetail> whateverTypesDetails = new ArrayList<>();
+        if (keys != null) {
+            for (String k : keys) {
+                whateverTypesDetails.add((WhateverTypesDetail) redisTemplate.opsForValue().get(k));
+            }
+        }
+        return whateverTypesDetails;
     }
 }

@@ -61,8 +61,8 @@ public class FileUtils {
         int maxDepth = 10;
         Stream<Path> stream = Files.find(parent, maxDepth, (filePath, attributes) -> true);
         List<String> logs = stream.sorted().map(String::valueOf).filter(filePath -> {
-            return (String.valueOf(filePath).toLowerCase().endsWith("logback.xml")
-                    || String.valueOf(filePath).toLowerCase().endsWith("logback-spring.xml")
+            return ((String.valueOf(filePath).toLowerCase().endsWith("logback.xml")
+                    || String.valueOf(filePath).toLowerCase().endsWith("logback-spring.xml"))
                     && !String.valueOf(filePath).toLowerCase().contains("target"));
         }).collect(Collectors.toList());
         return logs;

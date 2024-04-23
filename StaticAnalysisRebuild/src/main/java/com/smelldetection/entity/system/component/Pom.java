@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.apache.maven.model.Model;
 
+import java.io.Serializable;
+
 /**
  * @author Cocoicobird
  * @version 1.0
@@ -11,7 +13,9 @@ import org.apache.maven.model.Model;
  */
 @Data
 @AllArgsConstructor
-public class Pom {
+public class Pom implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private String microserviceName;
 
     private Model mavenModel;

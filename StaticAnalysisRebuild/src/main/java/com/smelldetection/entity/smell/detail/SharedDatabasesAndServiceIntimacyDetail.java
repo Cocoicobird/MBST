@@ -3,6 +3,7 @@ package com.smelldetection.entity.smell.detail;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,7 +14,9 @@ import java.util.Map;
  */
 @Data
 @AllArgsConstructor
-public class SharedDatabasesAndServiceIntimacyDetail {
+public class SharedDatabasesAndServiceIntimacyDetail implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private Map<String, List<String>> sharedDatabases; // key 为数据库 value 为使用该数据库的微服务集合
     public Map<String, List<String>> serviceIntimacy; // key 为微服务 value 为与其亲密的微服务
 

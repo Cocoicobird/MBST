@@ -1,11 +1,20 @@
 package com.smelldetection.service;
 
+import com.smelldetection.entity.smell.detail.LocalLoggingDetail;
 import com.smelldetection.entity.smell.detail.SharedLibraryDetail;
 import com.smelldetection.entity.system.component.Pom;
+import com.smelldetection.utils.FileUtils;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -15,8 +24,27 @@ import java.util.*;
 @Service
 public class SharedLibraryService {
 
-    public SharedLibraryDetail getSharedLibraries(List<Pom> poms) {
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+
+    public SharedLibraryDetail getSharedLibraries(Map<String, String> filePathToMicroserviceName, String systemPath, String changed) throws IOException, XmlPullParserException {
+        long start = System.currentTimeMillis();
         SharedLibraryDetail sharedLibraryDetail = new SharedLibraryDetail();
+        List<Pom> poms = new ArrayList<>();
+        for (String filePath : filePathToMicroserviceName.keySet()) {
+            String microserviceName = filePathToMicroserviceName.get(filePath);
+            if (redisTemplate.opsForValue().get(systemPath + "_" + microserviceName + "_pom") == null || "true".equals(changed)) {
+                List<Pom> pomList = FileUtils.getPomObject(FileUtils.getPomXml(filePath));
+                for (Pom pom : pomList) {
+                    pom.setMicroserviceName(microserviceName);
+                }
+                poms.addAll(pomList);
+                redisTemplate.opsForValue().set(systemPath + "_" + microserviceName + "_pom", pomList);
+            } else {
+                List<Pom> pomList = (List<Pom>) redisTemplate.opsForValue().get(systemPath + "_" + microserviceName + "_pom");
+                poms.addAll(pomList);
+            }
+        }
         int num = poms.size();
         for (int i = 0; i < num; i++) {
             for (int j = i + 1; j < num; j++) {
@@ -34,8 +62,8 @@ public class SharedLibraryService {
                                     && dependency1.getVersion().equals(dependency2.getVersion())) {
                                 sharedLibrary += "." + dependency1.getVersion();
                             }
-                            String service1 = mavenModel2.getArtifactId();
-                            String service2 = mavenModel2.getArtifactId();
+                            String service1 = poms.get(i).getMicroserviceName();
+                            String service2 = poms.get(j).getMicroserviceName();
                             sharedLibraryDetail.put(sharedLibrary, service1);
                             sharedLibraryDetail.put(sharedLibrary, service2);
                         }
@@ -43,6 +71,19 @@ public class SharedLibraryService {
                 }
             }
         }
+        redisTemplate.opsForValue().set(systemPath + "_sharedLibraries_" + start, sharedLibraryDetail);
         return sharedLibraryDetail;
+    }
+
+    public List<SharedLibraryDetail> getSharedLibrariesHistory(String systemPath) {
+        String key = systemPath + "_localLogging_*";
+        Set<String> keys = redisTemplate.keys(key);
+        List<SharedLibraryDetail> sharedLibraryDetails = new ArrayList<>();
+        if (keys != null) {
+            for (String k : keys) {
+                sharedLibraryDetails.add((SharedLibraryDetail) redisTemplate.opsForValue().get(k));
+            }
+        }
+        return sharedLibraryDetails;
     }
 }

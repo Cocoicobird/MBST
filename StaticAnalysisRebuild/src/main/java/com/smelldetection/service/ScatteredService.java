@@ -1,12 +1,13 @@
 package com.smelldetection.service;
 
+import com.smelldetection.entity.smell.detail.ApiDesignDetail;
 import com.smelldetection.entity.smell.detail.ScatteredServiceDetail;
 import com.smelldetection.utils.ServiceCallParserUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author Cocoicobird
@@ -16,7 +17,11 @@ import java.util.Set;
 @Service
 public class ScatteredService {
 
-    public ScatteredServiceDetail getScatteredFunctionalityServices(Map<String, String> filePathToMicroserviceName){
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+
+    public ScatteredServiceDetail getScatteredFunctionalityServices(Map<String, String> filePathToMicroserviceName, String systemPath, String changed) {
+        long start = System.currentTimeMillis();
         ScatteredServiceDetail scatteredServiceDetail = new ScatteredServiceDetail();
         Map<String, Map<String,Integer>> microserviceCallResults = ServiceCallParserUtils.getMicroserviceCallResults(filePathToMicroserviceName);
         if (microserviceCallResults != null) {
@@ -85,6 +90,19 @@ public class ScatteredService {
         }
         if (!ssd.getScatteredServices().isEmpty())
             ssd.setStatus(true);
+        redisTemplate.opsForValue().set(systemPath + "_scatteredFunctionalityService_" + start, ssd);
         return ssd;
+    }
+
+    public List<ScatteredServiceDetail> getScatteredFunctionalityServiceHistory(String systemPath) {
+        String key = systemPath + "_scatteredFunctionalityService_*";
+        Set<String> keys = redisTemplate.keys(key);
+        List<ScatteredServiceDetail> scatteredServiceDetails = new ArrayList<>();
+        if (keys != null) {
+            for (String k : keys) {
+                scatteredServiceDetails.add((ScatteredServiceDetail) redisTemplate.opsForValue().get(k));
+            }
+        }
+        return scatteredServiceDetails;
     }
 }

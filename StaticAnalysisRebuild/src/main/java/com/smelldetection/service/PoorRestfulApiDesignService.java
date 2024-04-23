@@ -1,6 +1,7 @@
 package com.smelldetection.service;
 
 import com.smelldetection.entity.smell.detail.ApiDesignDetail;
+import com.smelldetection.entity.smell.detail.NoHealthCheckAndNoServiceDiscoveryPatternDetail;
 import com.smelldetection.utils.FileUtils;
 import com.smelldetection.utils.JavaParserUtils;
 import com.smelldetection.utils.NlpUtils;
@@ -16,6 +17,8 @@ import opennlp.tools.sentdetect.SentenceDetectorME;
 import opennlp.tools.sentdetect.SentenceModel;
 import opennlp.tools.tokenize.TokenizerME;
 import opennlp.tools.tokenize.TokenizerModel;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -24,10 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 /**
  * @author Cocoicobird
@@ -37,61 +37,32 @@ import java.util.Properties;
 @Service
 public class PoorRestfulApiDesignService {
 
-    public ApiDesignDetail getPoorRestfulApiDesign(Map<String, String> filePathToMicroserviceName) throws IOException {
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+
+    public ApiDesignDetail getPoorRestfulApiDesign(Map<String, String> filePathToMicroserviceName, String systemPath, String changed) throws IOException {
+        long start = System.currentTimeMillis();
         ApiDesignDetail apiDesignDetail = new ApiDesignDetail();
+        Map<String, Map<String, String>> urls;
+        if (redisTemplate.opsForValue().get(systemPath + "_urls") != null || "true".equals(changed)) {
+            urls = (Map<String, Map<String, String>>) redisTemplate.opsForValue().get(systemPath + "_urls");
+        } else {
+            urls = new HashMap<>();
+        }
         for (String filePath : filePathToMicroserviceName.keySet()) {
             String microserviceName = filePathToMicroserviceName.get(filePath);
             System.out.println(microserviceName);
             List<String> javaFiles = FileUtils.getJavaFiles(filePath);
-            Map<String, String> methodToApi = new HashMap<>();
-            for (String javaFile : javaFiles) {
-                File file = new File(javaFile);
-                methodToApi.putAll(JavaParserUtils.getMethodToApi(file));
-            }
-//            Path tokenPath = Paths.get("StaticAnalysisRebuild", "src", "main", "resources", "model", "en-token.bin");
-//            InputStream tokeInputStream = new FileInputStream(tokenPath.toFile());
-//            TokenizerME tokenizer = new TokenizerME(new TokenizerModel(tokeInputStream));
-//            Path posPath = Paths.get("StaticAnalysisRebuild", "src", "main", "resources", "model", "en-pos-perceptron.bin");
-//            InputStream posInputStream = new FileInputStream(posPath.toFile());
-//            POSModel posModel = new POSModel(posInputStream);
-//            POSTaggerME posTagger = new POSTaggerME(posModel);
-            // 针对每一个 API
-            /*
-            for (String methodName : methodToApi.keySet()) {
-                boolean noVersion = false; // 版本控制
-                boolean hasHttpMethod = true; // HTTP 方法是否指定
-                boolean hasVerb = false;
-                String api = methodToApi.get(methodName);
-                if (!JavaParserUtils.matchApiPattern(api)) { // 版本控制
-                    noVersion = true;
+            Map<String, String> methodToApi;
+            if (!urls.containsKey(microserviceName)) {
+                methodToApi = new HashMap<>();
+                for (String javaFile : javaFiles) {
+                    File file = new File(javaFile);
+                    methodToApi.putAll(JavaParserUtils.getMethodToApi(file));
                 }
-                String[] apiAndHttpMethod = api.split(" ");
-                String[] levels = apiAndHttpMethod[0].split("/");
-                if (apiAndHttpMethod.length < 2)
-                    hasHttpMethod = false;
-                for (String level : levels) { // API 的每一级
-                    if (level.length() > 0 && level.charAt(0) == '{' && level.charAt(level.length() - 1) == '}') {
-                        level = level.substring(1, level.length() - 1);
-                    }
-                    StringBuilder stringBuilder = new StringBuilder();
-                    for (int i = 0; i < level.length(); i++) {
-                        if (Character.isUpperCase(level.charAt(i))) {
-                            stringBuilder.append(" ");
-                        }
-                        stringBuilder.append(Character.toLowerCase(level.charAt(i)));
-                    }
-                    System.out.println(stringBuilder.toString());
-                    String[] tokens = tokenizer.tokenize(stringBuilder.toString());
-                    String[] tagArray = posTagger.tag(tokens);
-                    for (int i = 0; i < tokens.length; i++) {
-                        System.out.printf("%s -- %s%n", tokens[i], tagArray[i]);
-                        if ("VB".equals(tagArray[i]) || "VBZ".equals(tagArray[i]))
-                            hasVerb = true;
-                    }
-                }
-                System.out.println(api + " " + "noVersion:" + noVersion + " hasHttpMethod:" + hasHttpMethod + " hasVerb:" + hasVerb);
+            } else {
+                methodToApi = urls.get(microserviceName);
             }
-            */
             for (String methodName : methodToApi.keySet()) {
                 boolean noVersion = false; // 版本控制
                 boolean hasHttpMethod = true; // HTTP 方法是否指定
@@ -136,6 +107,20 @@ public class PoorRestfulApiDesignService {
                 System.out.println(api + " " + "noVersion:" + noVersion + " hasHttpMethod:" + hasHttpMethod + " hasVerb:" + hasVerb);
             }
         }
+        redisTemplate.opsForValue().set(systemPath + "_urls", urls);
+        redisTemplate.opsForValue().set(systemPath + "_poorRestfulApiDesign_" + start, apiDesignDetail);
         return apiDesignDetail;
+    }
+
+    public List<ApiDesignDetail> getPoorRestfulApiDesignHistory(String systemPath) {
+        String key = systemPath + "_poorRestfulApiDesign_*";
+        Set<String> keys = redisTemplate.keys(key);
+        List<ApiDesignDetail> apiDesignDetails = new ArrayList<>();
+        if (keys != null) {
+            for (String k : keys) {
+                apiDesignDetails.add((ApiDesignDetail) redisTemplate.opsForValue().get(k));
+            }
+        }
+        return apiDesignDetails;
     }
 }

@@ -3,6 +3,7 @@ package com.smelldetection.entity.smell.detail;
 import com.smelldetection.entity.item.HardCodeItem;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -14,7 +15,10 @@ import java.util.Map;
  * @description 某一微服务的硬编码信息
  */
 @Data
-public class HardCodeDetail {
+public class HardCodeDetail implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    private boolean status;
     private Map<String, List<HardCodeItem>> hardCodes;
 
     public HardCodeDetail() {

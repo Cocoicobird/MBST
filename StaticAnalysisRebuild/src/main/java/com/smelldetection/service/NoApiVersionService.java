@@ -1,18 +1,18 @@
 package com.smelldetection.service;
 
 import com.smelldetection.entity.smell.detail.ApiVersionDetail;
+import com.smelldetection.entity.smell.detail.LocalLoggingDetail;
 import com.smelldetection.utils.JavaParserUtils;
 import com.smelldetection.utils.FileUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Stack;
+import java.util.*;
 
 /**
  * @author Cocoicobird
@@ -21,8 +21,13 @@ import java.util.Stack;
 @Service
 public class NoApiVersionService {
 
-    public ApiVersionDetail getNoApiVersion(Map<String, String> filePathToMicroserviceName) throws IOException {
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+
+    public ApiVersionDetail getNoApiVersion(Map<String, String> filePathToMicroserviceName, String systemPath, String changed) throws IOException {
+        long start = System.currentTimeMillis();
         ApiVersionDetail apiVersionDetail = new ApiVersionDetail();
+        Map<String, Map<String, String>> urls = new HashMap<>();
         for (String directory : filePathToMicroserviceName.keySet()) {
             String microserviceName = filePathToMicroserviceName.get(directory);
             apiVersionDetail.getNoVersion().put(microserviceName, new HashMap<>());
@@ -30,16 +35,31 @@ public class NoApiVersionService {
             List<String> javaFiles = FileUtils.getJavaFiles(directory);
             for (String javaFile : javaFiles) {
                 File file = new File(javaFile);
-                JavaParserUtils.resolveApiFromJavaFile(file, apiVersionDetail, microserviceName);
+                JavaParserUtils.resolveApiFromJavaFile(file, apiVersionDetail, microserviceName, urls);
             }
         }
-        boolean status = false;
-        for(String microserviceName: apiVersionDetail.getNoVersion().keySet()) {
-            if(!apiVersionDetail.getNoVersion().get(microserviceName).isEmpty()){
-                status = true;
-                break;
-            }
-        }
+        redisTemplate.opsForValue().set(systemPath + "_urls", urls);
+//        boolean status = false;
+//        for(String microserviceName: apiVersionDetail.getNoVersion().keySet()) {
+//            if(!apiVersionDetail.getNoVersion().get(microserviceName).isEmpty()){
+//                status = true;
+//                break;
+//            }
+//        }
+        // redisTemplate.opsForValue().set(systemPath + "_urls", urls);
+        redisTemplate.opsForValue().set(systemPath + "_noApiVersion_" + start, apiVersionDetail);
         return apiVersionDetail;
+    }
+
+    public List<ApiVersionDetail> getNoApiVersionHistory(String systemPath) {
+        String key = systemPath + "_noApiVersion_*";
+        Set<String> keys = redisTemplate.keys(key);
+        List<ApiVersionDetail> apiVersionDetails = new ArrayList<>();
+        if (keys != null) {
+            for (String k : keys) {
+                apiVersionDetails.add((ApiVersionDetail) redisTemplate.opsForValue().get(k));
+            }
+        }
+        return apiVersionDetails;
     }
 }

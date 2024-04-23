@@ -2,6 +2,7 @@ package com.smelldetection.entity.smell.detail;
 
 import lombok.Data;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -14,7 +15,9 @@ import java.util.Map;
  * 形式为 Map 的 key 为微服务名称 value 类名 + 方法
  */
 @Data
-public class WhateverTypesDetail {
+public class WhateverTypesDetail implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private boolean status;
     private Map<String, List<String>> returnTypes;
 

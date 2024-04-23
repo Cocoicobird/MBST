@@ -3,6 +3,7 @@ package com.smelldetection.entity.smell.detail;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.util.*;
 
 /**
@@ -11,7 +12,9 @@ import java.util.*;
  */
 @Data
 @AllArgsConstructor
-public class SharedLibraryDetail {
+public class SharedLibraryDetail implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private Map<String, Set<String>> sharedLibraries;
 
     public SharedLibraryDetail() {

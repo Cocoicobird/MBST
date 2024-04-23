@@ -3,6 +3,7 @@ package com.smelldetection.entity.smell.detail;
 import com.smelldetection.entity.item.ChattyServiceItem;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -11,9 +12,10 @@ import java.util.Map;
  * @version 1.0
  */
 @Data
-public class ChattyServiceDetail {
+public class ChattyServiceDetail implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private boolean status;
-    private String microserviceName;
     private Map<String, ChattyServiceItem> chattyServices;
 
     public ChattyServiceDetail() {

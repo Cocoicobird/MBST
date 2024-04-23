@@ -1,5 +1,6 @@
 package com.smelldetection.service;
 
+import com.smelldetection.entity.smell.detail.SharedDatabasesAndServiceIntimacyDetail;
 import com.smelldetection.entity.smell.detail.UnnecessarySettingsDetail;
 import com.smelldetection.entity.system.component.Configuration;
 import com.smelldetection.utils.FileUtils;
@@ -11,8 +12,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Cocoicobird
@@ -48,13 +48,14 @@ public class UnnecessarySettingsService {
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
-    public UnnecessarySettingsDetail getUnnecessarySettings(Map<String, String> filePathToMicroserviceName, String systemDirectory) throws IOException {
+    public UnnecessarySettingsDetail getUnnecessarySettings(Map<String, String> filePathToMicroserviceName, String systemDirectory, String changed) throws IOException {
+        long start = System.currentTimeMillis();
         Map<String, Configuration> filePathToConfiguration;
-        if (redisTemplate.opsForValue().get(systemDirectory + "Configuration") != null) {
+        if (redisTemplate.opsForValue().get(systemDirectory + "_filePathToConfiguration") != null || "true".equals(changed)) {
             filePathToConfiguration = (Map<String, Configuration>) redisTemplate.opsForValue().get(systemDirectory + "Configuration");
         } else {
             filePathToConfiguration = FileUtils.getConfiguration(filePathToMicroserviceName);
-            redisTemplate.opsForValue().set(systemDirectory + "Configuration", filePathToConfiguration);
+            redisTemplate.opsForValue().set(systemDirectory + "_filePathToConfiguration", filePathToConfiguration);
         }
         UnnecessarySettingsDetail unnecessarySettingsDetail = new UnnecessarySettingsDetail();
         for (String filePath : filePathToMicroserviceName.keySet()) {
@@ -68,6 +69,19 @@ public class UnnecessarySettingsService {
                 }
             }
         }
+        redisTemplate.opsForValue().set(systemDirectory + "_unnecessarySettings_" + start, unnecessarySettingsDetail);
         return unnecessarySettingsDetail;
+    }
+
+    public List<UnnecessarySettingsDetail> getUnnecessarySettingsHistory(String systemPath) {
+        String key = systemPath + "_unnecessarySettings_*";
+        Set<String> keys = redisTemplate.keys(key);
+        List<UnnecessarySettingsDetail> unnecessarySettingsDetails = new ArrayList<>();
+        if (keys != null) {
+            for (String k : keys) {
+                unnecessarySettingsDetails.add((UnnecessarySettingsDetail) redisTemplate.opsForValue().get(k));
+            }
+        }
+        return unnecessarySettingsDetails;
     }
 }

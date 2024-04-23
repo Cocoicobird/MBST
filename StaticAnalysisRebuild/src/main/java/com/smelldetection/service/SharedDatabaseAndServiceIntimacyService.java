@@ -1,8 +1,12 @@
 package com.smelldetection.service;
 
+import com.smelldetection.entity.smell.detail.ScatteredServiceDetail;
 import com.smelldetection.entity.smell.detail.SharedDatabasesAndServiceIntimacyDetail;
 import com.smelldetection.entity.system.component.Configuration;
 import org.checkerframework.checker.units.qual.A;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.cache.CacheProperties;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -16,7 +20,11 @@ import java.util.*;
 @Service
 public class SharedDatabaseAndServiceIntimacyService {
 
-    public SharedDatabasesAndServiceIntimacyDetail getSharedDatabasesAndServiceIntimacy(Map<String, Configuration> configurations) throws IOException {
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+
+    public SharedDatabasesAndServiceIntimacyDetail getSharedDatabasesAndServiceIntimacy(Map<String, Configuration> configurations, String systemPath, String changed) throws IOException {
+        long start = System.currentTimeMillis();
         String pattern = "mysql://";
         // key 为数据库 value 为使用该数据库的微服务模块
         Map<String, List<String>> sharedDatabases = new HashMap<>();
@@ -69,6 +77,19 @@ public class SharedDatabaseAndServiceIntimacyService {
             }
             sharedDatabasesAndServiceIntimacyDetail.addServiceIntimacy(microservice, microservices);
         }
+        redisTemplate.opsForValue().set(systemPath + "_sharedDatabasesAndServiceIntimacy_" + start, sharedDatabasesAndServiceIntimacyDetail);
         return sharedDatabasesAndServiceIntimacyDetail;
+    }
+
+    public List<SharedDatabasesAndServiceIntimacyDetail> getSharedDatabasesAndServiceIntimacyHistory(String systemPath) {
+        String key = systemPath + "_sharedDatabasesAndServiceIntimacy_*";
+        Set<String> keys = redisTemplate.keys(key);
+        List<SharedDatabasesAndServiceIntimacyDetail> sharedDatabasesAndServiceIntimacyDetails = new ArrayList<>();
+        if (keys != null) {
+            for (String k : keys) {
+                sharedDatabasesAndServiceIntimacyDetails.add((SharedDatabasesAndServiceIntimacyDetail) redisTemplate.opsForValue().get(k));
+            }
+        }
+        return sharedDatabasesAndServiceIntimacyDetails;
     }
 }

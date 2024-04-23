@@ -4,7 +4,6 @@ import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.smelldetection.entity.item.BloatedServiceItem;
-import com.smelldetection.entity.item.ServiceCallItem;
 import com.smelldetection.entity.smell.detail.BloatedServiceDetail;
 import com.smelldetection.utils.FileUtils;
 import com.smelldetection.utils.JavaParserUtils;
@@ -15,10 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Cocoicobird
@@ -33,12 +29,18 @@ public class BloatedService {
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
-    public BloatedServiceDetail getBloatedService(Map<String, String> filePathToMicroserviceName) throws IOException {
+    public BloatedServiceDetail getBloatedService(Map<String, String> filePathToMicroserviceName, String systemPath, String changed) throws IOException {
         // 微服务调用结果，每个微服务调用了哪些微服务以及次数
+        long start = System.currentTimeMillis();
         BloatedServiceDetail bloatedServiceDetail = new BloatedServiceDetail();
-        Map<String, Map<String, Integer>> microserviceCallResults = ServiceCallParserUtils.getMicroserviceCallResults(filePathToMicroserviceName);
+        Map<String, Map<String, Integer>> microserviceCallResults;
+        if (redisTemplate.opsForValue().get(systemPath + "_" + "microserviceCallResults") == null || "true".equals(changed)) {
+            microserviceCallResults = ServiceCallParserUtils.getMicroserviceCallResults(filePathToMicroserviceName);
+            redisTemplate.opsForValue().set(systemPath + "_" + "microserviceCallResults", microserviceCallResults);
+        } else {
+            microserviceCallResults = (Map<String, Map<String, Integer>>) redisTemplate.opsForValue().get(systemPath + "_microserviceCallResults");
+        }
         for (String filePath : filePathToMicroserviceName.keySet()) {
-            System.out.println(filePath);
             String microserviceName = filePathToMicroserviceName.get(filePath);
             List<String> javaFiles = FileUtils.getJavaFiles(filePath);
             // 该微服务模块所有方法声明
@@ -46,7 +48,13 @@ public class BloatedService {
             // 该微服务模块的总代码行数
             int codeSize = 0;
             // 该微服务模块中控制器层中所有业务层调用情况
-            Map<String, Map<String, Integer>> serviceMethodCallOfControllers = new HashMap<>();
+            Map<String, Map<String, Integer>> serviceMethodCallOfControllers;
+            if (redisTemplate.opsForValue().get(systemPath + "_" + microserviceName + "_serviceMethodCallOfControllers") == null || "true".equals(changed)) {
+                serviceMethodCallOfControllers = ServiceCallParserUtils.getMicroserviceCallResults(filePathToMicroserviceName);
+                redisTemplate.opsForValue().set(systemPath + "_" + microserviceName + "_serviceMethodCallOfControllers", serviceMethodCallOfControllers);
+            } else {
+                serviceMethodCallOfControllers = (Map<String, Map<String, Integer>>) redisTemplate.opsForValue().get(systemPath + "_" + microserviceName + "_serviceMethodCallOfControllers");
+            }
             for (String javaFile : javaFiles) {
                 methodDeclarations.putAll(JavaParserUtils.getMethodDeclaration(javaFile));
                 codeSize = codeSize + FileUtils.getJavaFileLinesOfCode(new File(javaFile));
@@ -101,6 +109,19 @@ public class BloatedService {
         }
         if (!bloatedServiceDetail.getBloatedServices().isEmpty())
             bloatedServiceDetail.setStatus(true);
+        redisTemplate.opsForValue().set(systemPath + "_bloatedService_" + start, bloatedServiceDetail);
         return bloatedServiceDetail;
+    }
+
+    public List<BloatedServiceDetail> getBloatedServiceHistory(String systemPath) {
+        String key = systemPath + "_bloatedService_*";
+        Set<String> keys = redisTemplate.keys(key);
+        List<BloatedServiceDetail> bloatedServiceDetails = new ArrayList<>();
+        if (keys != null) {
+            for (String k : keys) {
+                bloatedServiceDetails.add((BloatedServiceDetail) redisTemplate.opsForValue().get(k));
+            }
+        }
+        return bloatedServiceDetails;
     }
 }

@@ -18,7 +18,7 @@ import java.util.Map;
 public class WhateverTypesDetail implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private boolean status;
+    private Boolean status;
     private Map<String, List<String>> returnTypes;
 
     public WhateverTypesDetail() {
@@ -26,12 +26,8 @@ public class WhateverTypesDetail implements Serializable {
     }
 
     public void put(String microserviceName, String returnType) {
-        if (this.returnTypes.containsKey(microserviceName))
+        if (!this.returnTypes.containsKey(microserviceName))
             this.returnTypes.put(microserviceName, new ArrayList<>());
         this.returnTypes.get(microserviceName).add(returnType);
-    }
-
-    public boolean isEmpty() {
-        return returnTypes.isEmpty();
     }
 }

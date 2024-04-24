@@ -75,7 +75,7 @@ public class ServiceCallParserUtils {
      */
     public static Map<String, Map<String, Integer>> getMicroserviceCallResults(Map<String, String> filePathToMicroserviceName) {
         if (filePathToMicroserviceName.isEmpty()) {
-            return null;
+            return new HashMap<>();
         }
         Map<String, Map<String, Integer>> microserviceCallResults = new HashMap<>();
         for (Map.Entry<String, String> entry : filePathToMicroserviceName.entrySet()) {

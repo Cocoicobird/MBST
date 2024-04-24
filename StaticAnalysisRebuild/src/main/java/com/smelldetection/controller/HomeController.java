@@ -1,5 +1,6 @@
 package com.smelldetection.controller;
 
+import com.smelldetection.entity.smell.detail.MicroserviceRankDetail;
 import com.smelldetection.entity.smell.detail.*;
 import com.smelldetection.entity.system.component.Configuration;
 import com.smelldetection.service.*;
@@ -90,6 +91,9 @@ public class HomeController {
     @Autowired
     private LocalLoggingService localLoggingService;
 
+    @Autowired
+    private MicroserviceRankService microserviceRankService;
+
     @GetMapping("/static")
     public Map<String, Object> staticAnalysis(HttpServletRequest request) throws IOException, XmlPullParserException, DocumentException {
         /**
@@ -122,8 +126,8 @@ public class HomeController {
         NoHealthCheckAndNoServiceDiscoveryPatternDetail noHealthCheckAndNoServiceDiscoveryPattern = noHealthCheckAndNoServiceDiscoveryPatternService.getNoHealthCheckAndNoServiceDiscoveryPattern(filePathToMicroserviceName, systemPath, changed);
         result.put("noHealthCheck", noHealthCheckAndNoServiceDiscoveryPattern);
         result.put("noServiceDiscoveryPattern", noHealthCheckAndNoServiceDiscoveryPattern);
+        result.put("poorRestfulApiDesign", poorRestfulApiDesignService.getPoorRestfulApiDesign(filePathToMicroserviceName, systemPath, changed));
         result.put("scatteredService", scatteredService.getScatteredFunctionalityServices(filePathToMicroserviceName, systemPath, changed));
-        result.put("GreedyService", greedyService.getGreedyService(filePathToMicroserviceName, systemPath, changed));
         SharedDatabasesAndServiceIntimacyDetail sharedDatabasesAndServiceIntimacy = sharedDatabaseService.getSharedDatabasesAndServiceIntimacy(configuration, systemPath, changed);
         result.put("sharedDatabases", sharedDatabasesAndServiceIntimacy.getSharedDatabases());
         result.put("serviceIntimacy", sharedDatabasesAndServiceIntimacy.getServiceIntimacy());
@@ -141,7 +145,7 @@ public class HomeController {
         String changed = request.getParameter("changed");
         Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
         Map<String, Configuration> filePathToConfiguration;
-        if (redisTemplate.opsForValue().get(systemPath + "_filePathToConfiguration") == null) {
+        if (redisTemplate.opsForValue().get(systemPath + "_filePathToConfiguration") == null || "true".equals(changed)) {
             filePathToConfiguration = FileUtils.getConfiguration(filePathToMicroserviceName);
             redisTemplate.opsForValue().set(systemPath + "_filePathToConfiguration", filePathToConfiguration);
         } else {
@@ -156,7 +160,7 @@ public class HomeController {
         String systemPath = request.getParameter("path");
         String changed = request.getParameter("changed");
         Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);
-        if (filePathToMicroserviceName == null) {
+        if (filePathToMicroserviceName == null || "true".equals(changed)) {
             filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
             redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
         }
@@ -169,7 +173,7 @@ public class HomeController {
         String systemPath = request.getParameter("path");
         String changed = request.getParameter("changed");
         Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);
-        if (filePathToMicroserviceName == null) {
+        if (filePathToMicroserviceName == null || "true".equals(changed)) {
             filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
             redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
         }
@@ -181,7 +185,7 @@ public class HomeController {
         String systemPath = request.getParameter("path");
         String changed = request.getParameter("changed");
         Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);
-        if (filePathToMicroserviceName == null) {
+        if (filePathToMicroserviceName == null || "true".equals(changed)) {
             filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
             redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
         }
@@ -194,7 +198,7 @@ public class HomeController {
         String systemPath = request.getParameter("path");
         String changed = request.getParameter("changed");
         Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);
-        if (filePathToMicroserviceName == null) {
+        if (filePathToMicroserviceName == null || "true".equals(changed)) {
             filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
             redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
         }
@@ -207,7 +211,7 @@ public class HomeController {
         String systemPath = request.getParameter("path");
         String changed = request.getParameter("changed");
         Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);
-        if (filePathToMicroserviceName == null) {
+        if (filePathToMicroserviceName == null || "true".equals(changed)) {
             filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
             redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
         }
@@ -226,7 +230,7 @@ public class HomeController {
         String systemPath = request.getParameter("path");
         String changed = request.getParameter("changed");
         Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);
-        if (filePathToMicroserviceName == null) {
+        if (filePathToMicroserviceName == null || "true".equals(changed)) {
             filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
             redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
         }
@@ -238,7 +242,7 @@ public class HomeController {
         String systemPath = request.getParameter("path");
         String changed = request.getParameter("changed");
         Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);
-        if (filePathToMicroserviceName == null) {
+        if (filePathToMicroserviceName == null || "true".equals(changed)) {
             filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
             redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
         }
@@ -251,7 +255,7 @@ public class HomeController {
         String systemPath = request.getParameter("path");
         String changed = request.getParameter("changed");
         Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);
-        if (filePathToMicroserviceName == null) {
+        if (filePathToMicroserviceName == null || "true".equals(changed)) {
             filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
             redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
         }
@@ -263,7 +267,7 @@ public class HomeController {
         String systemPath = request.getParameter("path");
         String changed = request.getParameter("changed");
         Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);
-        if (filePathToMicroserviceName == null) {
+        if (filePathToMicroserviceName == null || "true".equals(changed)) {
             filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
             redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
         }
@@ -275,7 +279,7 @@ public class HomeController {
         String systemPath = request.getParameter("path");
         String changed = request.getParameter("changed");
         Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);
-        if (filePathToMicroserviceName == null) {
+        if (filePathToMicroserviceName == null || "true".equals(changed)) {
             filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
             redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
         }
@@ -286,7 +290,11 @@ public class HomeController {
     public HubServiceDetail hubService(HttpServletRequest request) throws IOException {
         String systemPath = request.getParameter("path");
         String changed = request.getParameter("changed");
-        Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
+        Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);
+        if (filePathToMicroserviceName == null || "true".equals(changed)) {
+            filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
+            redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
+        }
         return hubService.getHubClass(filePathToMicroserviceName, systemPath, changed);
     }
 
@@ -295,7 +303,7 @@ public class HomeController {
         String systemPath = request.getParameter("path");
         String changed = request.getParameter("changed");
         Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);
-        if (filePathToMicroserviceName == null) {
+        if (filePathToMicroserviceName == null || "true".equals(changed)) {
             filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
             redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
         }
@@ -307,7 +315,7 @@ public class HomeController {
         String systemPath = request.getParameter("path");
         String changed = request.getParameter("changed");
         Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);
-        if (filePathToMicroserviceName == null) {
+        if (filePathToMicroserviceName == null || "true".equals(changed)) {
             filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
             redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
         }
@@ -319,7 +327,7 @@ public class HomeController {
         String systemPath = request.getParameter("path");
         String changed = request.getParameter("changed");
         Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);
-        if (filePathToMicroserviceName == null) {
+        if (filePathToMicroserviceName == null || "true".equals(changed)) {
             filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
             redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
         }
@@ -331,7 +339,7 @@ public class HomeController {
         String systemPath = request.getParameter("path");
         String changed = request.getParameter("changed");
         Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);
-        if (filePathToMicroserviceName == null) {
+        if (filePathToMicroserviceName == null || "true".equals(changed)) {
             filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
             redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
         }
@@ -343,7 +351,7 @@ public class HomeController {
         String systemPath = request.getParameter("path");
         String changed = request.getParameter("changed");
         Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);
-        if (filePathToMicroserviceName == null) {
+        if (filePathToMicroserviceName == null || "true".equals(changed)) {
             filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
             redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
         }
@@ -355,7 +363,7 @@ public class HomeController {
         String systemPath = request.getParameter("path");
         String changed = request.getParameter("changed");
         Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);
-        if (filePathToMicroserviceName == null) {
+        if (filePathToMicroserviceName == null || "true".equals(changed)) {
             filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
             redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
         }
@@ -367,7 +375,7 @@ public class HomeController {
         String systemPath = request.getParameter("path");
         String changed = request.getParameter("changed");
         Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);
-        if (filePathToMicroserviceName == null) {
+        if (filePathToMicroserviceName == null || "true".equals(changed)) {
             filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
             redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
         }
@@ -379,10 +387,22 @@ public class HomeController {
         String systemPath = request.getParameter("path");
         String changed = request.getParameter("changed");
         Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);
-        if (filePathToMicroserviceName == null) {
+        if (filePathToMicroserviceName == null || "true".equals(changed)) {
             filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
             redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
         }
         return wrongCutService.getWrongCut(filePathToMicroserviceName, systemPath, changed);
+    }
+
+    @GetMapping("/microserviceRank")
+    public List<MicroserviceRankDetail> microserviceRank(HttpServletRequest request) throws Exception {
+        String systemPath = request.getParameter("path");
+        String changed = request.getParameter("changed");
+        Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);
+        if (filePathToMicroserviceName == null || "true".equals(changed)) {
+            filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
+            redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
+        }
+        return microserviceRankService.getMicroserviceRank(filePathToMicroserviceName, systemPath, changed);
     }
 }

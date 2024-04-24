@@ -49,7 +49,7 @@ public class WhateverTypesService {
                 }
             }
         }
-        if (!whateverTypesDetail.isEmpty()) {
+        if (!whateverTypesDetail.getReturnTypes().isEmpty()) {
             whateverTypesDetail.setStatus(true);
         }
         redisTemplate.opsForValue().set(systemPath + "_whateverTypes_" + start, whateverTypesDetail);

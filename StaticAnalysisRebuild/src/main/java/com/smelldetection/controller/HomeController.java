@@ -99,6 +99,7 @@ public class HomeController {
          *   2.2.解析 pom 文件
          *   2.3.解析 .java 文件
          */
+        long start = System.currentTimeMillis();
         String systemPath = request.getParameter("path");
         String changed = request.getParameter("changed");
         Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
@@ -130,6 +131,7 @@ public class HomeController {
         result.put("unnecessarySettings", unnecessarySettingsService.getUnnecessarySettings(filePathToMicroserviceName, systemPath, changed));
         result.put("whateverTypes", whateverTypesService.getWhateverTypes(filePathToMicroserviceName, systemPath, changed));
         result.put("wrongCut", wrongCutService.getWrongCut(filePathToMicroserviceName, systemPath, changed));
+        redisTemplate.opsForValue().set(systemPath + "_static_" + start, result);
         return result;
     }
 

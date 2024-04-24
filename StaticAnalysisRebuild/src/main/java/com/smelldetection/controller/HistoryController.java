@@ -3,12 +3,14 @@ package com.smelldetection.controller;
 import com.smelldetection.entity.smell.detail.*;
 import com.smelldetection.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -80,6 +82,9 @@ public class HistoryController {
 
     @Autowired
     private WrongCutService wrongCutService;
+
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
 
     @GetMapping("/bloatedService")
     public List<BloatedServiceDetail> bloatedServiceHistory(HttpServletRequest request) {
@@ -179,5 +184,19 @@ public class HistoryController {
     @GetMapping("/wrongCut")
     public List<WrongCutDetail> wrongCutHistory(HttpServletRequest request) {
         return wrongCutService.getWrongCutHistory(request.getParameter("path"));
+    }
+
+    @GetMapping("/static")
+    public List<Map<String, Object>> staticHistory(HttpServletRequest request) {
+        String systemPath = request.getParameter("path");
+        String key = systemPath + "_static_*";
+        Set<String> keys = redisTemplate.keys(key);
+        List<Map<String, Object>> statics = new ArrayList<>();
+        if (keys != null) {
+            for (String k : keys) {
+                statics.add((Map<String, Object>) redisTemplate.opsForValue().get(k));
+            }
+        }
+        return statics;
     }
 }

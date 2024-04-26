@@ -121,7 +121,7 @@ public class HomeController {
         result.put("chattyService", chattyService.getChattyService(filePathToMicroserviceName, systemPath, changed));
         result.put("cyclicReference", cyclicReferenceService.getCyclicReference(filePathToMicroserviceName, systemPath, changed));
         result.put("duplicatedService", duplicatedServicesService.getDuplicatedService(filePathToMicroserviceName, systemPath, changed));
-        result.put("ESBUsage", esbUsageService.getESBUsageServices(filePathToMicroserviceName, systemPath, changed));
+        result.put("esbUsage", esbUsageService.getESBUsageServices(filePathToMicroserviceName, systemPath, changed));
         result.put("godService", godService.getGodService(filePathToMicroserviceName, systemPath, changed));
         result.put("greedyService", greedyService.getGreedyService(filePathToMicroserviceName, systemPath, changed));
         result.put("hardCode", hardCodeService.getHardCode(filePathToMicroserviceName, systemPath, changed));

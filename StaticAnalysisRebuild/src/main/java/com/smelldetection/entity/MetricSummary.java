@@ -17,7 +17,7 @@ public class MetricSummary implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @ExcelIgnore
-    private Integer id; // 自增 id
+    private Long id; // 自增 id
     @ExcelProperty("systemName")
     private String systemName; // 微服务系统名称
     @ExcelProperty("microserviceName")

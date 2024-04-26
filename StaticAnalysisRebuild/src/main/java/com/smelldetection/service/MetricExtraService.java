@@ -169,7 +169,8 @@ public class MetricExtraService {
             metricSummary.setApiNumber(apis.size());
             metricSummary.setApiVersionNumber(apiVersions.size());
             metricSummary.setDatabaseNumber(dataBases.size());
-            metricSummary.setMicroserviceCall(serviceMethodCallResults.get(microserviceName).toString());
+            metricSummary.setServiceImplCall(serviceMethodCallResults.get(microserviceName).toString());
+            metricSummary.setMicroserviceCall(microserviceCallResults.get(microserviceName).toString());
             System.out.println("当前微服务: " + microserviceName);
             System.out.println("代码行数: " + linesOfCode);
             System.out.println("实体类集合(个数:" + entityClasses.size() + "): " + entityClasses);
@@ -184,6 +185,7 @@ public class MetricExtraService {
             System.out.println("API 版本集合(个数:" + apiVersions.size() + "): " + apiVersions);
             System.out.println("使用的数据库(个数:" + dataBases.size() + "): " + dataBases);
             System.out.println("服务层方法调用: " + serviceMethodCallResults.get(microserviceName));
+            metricSummaryMapper.insert(metricSummary);
         }
         System.out.println("微服务间调用: " + microserviceCallResults);
     }

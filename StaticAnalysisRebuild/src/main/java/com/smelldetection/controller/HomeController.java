@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -98,7 +99,7 @@ public class HomeController {
     private MetricExtraService metricExtraService;
 
     @GetMapping("/static")
-    public Map<String, Object> staticAnalysis(HttpServletRequest request) throws IOException, XmlPullParserException, DocumentException {
+    public Map<String, Object> staticAnalysis(HttpServletRequest request) throws Exception {
         /**
          * 1.获取系统各微服务模块的路径
          * 2.针对每个模块进行静态解析
@@ -107,6 +108,8 @@ public class HomeController {
          *   2.3.解析 .java 文件
          */
         long start = System.currentTimeMillis();
+        SimpleDateFormat dateformat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String time = dateformat.format(System.currentTimeMillis());
         String systemPath = request.getParameter("path");
         String changed = request.getParameter("changed");
         if (!redisTemplate.hasKey(systemPath + "_static_prepare") || "true".equals(changed)) {
@@ -117,6 +120,9 @@ public class HomeController {
         Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath + "_filePathToMicroserviceName");
         Map<String, Configuration> configuration = (Map<String, Configuration>) redisTemplate.opsForValue().get(systemPath + "_filePathToConfiguration");
         Map<String, Object> result = new HashMap<>();
+        result.put("time", time);
+        result.put("qualityScore", 0.0);
+        result.put("microserviceRank", microserviceRankService.getMicroserviceRank(filePathToMicroserviceName, systemPath, changed));
         result.put("bloatedService", bloatedService.getBloatedService(filePathToMicroserviceName, systemPath, changed));
         result.put("chattyService", chattyService.getChattyService(filePathToMicroserviceName, systemPath, changed));
         result.put("cyclicReference", cyclicReferenceService.getCyclicReference(filePathToMicroserviceName, systemPath, changed));

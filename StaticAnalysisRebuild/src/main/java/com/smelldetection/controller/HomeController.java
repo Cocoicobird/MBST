@@ -94,6 +94,9 @@ public class HomeController {
     @Autowired
     private MicroserviceRankService microserviceRankService;
 
+    @Autowired
+    private MetricExtraService metricExtraService;
+
     @GetMapping("/static")
     public Map<String, Object> staticAnalysis(HttpServletRequest request) throws IOException, XmlPullParserException, DocumentException {
         /**
@@ -106,10 +109,13 @@ public class HomeController {
         long start = System.currentTimeMillis();
         String systemPath = request.getParameter("path");
         String changed = request.getParameter("changed");
-        Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
-        Map<String, Configuration> configuration = FileUtils.getConfiguration(filePathToMicroserviceName);
-        redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
-        redisTemplate.opsForValue().set(systemPath + "_filePathToConfiguration", configuration);
+        if (!redisTemplate.hasKey(systemPath + "_static_prepare") || "true".equals(changed)) {
+            metricExtraService.prepare(systemPath);
+            redisTemplate.opsForValue().set(systemPath + "_static_prepare", "mark");
+            changed = "false";
+        }
+        Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath + "_filePathToMicroserviceName");
+        Map<String, Configuration> configuration = (Map<String, Configuration>) redisTemplate.opsForValue().get(systemPath + "_filePathToConfiguration");
         Map<String, Object> result = new HashMap<>();
         result.put("bloatedService", bloatedService.getBloatedService(filePathToMicroserviceName, systemPath, changed));
         result.put("chattyService", chattyService.getChattyService(filePathToMicroserviceName, systemPath, changed));
@@ -299,7 +305,7 @@ public class HomeController {
     }
 
     @GetMapping("/duplicatedService")
-    public Map<String, Set<List<DuplicatedServiceDetail>>> duplicatedService(HttpServletRequest request) throws IOException {
+    public Set<List<DuplicatedServiceDetail>> duplicatedService(HttpServletRequest request) throws IOException {
         String systemPath = request.getParameter("path");
         String changed = request.getParameter("changed");
         Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);

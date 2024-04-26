@@ -40,6 +40,7 @@ public class SharedLibraryService {
             poms.addAll(pomObject);
         }
         int num = poms.size();
+        boolean status = false;
         for (int i = 0; i < num; i++) {
             for (int j = i + 1; j < num; j++) {
                 Model mavenModel1 = poms.get(i).getMavenModel();
@@ -51,6 +52,7 @@ public class SharedLibraryService {
                             if (dependency1.getGroupId().startsWith("org.springframework")) {
                                 continue;
                             }
+                            status = true;
                             String sharedLibrary = dependency1.getGroupId() + "." + dependency2.getArtifactId();
                             if (dependency1.getVersion() != null
                                     && dependency1.getVersion().equals(dependency2.getVersion())) {
@@ -65,6 +67,7 @@ public class SharedLibraryService {
                 }
             }
         }
+        sharedLibraryDetail.setStatus(status);
         redisTemplate.opsForValue().set(systemPath + "_sharedLibraries_" + start, sharedLibraryDetail);
         return sharedLibraryDetail;
     }

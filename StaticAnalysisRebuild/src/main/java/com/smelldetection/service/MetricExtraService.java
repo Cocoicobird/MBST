@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.smelldetection.entity.MetricSummary;
+import com.smelldetection.entity.item.ServiceCutItem;
 import com.smelldetection.entity.system.component.Configuration;
 import com.smelldetection.entity.system.component.Pom;
 import com.smelldetection.mapper.MetricSummaryMapper;
@@ -17,6 +18,7 @@ import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.dom4j.DocumentException;
 import org.springframework.beans.MethodInvocationException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.yaml.snakeyaml.Yaml;
 
@@ -34,6 +36,9 @@ public class MetricExtraService {
 
     @Autowired
     private MetricSummaryMapper metricSummaryMapper;
+
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
 
     public void extraMetric(String microserviceSystemPath) throws IOException, XmlPullParserException, DocumentException {
         System.out.println("----------------------------------------------------------------");
@@ -214,6 +219,25 @@ public class MetricExtraService {
                     dataBases.add(dataBase);
                 }
             }
+        }
+    }
+
+    public void prepare(String systemPath) throws DocumentException, XmlPullParserException, IOException {
+        Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
+        redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
+        Map<String, Map<String, Integer>> microserviceCallResults = ServiceCallParserUtils.getMicroserviceCallResults(filePathToMicroserviceName);
+        redisTemplate.opsForValue().set(systemPath + "_microserviceCallResults", microserviceCallResults);
+        List<ServiceCutItem> systemServiceCuts = FileUtils.getSystemServiceCuts(filePathToMicroserviceName);
+        redisTemplate.opsForValue().set(systemPath + "_systemServiceCuts", systemServiceCuts);
+        Map<String, Configuration> filePathToConfiguration = FileUtils.getConfiguration(filePathToMicroserviceName);
+        redisTemplate.opsForValue().set(systemPath + "_filePathToConfiguration", filePathToConfiguration);
+        for (String filePath : filePathToMicroserviceName.keySet()) {
+            String microserviceName = filePathToMicroserviceName.get(filePath);
+            List<String> entityClasses = FileUtils.getJavaFilesUnderEntity(filePath);
+            redisTemplate.opsForValue().set(systemPath + "_" + microserviceName + "_entityClasses", entityClasses);
+            Map<String, Map<String, Integer>> serviceMethodCallOfControllers = JavaParserUtils.getServiceMethodCallOfControllerUnderOneMicroservice(filePath);
+            redisTemplate.opsForValue().set(systemPath + "_" + microserviceName + "_serviceMethodCallOfControllers", serviceMethodCallOfControllers);
+            // System.out.println("服务层调用: " + serviceMethodCallOfControllers);
         }
     }
 }

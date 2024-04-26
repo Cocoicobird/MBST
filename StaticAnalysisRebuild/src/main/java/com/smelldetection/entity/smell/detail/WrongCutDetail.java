@@ -18,6 +18,7 @@ import java.util.Map;
 public class WrongCutDetail implements Serializable {
     private static final long serialVersionUID = 1L;
 
+    private boolean status;
     private Map<String, ServiceCutItem> wrongCutMicroservices;
 
     public WrongCutDetail() {

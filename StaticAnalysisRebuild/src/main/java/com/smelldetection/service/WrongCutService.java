@@ -58,6 +58,9 @@ public class WrongCutService {
                 wrongCutDetail.getWrongCutMicroservices().put(serviceCut.getMicroserviceName(), serviceCut);
             }
         }
+        if (!wrongCutDetail.getWrongCutMicroservices().isEmpty()) {
+            wrongCutDetail.setStatus(true);
+        }
         redisTemplate.opsForValue().set(systemPath + "_wrongCut_" + start, wrongCutDetail);
         return wrongCutDetail;
     }

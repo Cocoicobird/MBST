@@ -14,6 +14,7 @@ import java.util.Map;
 public class NoHealthCheckAndNoServiceDiscoveryPatternDetail implements Serializable {
     private static final long serialVersionUID = 1L;
 
+    private boolean status;
     Map<String, Boolean> hasDiscovery;
 
     public NoHealthCheckAndNoServiceDiscoveryPatternDetail() {

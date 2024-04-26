@@ -58,6 +58,7 @@ public class UnnecessarySettingsService {
             filePathToConfiguration = (Map<String, Configuration>) redisTemplate.opsForValue().get(systemDirectory + "_filePathToConfiguration");
         }
         UnnecessarySettingsDetail unnecessarySettingsDetail = new UnnecessarySettingsDetail();
+        boolean status = false;
         for (String filePath : filePathToMicroserviceName.keySet()) {
             String microserviceName = filePathToMicroserviceName.get(filePath);
             Configuration configuration = filePathToConfiguration.get(filePath);
@@ -65,10 +66,12 @@ public class UnnecessarySettingsService {
             for (String key : configuration.getItems().keySet()) {
                 String value = configuration.get(key);
                 if (defaultConfiguration.containsKey(key) && defaultConfiguration.get(key).equals(value)) {
+                    status = true;
                     unnecessarySettingsDetail.put(microserviceName, key + "=" + value);
                 }
             }
         }
+        unnecessarySettingsDetail.setStatus(status);
         redisTemplate.opsForValue().set(systemDirectory + "_unnecessarySettings_" + start, unnecessarySettingsDetail);
         return unnecessarySettingsDetail;
     }

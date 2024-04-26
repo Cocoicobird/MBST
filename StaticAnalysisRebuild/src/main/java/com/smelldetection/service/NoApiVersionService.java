@@ -39,13 +39,12 @@ public class NoApiVersionService {
             }
         }
         redisTemplate.opsForValue().set(systemPath + "_urls", urls);
-//        boolean status = false;
-//        for(String microserviceName: apiVersionDetail.getNoVersion().keySet()) {
-//            if(!apiVersionDetail.getNoVersion().get(microserviceName).isEmpty()){
-//                status = true;
-//                break;
-//            }
-//        }
+        for(String microserviceName: apiVersionDetail.getNoVersion().keySet()) {
+            if(!apiVersionDetail.getNoVersion().get(microserviceName).isEmpty()){
+                apiVersionDetail.setStatus(true);
+                break;
+            }
+        }
         // redisTemplate.opsForValue().set(systemPath + "_urls", urls);
         redisTemplate.opsForValue().set(systemPath + "_noApiVersion_" + start, apiVersionDetail);
         return apiVersionDetail;

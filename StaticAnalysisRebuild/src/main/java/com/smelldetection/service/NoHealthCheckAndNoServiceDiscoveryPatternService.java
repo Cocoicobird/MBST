@@ -72,6 +72,9 @@ public class NoHealthCheckAndNoServiceDiscoveryPatternService {
             if (nacos && configuration.getItems().containsKey("spring.cloud.nacos.discovery.server-addr")) {
                 status = true;
             }
+            if (!status) {
+                result.setStatus(true);
+            }
             result.put(microserviceName, status);
         }
         redisTemplate.opsForValue().set(systemPath + "_noHealthCheckAndNoServiceDiscoveryPattern_" + start, result);

@@ -618,7 +618,7 @@ public class JavaParserUtils {
     }
 
     /**
-     * 简单过滤
+     * 简单过滤 <业务层对象:<方法:次数>>
      * @param compilationUnit 编译单元
      */
     public static Map<String, Map<String, Integer>> getServiceMethodCallOfController(CompilationUnit compilationUnit) {
@@ -649,6 +649,30 @@ public class JavaParserUtils {
             }
         }
         return serviceMethodCallOfController;
+    }
+
+    public static Map<String, Map<String, Integer>> getServiceMethodCallOfControllerUnderOneMicroservice(String filePath) throws IOException {
+        List<String> javaFiles = FileUtils.getJavaFiles(filePath);
+        Map<String, Map<String, Integer>> serviceMethodCallOfControllers = new HashMap<>();
+        for (String javaFile : javaFiles) {
+            File file = new File(javaFile);
+            if (JavaParserUtils.isControllerClass(file)) {
+                CompilationUnit compilationUnit = StaticJavaParser.parse(file);
+                Map<String, Map<String, Integer>> serviceMethodCallOfController = JavaParserUtils.getServiceMethodCallOfController(compilationUnit);
+                for (String serviceObject : serviceMethodCallOfController.keySet()) {
+                    // 未统计该 service 对象的方法调用
+                    if (!serviceMethodCallOfControllers.containsKey(serviceObject)) {
+                        serviceMethodCallOfControllers.put(serviceObject, new HashMap<>());
+                    }
+                    for (String serviceMethod : serviceMethodCallOfController.get(serviceObject).keySet()) {
+                        Integer count = serviceMethodCallOfController.get(serviceObject).get(serviceMethod);
+                        count += serviceMethodCallOfControllers.get(serviceObject).getOrDefault(serviceMethod, 0);
+                        serviceMethodCallOfControllers.get(serviceObject).put(serviceMethod, count);
+                    }
+                }
+            }
+        }
+        return serviceMethodCallOfControllers;
     }
 
     /**

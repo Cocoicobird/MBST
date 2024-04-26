@@ -105,6 +105,9 @@ public class PoorRestfulApiDesignService {
                     apiDesignDetail.putMissingHttpMethod(microserviceName, methodName, api);
                 if (hasVerb)
                     apiDesignDetail.putNoStandard(microserviceName, methodName, api);
+                if (noVersion || !hasHttpMethod || hasVerb) {
+                    apiDesignDetail.setStatus(true);
+                }
                 System.out.println(api + " " + "noVersion:" + noVersion + " hasHttpMethod:" + hasHttpMethod + " hasVerb:" + hasVerb);
             }
         }

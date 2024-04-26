@@ -71,6 +71,12 @@ public class LocalLoggingService {
             }
             localLoggingDetail.put(microserviceName, status);
         }
+        for (String microserviceName : localLoggingDetail.getLogs().keySet()) {
+            if (localLoggingDetail.getLogs().get(microserviceName)) {
+                localLoggingDetail.setStatus(true);
+                break;
+            }
+        }
         redisTemplate.opsForValue().set(systemPath + "_localLogging_" + start, localLoggingDetail);
         return localLoggingDetail;
     }

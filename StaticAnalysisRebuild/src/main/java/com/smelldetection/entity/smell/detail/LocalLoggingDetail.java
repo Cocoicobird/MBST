@@ -14,6 +14,7 @@ import java.util.Map;
 public class LocalLoggingDetail implements Serializable {
     private static final long serialVersionUID = 1L;
 
+    private boolean status;
     private Map<String, Boolean> logs; // true 为 Local Logging
 
     public LocalLoggingDetail() {

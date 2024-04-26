@@ -26,7 +26,7 @@ public class DuplicatedServicesService {
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
-    public Map<String, Set<List<DuplicatedServiceDetail>>> getDuplicatedService(Map<String, String> filePathToMicroserviceName, String systemPath, String changed) throws IOException {
+    public Set<List<DuplicatedServiceDetail>> getDuplicatedService(Map<String, String> filePathToMicroserviceName, String systemPath, String changed) throws IOException {
         long start = System.currentTimeMillis();
         // Map<String, Map<String, MethodDeclaration>> filePathToControllerMethod = new HashMap<>();
         Map<String, Map<String, MethodDeclaration>> filePathToServiceImplMethod = new HashMap<>();
@@ -129,11 +129,9 @@ public class DuplicatedServicesService {
             if (!check(serviceImpls, duplicatedServiceDetails))
                 serviceImpls.add(duplicatedServiceDetails);
         }
-        Map<String, Set<List<DuplicatedServiceDetail>>> results = new HashMap<>();
-        results.put("serviceImpl", serviceImpls);
         // results.put("controllers", controllers);
-        redisTemplate.opsForValue().set(systemPath + "_duplicatedService_" + start, results);
-        return results;
+        redisTemplate.opsForValue().set(systemPath + "_duplicatedService_" + start, serviceImpls);
+        return serviceImpls;
     }
 
     private boolean check(Set<List<DuplicatedServiceDetail>> serviceImpls, List<DuplicatedServiceDetail> duplicatedServiceDetails) {
@@ -154,13 +152,13 @@ public class DuplicatedServicesService {
         return stringBuilder.toString();
     }
 
-    public List<Map<String, Set<List<DuplicatedServiceDetail>>>> getDuplicatedServiceHistory(String systemPath) {
+    public List<Set<List<DuplicatedServiceDetail>>> getDuplicatedServiceHistory(String systemPath) {
         String key = systemPath + "_duplicatedService_*";
         Set<String> keys = redisTemplate.keys(key);
-        List<Map<String, Set<List<DuplicatedServiceDetail>>>> duplicatedServiceDetails = new ArrayList<>();
+        List<Set<List<DuplicatedServiceDetail>>> duplicatedServiceDetails = new ArrayList<>();
         if (keys != null) {
             for (String k : keys) {
-                duplicatedServiceDetails.add((Map<String, Set<List<DuplicatedServiceDetail>>>) redisTemplate.opsForValue().get(k));
+                duplicatedServiceDetails.add((Set<List<DuplicatedServiceDetail>>) redisTemplate.opsForValue().get(k));
             }
         }
         return duplicatedServiceDetails;

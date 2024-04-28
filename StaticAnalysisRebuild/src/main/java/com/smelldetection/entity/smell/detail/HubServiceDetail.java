@@ -4,7 +4,9 @@ import com.smelldetection.entity.item.DependCount;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -16,12 +18,14 @@ public class HubServiceDetail implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private boolean status;
-    Map<String, DependCount> hubClasses;
+    Map<String, List<DependCount>> hubClasses;
 
     public HubServiceDetail() {
         this.hubClasses = new HashMap<>();
     }
     public void put(String microserviceName, DependCount dependCount) {
-        hubClasses.put(microserviceName, dependCount);
+        if (!hubClasses.containsKey(microserviceName))
+            hubClasses.put(microserviceName, new ArrayList<>());
+        hubClasses.get(microserviceName).add(dependCount);
     }
 }

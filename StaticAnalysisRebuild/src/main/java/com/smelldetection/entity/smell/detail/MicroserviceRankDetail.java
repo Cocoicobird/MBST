@@ -16,7 +16,7 @@ public class MicroserviceRankDetail implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private String name;
-    private Double weight;
+    private double weight;
     private List<MicroserviceRankItem> pointers;
 
     public MicroserviceRankDetail() {
@@ -25,7 +25,7 @@ public class MicroserviceRankDetail implements Serializable {
         this.pointers = new ArrayList<>();
     }
 
-    public void setPointers(List<String> pointers) {
+    public void addPointers(List<String> pointers) {
         for (String pointer : pointers)
             this.pointers.add(new MicroserviceRankItem(pointer));
     }

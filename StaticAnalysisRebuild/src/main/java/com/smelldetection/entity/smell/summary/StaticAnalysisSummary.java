@@ -4,6 +4,8 @@ import com.smelldetection.entity.smell.detail.*;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.List;
+import java.util.Set;
 
 /**
  * @author Cocoicobird
@@ -14,16 +16,25 @@ import java.io.Serializable;
 public class StaticAnalysisSummary implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private ApiVersionDetail apiVersionDetail;
+    private BloatedServiceDetail bloatedServiceDetail;
+    private ChattyServiceDetail chattyServiceDetail;
     private CyclicReferenceDetail cyclicReferenceDetail;
+    private Set<List<DuplicatedServiceDetail>> duplicatedServiceDetail;
     private ESBUsageDetail esbUsageDetail;
-    private NoGatewayDetail noGatewayDetail;
     private GodServiceDetail godServiceDetail;
+    private ServiceGreedyDetail greedyServiceDetail;
     private HardCodeDetail hardCodeDetail;
+    private HubServiceDetail hubServiceDetail;
+    private LocalLoggingDetail localLoggingDetail;
+    private ApiVersionDetail noApiVersionDetail;
+    private NoGatewayDetail noGatewayDetail;
+    private NoHealthCheckAndNoServiceDiscoveryPatternDetail NoHealthCheckDetail;
+    private NoHealthCheckAndNoServiceDiscoveryPatternDetail NoServiceDiscoveryPatternDetail;
+    private ApiDesignDetail poorRestfulApiDesign;
     private ScatteredServiceDetail scatteredServiceDetail;
-    private ServiceGreedyDetail serviceGreedyDetail;
     private SharedDatabasesAndServiceIntimacyDetail sharedDatabasesAndServiceIntimacyDetail;
     private SharedLibraryDetail sharedLibraryDetail;
-    private TooManyStandardsDetail tooManyStandardsDetail;
+    private UnnecessarySettingsDetail unnecessarySettingsDetail;
+    private WhateverTypesDetail whateverTypesDetail;
     private WrongCutDetail wrongCutDetail;
 }

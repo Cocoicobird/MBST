@@ -98,6 +98,9 @@ public class HomeController {
     @Autowired
     private MetricExtraService metricExtraService;
 
+    @Autowired
+    private QualityCharacteristicCalculationService calculationService;
+
     @GetMapping("/static")
     public Map<String, Object> staticAnalysis(HttpServletRequest request) throws Exception {
         /**
@@ -112,16 +115,15 @@ public class HomeController {
         String time = dateformat.format(System.currentTimeMillis());
         String systemPath = request.getParameter("path");
         String changed = request.getParameter("changed");
-        if (!redisTemplate.hasKey(systemPath + "_static_prepare") || "true".equals(changed)) {
+        if (!redisTemplate.hasKey(systemPath + "_prepare_static") || "true".equals(changed)) {
             metricExtraService.prepare(systemPath);
-            redisTemplate.opsForValue().set(systemPath + "_static_prepare", "mark");
+            redisTemplate.opsForValue().set(systemPath + "_prepare_static", "mark");
             changed = "false";
         }
         Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath + "_filePathToMicroserviceName");
         Map<String, Configuration> configuration = (Map<String, Configuration>) redisTemplate.opsForValue().get(systemPath + "_filePathToConfiguration");
         Map<String, Object> result = new HashMap<>();
         result.put("time", time);
-        result.put("qualityScore", 0.0);
         result.put("microserviceRank", microserviceRankService.getMicroserviceRank(filePathToMicroserviceName, systemPath, changed));
         result.put("bloatedService", bloatedService.getBloatedService(filePathToMicroserviceName, systemPath, changed));
         result.put("chattyService", chattyService.getChattyService(filePathToMicroserviceName, systemPath, changed));
@@ -147,6 +149,9 @@ public class HomeController {
         result.put("unnecessarySettings", unnecessarySettingsService.getUnnecessarySettings(filePathToMicroserviceName, systemPath, changed));
         result.put("whateverTypes", whateverTypesService.getWhateverTypes(filePathToMicroserviceName, systemPath, changed));
         result.put("wrongCut", wrongCutService.getWrongCut(filePathToMicroserviceName, systemPath, changed));
+        calculationService.processStaticAnalysisResult(result);
+        calculationService.calculateStaticAnalysisQualityScore();
+        result.put("qualityScore", QualityCharacteristicCalculationService.qualityScore);
         redisTemplate.opsForValue().set(systemPath + "_static_" + start, result);
         return result;
     }

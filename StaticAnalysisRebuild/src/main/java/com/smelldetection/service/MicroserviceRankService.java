@@ -64,13 +64,15 @@ public class MicroserviceRankService {
         if (n > 0) {
             double d = 0.85;
             // 建图
-            int [][] graph = new int[n][n];
+            boolean status = false;
+            int[][] graph = new int[n][n];
             for (int i = 0; i < n; i++) {
                 String filePath = filePaths.get(i);
                 for (int j = 0; j < n; j++) {
                     String pointed = filePathToMicroserviceName.get(filePaths.get(j));
                     if (microserviceCallResults.get(filePathToMicroserviceName.get(filePath)).containsKey(pointed)) {
                         graph[i][j] = 1;
+                        status = true;
                     } else {
                         graph[i][j] = 0;
                     }
@@ -86,15 +88,31 @@ public class MicroserviceRankService {
                         weights.setValue(i, j, 0.0);
                     }
                 }
+                boolean flag = true;
+                for (int j = 0; j < n; j++) {
+                    if (graph[i][j] == 1) {
+                        flag = false;
+                        break;
+                    }
+                }
+                if (flag) {
+                    weights.setValue(i, i, 1);
+                }
             }
+            if (n == 1 || !status) {
+                for (int i = 0; i < n; i++) {
+                    weights.setValue(i, i, 1.0);
+                }
+            }
+            System.out.println(weights);
             weights = weights.transpose();
             Matrix r = new Matrix(n, 1); // n * 1
             for (int i = 0; i < n; i++) {
-                r.setValue(i, 0, 0.25);
+                r.setValue(i, 0, 1.0 / n);
             }
             Matrix t = new Matrix(n, 1);
             for (int i = 0; i < n; i++) {
-                t.setValue(i, 0, (1 - d) / 4.0);
+                t.setValue(i, 0, (1 - d) / n);
             }
             for (int i = 0; i < 100; i++) {
                 r = weights.multiply(r);
@@ -108,7 +126,7 @@ public class MicroserviceRankService {
                 String microserviceName = filePathToMicroserviceName.get(filePaths.get(i));
                 microserviceRankItem.setName(microserviceName);
                 microserviceRankItem.setWeight(r.getValue(i, 0));
-                microserviceRankItem.setPointers(new ArrayList<>(microserviceCallResults.get(microserviceName).keySet()));
+                microserviceRankItem.addPointers(new ArrayList<>(microserviceCallResults.get(microserviceName).keySet()));
                 microserviceRank.add(microserviceRankItem);
             }
         }

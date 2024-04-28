@@ -73,7 +73,7 @@ public class SharedLibraryService {
     }
 
     public List<SharedLibraryDetail> getSharedLibrariesHistory(String systemPath) {
-        String key = systemPath + "_localLogging_*";
+        String key = systemPath + "_sharedLibraries_*";
         Set<String> keys = redisTemplate.keys(key);
         List<SharedLibraryDetail> sharedLibraryDetails = new ArrayList<>();
         if (keys != null) {

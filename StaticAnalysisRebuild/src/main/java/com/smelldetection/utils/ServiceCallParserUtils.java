@@ -128,7 +128,9 @@ public class ServiceCallParserUtils {
             for (CompilationUnit compilationUnit : compilationUnits) {
                 Map<String, Integer> parseResultsOfJavaFile = parseJavaFile(compilationUnit);
                 // System.out.println("parseResultsOfJavaFile: " + parseResultsOfJavaFile);
-                parseResultsOfMicroservice.putAll(parseResultsOfJavaFile);
+                for (String key : parseResultsOfJavaFile.keySet()) {
+                    parseResultsOfMicroservice.put(key, parseResultsOfMicroservice.getOrDefault(key, 0) + parseResultsOfJavaFile.get(key));
+                }
             }
         });
         return parseResultsOfMicroservice;

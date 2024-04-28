@@ -160,7 +160,7 @@ public class HistoryController {
         return scatteredService.getScatteredFunctionalityServiceHistory(request.getParameter("path"));
     }
 
-    @GetMapping("/sharedDatabaseAndServiceIntimacy")
+    @GetMapping("/sharedDatabasesAndServiceIntimacy")
     public List<SharedDatabasesAndServiceIntimacyDetail> sharedDatabasesAndServiceIntimacyHistory(HttpServletRequest request) {
         return sharedDatabaseAndServiceIntimacyService.getSharedDatabasesAndServiceIntimacyHistory(request.getParameter("path"));
     }
@@ -186,14 +186,14 @@ public class HistoryController {
     }
 
     @GetMapping("/static")
-    public List<Map<String, Object>> staticHistory(HttpServletRequest request) {
+    public List<String> staticHistory(HttpServletRequest request) {
         String systemPath = request.getParameter("path");
         String key = systemPath + "_static_*";
         Set<String> keys = redisTemplate.keys(key);
-        List<Map<String, Object>> statics = new ArrayList<>();
+        List<String> statics = new ArrayList<>();
         if (keys != null) {
             for (String k : keys) {
-                statics.add((Map<String, Object>) redisTemplate.opsForValue().get(k));
+                statics.add((String) redisTemplate.opsForValue().get(k));
             }
         }
         return statics;

@@ -25,6 +25,7 @@ public class ApiDesignDetail implements Serializable {
     public ApiDesignDetail() {
         this.noVersion = new HashMap<>();
         this.noStandard = new HashMap<>();
+        this.missingHttpMethod = new HashMap<>();
     }
 
     public void putNoVersion(String microserviceName, String methodName, String url) {

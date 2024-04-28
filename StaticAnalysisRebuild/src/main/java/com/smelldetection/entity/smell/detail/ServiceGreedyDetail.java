@@ -17,7 +17,7 @@ public class ServiceGreedyDetail implements Serializable {
     private static final long serialVersionUID = 1L;
 
     // 是否存在服务贪婪
-    private boolean existed;
+    private boolean status;
     private List<ServiceGreedyItem> greedyServices;
 
     public ServiceGreedyDetail() {

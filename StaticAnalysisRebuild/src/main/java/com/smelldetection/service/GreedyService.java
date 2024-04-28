@@ -47,7 +47,7 @@ public class GreedyService {
             }
         }
         if (!serviceGreedyDetail.getGreedyServices().isEmpty()) {
-            serviceGreedyDetail.setExisted(true);
+            serviceGreedyDetail.setStatus(true);
         }
         redisTemplate.opsForValue().set(systemPath + "_greedyService_" + start, serviceGreedyDetail);
         return serviceGreedyDetail;

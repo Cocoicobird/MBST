@@ -18,7 +18,7 @@ import java.util.Map;
 public class WhateverTypesDetail implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private Boolean status;
+    private boolean status;
     private Map<String, List<String>> returnTypes;
 
     public WhateverTypesDetail() {

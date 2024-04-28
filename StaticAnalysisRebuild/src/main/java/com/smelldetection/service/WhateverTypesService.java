@@ -36,8 +36,6 @@ public class WhateverTypesService {
             Map<String, MethodDeclaration> returnTypes = new HashMap<>();
             for (String javaFile : javaFiles) {
                 Map<String, MethodDeclaration> returnType = JavaParserUtils.getMethodDeclaration(javaFile);
-                System.out.println(JavaParserUtils.getPackageName(new File(javaFile)));
-                System.out.println(JavaParserUtils.getImports(new File(javaFile)));
                 returnTypes.putAll(returnType);
             }
             // redisTemplate.opsForValue().set(microserviceName + "MethodDeclaration", returnTypes);

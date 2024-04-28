@@ -54,7 +54,7 @@ public class JavaParserUtils {
             String api = methodToApi.get(methodName);
             if ("".equals(api)) {
                 apiVersionDetail.getMissingUrl().get(microserviceName).put(methodName, api);
-            } else if (!matchApiPattern(api)) {
+            } else if (matchApiVersion(api).isEmpty()) {
                 apiVersionDetail.getNoVersion().get(microserviceName).put(methodName, api);
             }
         }
@@ -160,7 +160,7 @@ public class JavaParserUtils {
      * api 版本匹配
      * @param url 单个 api
      */
-    private static List<String> matchApiVersion(String url) {
+    public static List<String> matchApiVersion(String url) {
         // String pattern = "/v[0-9]+/";
         String pattern = "/v\\d+(\\.\\d+)?/";
         Pattern r = Pattern.compile(pattern);

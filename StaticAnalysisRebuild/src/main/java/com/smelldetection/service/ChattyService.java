@@ -40,7 +40,6 @@ public class ChattyService {
         }
         for (String filePath: filePathToMicroserviceName.keySet()) {
             String microserviceName = filePathToMicroserviceName.get(filePath);
-            System.out.println(microserviceName);
             int maxCallNumber = 0;
             assert microserviceCallResults != null;
             Map<String, Integer> microserviceCallResult = microserviceCallResults.get(microserviceName);

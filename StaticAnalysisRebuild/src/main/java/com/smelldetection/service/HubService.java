@@ -48,7 +48,6 @@ public class HubService {
             DependCount dependCount = importsAndOutputs.get(className);
             int importCount = dependCount.getImportCount();
             int outputCount = dependCount.getOutputCount();
-            System.out.println(dependCount);
             if (importCount >= 10 && outputCount >= 10 && Math.max(importCount, outputCount) * 0.9 <= Math.min(importCount, outputCount)) {
                 hubServiceDetail.put(dependCount.getMicroserviceName(), dependCount);
             }

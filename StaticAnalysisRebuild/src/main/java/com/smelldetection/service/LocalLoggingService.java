@@ -45,7 +45,6 @@ public class LocalLoggingService {
             List<String> logs = FileUtils.getLogs(filePath);
             boolean logstash = false;
             for (String log : logs) {
-                System.out.println(log);
                 Document document = saxReader.read(new File(log));
                 Element rootElement = document.getRootElement();
                 for (Element element : rootElement.elements()) {

@@ -163,9 +163,6 @@ public class FileUtils {
             Pom pom = new Pom();
             MavenXpp3Reader mavenXpp3Reader = new MavenXpp3Reader();
             Model model = mavenXpp3Reader.read(new FileInputStream(p));
-            for (Dependency dependency : model.getDependencies()) {
-                System.out.println(dependency);
-            }
             pom.setMavenModel(model);
             poms.add(pom);
         }

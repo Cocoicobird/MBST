@@ -95,9 +95,7 @@ public class BloatedService {
             assert microserviceCallResults != null;
             Map<String, Integer> microserviceCall = microserviceCallResults.get(microserviceName);
             double percent = (double) microserviceCall.size() / filePathToMicroserviceName.size();
-            System.out.println(maxParameterNumber + " " + microserviceCall.size() + "/" + filePathToMicroserviceName.size() + " " + totalServiceMethodCallNumber + " " + codeSize);
             boolean status = maxParameterNumber >= 6 && (percent >= 0.2 || totalServiceMethodCallNumber > 10 || codeSize > 5000);
-            System.out.println(status);
             if (status) {
                 BloatedServiceItem bloatedServiceItem = new BloatedServiceItem();
                 bloatedServiceItem.setMaxParameterNumber(maxParameterNumber);

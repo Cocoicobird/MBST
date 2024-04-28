@@ -17,7 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("detect/v1.0")
+@RequestMapping("/detect/v1.0")
 
 @CrossOrigin
 public class DetectionController {
@@ -132,20 +132,20 @@ public class DetectionController {
         return tooMuchStandardsService.getTMSServices(requestItem);
     }
 
-    @RequestMapping(path = "serviceGreedy",method = RequestMethod.POST, produces = "application/json; charset=UTF-8", consumes = {"text/plain", "application/*"})
+    @RequestMapping(path = "/serviceGreedy",method = RequestMethod.POST, produces = "application/json; charset=UTF-8", consumes = {"text/plain", "application/*"})
     public GreedyContext GetSvcGreedy(@RequestBody RequestItem requestItem) throws IOException {
         return greedyService.getGreedySvc(requestItem);
     }
 
-    @RequestMapping(path = "hubClass",method = RequestMethod.POST, produces = "application/json; charset=UTF-8", consumes = {"text/plain", "application/*"})
+    @RequestMapping(path = "/hubClass",method = RequestMethod.POST, produces = "application/json; charset=UTF-8", consumes = {"text/plain", "application/*"})
     public HubContext getHubClass(@RequestBody RequestItem requestItem) throws IOException {
         return hubService.getHubClass(requestItem);
     }
-    @RequestMapping(path = "scatteredFunctionality",method = RequestMethod.POST, produces = "application/json; charset=UTF-8", consumes = {"text/plain", "application/*"})
+    @RequestMapping(path = "/scatteredFunctionality",method = RequestMethod.POST, produces = "application/json; charset=UTF-8", consumes = {"text/plain", "application/*"})
     public ScatteredContext getSFServices(@RequestBody RequestItem requestItem) throws IOException{
         return scatteredService.getSFServices(requestItem);
     }
-    @RequestMapping(path = "getStaticAnalysisResults",method = RequestMethod.POST, produces = "application/json; charset=UTF-8", consumes = {"text/plain", "application/*"})
+    @RequestMapping(path = "/getStaticAnalysisResults",method = RequestMethod.POST, produces = "application/json; charset=UTF-8", consumes = {"text/plain", "application/*"})
     public SystemContext getStaticAnalysisResults(@RequestBody RequestItem requestItem) throws XmlPullParserException, IOException, ParseException, ClassNotFoundException {
         SystemContext systemContext = new SystemContext();
         systemContext.setServicesCount(fileFactory.getServicesCount(requestItem.getServicesPath()).size());

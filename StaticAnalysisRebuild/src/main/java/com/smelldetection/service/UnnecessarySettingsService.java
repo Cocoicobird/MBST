@@ -62,7 +62,6 @@ public class UnnecessarySettingsService {
         for (String filePath : filePathToMicroserviceName.keySet()) {
             String microserviceName = filePathToMicroserviceName.get(filePath);
             Configuration configuration = filePathToConfiguration.get(filePath);
-            System.out.println(microserviceName);
             for (String key : configuration.getItems().keySet()) {
                 String value = configuration.get(key);
                 if (defaultConfiguration.containsKey(key) && defaultConfiguration.get(key).equals(value)) {

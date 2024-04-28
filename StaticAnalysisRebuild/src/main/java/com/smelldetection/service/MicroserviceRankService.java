@@ -104,7 +104,6 @@ public class MicroserviceRankService {
                     weights.setValue(i, i, 1.0);
                 }
             }
-            System.out.println(weights);
             weights = weights.transpose();
             Matrix r = new Matrix(n, 1); // n * 1
             for (int i = 0; i < n; i++) {

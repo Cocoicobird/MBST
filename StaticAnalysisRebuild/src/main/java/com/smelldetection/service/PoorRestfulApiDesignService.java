@@ -43,24 +43,19 @@ public class PoorRestfulApiDesignService {
     public ApiDesignDetail getPoorRestfulApiDesign(Map<String, String> filePathToMicroserviceName, String systemPath, String changed) throws IOException {
         long start = System.currentTimeMillis();
         ApiDesignDetail apiDesignDetail = new ApiDesignDetail();
-        Map<String, Map<String, String>> urls;
-        if (redisTemplate.opsForValue().get(systemPath + "_urls") == null || "true".equals(changed)) {
-            urls = new HashMap<>();
-        } else {
-            urls = (Map<String, Map<String, String>>) redisTemplate.opsForValue().get(systemPath + "_urls");
-        }
+        Map<String, Map<String, String>> urls = new HashMap<>();
         for (String filePath : filePathToMicroserviceName.keySet()) {
             String microserviceName = filePathToMicroserviceName.get(filePath);
-            System.out.println(microserviceName);
             List<String> javaFiles = FileUtils.getJavaFiles(filePath);
             Map<String, String> methodToApi;
             if (!urls.containsKey(microserviceName)) {
                 methodToApi = new HashMap<>();
+                urls.put(microserviceName, methodToApi);
                 for (String javaFile : javaFiles) {
                     File file = new File(javaFile);
                     methodToApi.putAll(JavaParserUtils.getMethodToApi(file));
                 }
-                urls.put(microserviceName, methodToApi);
+                urls.get(microserviceName).putAll(methodToApi);
             } else {
                 methodToApi = urls.get(microserviceName);
             }
@@ -69,7 +64,7 @@ public class PoorRestfulApiDesignService {
                 boolean hasHttpMethod = true; // HTTP 方法是否指定
                 boolean hasVerb = false;
                 String api = methodToApi.get(methodName);
-                if (!JavaParserUtils.matchApiPattern(api)) { // 版本控制
+                if (JavaParserUtils.matchApiVersion(api).isEmpty()) { // 版本控制
                     noVersion = true;
                 }
                 String[] apiAndHttpMethod = api.split(" ");
@@ -96,7 +91,6 @@ public class PoorRestfulApiDesignService {
                         String pos = token.get(CoreAnnotations.PartOfSpeechAnnotation.class);
                         if ("VB".equals(pos))
                             hasVerb = true;
-                        System.out.println(word + " " + pos);
                     }
                 }
                 if (noVersion)
@@ -108,7 +102,7 @@ public class PoorRestfulApiDesignService {
                 if (noVersion || !hasHttpMethod || hasVerb) {
                     apiDesignDetail.setStatus(true);
                 }
-                System.out.println(api + " " + "noVersion:" + noVersion + " hasHttpMethod:" + hasHttpMethod + " hasVerb:" + hasVerb);
+                // System.out.println(api + " " + "noVersion:" + noVersion + " hasHttpMethod:" + hasHttpMethod + " hasVerb:" + hasVerb);
             }
         }
         redisTemplate.opsForValue().set(systemPath + "_urls", urls);

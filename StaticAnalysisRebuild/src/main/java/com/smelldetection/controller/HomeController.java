@@ -123,6 +123,7 @@ public class HomeController {
         Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath + "_filePathToMicroserviceName");
         Map<String, Configuration> configuration = (Map<String, Configuration>) redisTemplate.opsForValue().get(systemPath + "_filePathToConfiguration");
         Map<String, Object> result = new HashMap<>();
+        System.out.println(filePathToMicroserviceName);
         result.put("time", time);
         result.put("microserviceRank", microserviceRankService.getMicroserviceRank(filePathToMicroserviceName, systemPath, changed));
         result.put("bloatedService", bloatedService.getBloatedService(filePathToMicroserviceName, systemPath, changed));

@@ -18,6 +18,7 @@ public class ApiDesignDetail implements Serializable {
      * value 为对应方法和 url
      */
     private boolean status;
+    private String time;
     private Map<String, Map<String, String>> noVersion;
     private Map<String, Map<String, String>> noStandard;
     private Map<String, Map<String, String>> missingHttpMethod;

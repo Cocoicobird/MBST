@@ -14,4 +14,5 @@ public class NoGatewayDetail implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private boolean status; // true 表示无网关
+    private String time;
 }

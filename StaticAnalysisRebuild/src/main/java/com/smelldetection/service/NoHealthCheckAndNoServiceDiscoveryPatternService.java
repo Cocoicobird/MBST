@@ -12,6 +12,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -34,6 +35,8 @@ public class NoHealthCheckAndNoServiceDiscoveryPatternService {
      */
     public NoHealthCheckAndNoServiceDiscoveryPatternDetail getNoHealthCheckAndNoServiceDiscoveryPattern(Map<String, String> filePathToMicroserviceName, String systemPath, String changed) throws IOException, XmlPullParserException {
         long start = System.currentTimeMillis();
+        SimpleDateFormat dateformat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String time = dateformat.format(start);
         List<Pom> parentPom = FileUtils.getPomObject(FileUtils.getParentPomXml(filePathToMicroserviceName, systemPath));
         boolean nacos = false, consul = false;
         for (Pom pom : parentPom) {
@@ -57,6 +60,7 @@ public class NoHealthCheckAndNoServiceDiscoveryPatternService {
             filePathToConfiguration = (Map<String, Configuration>) redisTemplate.opsForValue().get(systemPath + "_filePathToConfiguration");
         }
         NoHealthCheckAndNoServiceDiscoveryPatternDetail result = new NoHealthCheckAndNoServiceDiscoveryPatternDetail();
+        result.setTime(time);
         for (String filePath : filePathToMicroserviceName.keySet()) {
             String microserviceName = filePathToMicroserviceName.get(filePath);
             Configuration configuration = filePathToConfiguration.get(filePath);

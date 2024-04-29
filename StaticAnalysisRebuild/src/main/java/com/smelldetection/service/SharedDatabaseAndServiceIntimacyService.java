@@ -10,6 +10,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -25,13 +26,16 @@ public class SharedDatabaseAndServiceIntimacyService {
 
     public SharedDatabasesAndServiceIntimacyDetail getSharedDatabasesAndServiceIntimacy(Map<String, Configuration> configurations, String systemPath, String changed) throws IOException {
         long start = System.currentTimeMillis();
+        SimpleDateFormat dateformat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String time = dateformat.format(start);
         String pattern = "mysql://";
         // key 为数据库 value 为使用该数据库的微服务模块
         Map<String, List<String>> sharedDatabases = new HashMap<>();
         // key 为微服务模块 value 为其数据库
-        Map<String, List<String>> serviceIntimacy = new HashMap<>();
+        Map<String, List<String>> serviceIntimacy = new HashMap<>(); // 该微服务模块使用的数据库
         for (String microserviceName : configurations.keySet()) {
             Configuration configuration = configurations.get(microserviceName);
+            System.out.println(microserviceName + " " + configuration);
             for (String key : configuration.getItems().keySet()) {
                 String value = configuration.get(key);
                 String database = "";
@@ -62,8 +66,10 @@ public class SharedDatabaseAndServiceIntimacyService {
             }
         }
         SharedDatabasesAndServiceIntimacyDetail sharedDatabasesAndServiceIntimacyDetail = new SharedDatabasesAndServiceIntimacyDetail();
+        sharedDatabasesAndServiceIntimacyDetail.setTime(time);
+        System.out.println(sharedDatabases);
         for (String database : sharedDatabases.keySet()) {
-            if (sharedDatabases.get(database).size() > 1) {
+            if (sharedDatabases.get(database).size() > 1) { // 该数据库被多个服务使用
                 sharedDatabasesAndServiceIntimacyDetail.addSharedDatabases(database, sharedDatabases.get(database));
             }
         }
@@ -72,10 +78,11 @@ public class SharedDatabaseAndServiceIntimacyService {
             List<String> microservices = new ArrayList<>();
             for (String database : databases) {
                 for (String ms : sharedDatabases.get(database))
-                    if (!microservices.contains(ms))
+                    if (!microservices.contains(ms) && !microservice.equals(ms))
                         microservices.add(ms);
             }
-            sharedDatabasesAndServiceIntimacyDetail.addServiceIntimacy(microservice, microservices);
+            if (!microservices.isEmpty())
+                sharedDatabasesAndServiceIntimacyDetail.addServiceIntimacy(microservice, microservices);
         }
         redisTemplate.opsForValue().set(systemPath + "_sharedDatabasesAndServiceIntimacy_" + start, sharedDatabasesAndServiceIntimacyDetail);
         return sharedDatabasesAndServiceIntimacyDetail;

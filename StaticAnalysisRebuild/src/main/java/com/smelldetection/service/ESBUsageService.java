@@ -10,6 +10,7 @@ import org.springframework.boot.autoconfigure.cache.CacheProperties;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -24,7 +25,10 @@ public class ESBUsageService {
 
     public ESBUsageDetail getESBUsageServices(Map<String, String> filePathToMicroserviceName, String systemPath, String changed) {
         long start = System.currentTimeMillis();
+        SimpleDateFormat dateformat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String time = dateformat.format(start);
         ESBUsageDetail esbUsageDetail = new ESBUsageDetail();
+        esbUsageDetail.setTime(time);
         Map<String, Map<String, Integer>> microserviceCallResults;
         if (redisTemplate.opsForValue().get(systemPath + "_" + "microserviceCallResults") == null || "true".equals(changed)) {
             microserviceCallResults = ServiceCallParserUtils.getMicroserviceCallResults(filePathToMicroserviceName);

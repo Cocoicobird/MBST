@@ -16,6 +16,7 @@ public class ScatteredServiceDetail implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private boolean status;
+    private String time;
     // 松散服务集合，若干个服务共同完成一个功能
     private List<Set<String>> scatteredServices;
 

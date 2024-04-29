@@ -19,6 +19,7 @@ public class WhateverTypesDetail implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private boolean status;
+    private String time;
     private Map<String, List<String>> returnTypes;
 
     public WhateverTypesDetail() {

@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -22,7 +23,10 @@ public class ScatteredService {
 
     public ScatteredServiceDetail getScatteredFunctionalityServices(Map<String, String> filePathToMicroserviceName, String systemPath, String changed) {
         long start = System.currentTimeMillis();
+        SimpleDateFormat dateformat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String time = dateformat.format(start);
         ScatteredServiceDetail scatteredServiceDetail = new ScatteredServiceDetail();
+        scatteredServiceDetail.setTime(time);
         Map<String, Map<String,Integer>> microserviceCallResults = ServiceCallParserUtils.getMicroserviceCallResults(filePathToMicroserviceName);
         if (microserviceCallResults != null) {
             ServiceCallParserUtils.checkCallResult(microserviceCallResults);

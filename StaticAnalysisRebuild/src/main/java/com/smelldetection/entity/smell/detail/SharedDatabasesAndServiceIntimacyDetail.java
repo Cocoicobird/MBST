@@ -17,6 +17,7 @@ import java.util.Map;
 public class SharedDatabasesAndServiceIntimacyDetail implements Serializable {
     private static final long serialVersionUID = 1L;
 
+    private String time;
     private Map<String, List<String>> sharedDatabases; // key 为数据库 value 为使用该数据库的微服务集合
     public Map<String, List<String>> serviceIntimacy; // key 为微服务 value 为与其亲密的微服务
 

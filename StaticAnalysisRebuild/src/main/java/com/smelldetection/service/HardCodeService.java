@@ -10,6 +10,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -25,7 +26,10 @@ public class HardCodeService {
 
     public HardCodeDetail getHardCode(Map<String, String> filePathToMicroserviceName, String systemPath, String changed) throws IOException {
         long start = System.currentTimeMillis();
+        SimpleDateFormat dateformat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String time = dateformat.format(start);
         HardCodeDetail hardCodeDetail = new HardCodeDetail();
+        hardCodeDetail.setTime(time);
         for (String filePath : filePathToMicroserviceName.keySet()) {
             String microserviceName = filePathToMicroserviceName.get(filePath);
             List<String> javaFiles = FileUtils.getJavaFiles(filePath);

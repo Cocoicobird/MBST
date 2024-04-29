@@ -16,6 +16,7 @@ public class ChattyServiceDetail implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private boolean status;
+    private String time;
     private Map<String, ChattyServiceItem> chattyServices;
 
     public ChattyServiceDetail() {

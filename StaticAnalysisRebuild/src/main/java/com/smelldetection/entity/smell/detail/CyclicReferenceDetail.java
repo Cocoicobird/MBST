@@ -16,6 +16,7 @@ public class CyclicReferenceDetail implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private boolean status;
+    private String time;
     public Map<String, CyclicReferenceItem> cyclicReferences;
     public CyclicReferenceDetail(){
         this.cyclicReferences = new HashMap<>();

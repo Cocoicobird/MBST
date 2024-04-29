@@ -15,6 +15,7 @@ public class NoHealthCheckAndNoServiceDiscoveryPatternDetail implements Serializ
     private static final long serialVersionUID = 1L;
 
     private boolean status;
+    private String time;
     Map<String, Boolean> hasDiscovery;
 
     public NoHealthCheckAndNoServiceDiscoveryPatternDetail() {

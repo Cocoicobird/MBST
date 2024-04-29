@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -30,7 +31,10 @@ public class CyclicReferenceService {
 
     public CyclicReferenceDetail getCyclicReference(Map<String, String> filePathToMicroserviceName, String systemPath, String changed) throws IOException {
         long start = System.currentTimeMillis();
+        SimpleDateFormat dateformat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String time = dateformat.format(start);
         CyclicReferenceDetail cyclicReferenceDetail = new CyclicReferenceDetail();
+        cyclicReferenceDetail.setTime(time);
         for (String filePath : filePathToMicroserviceName.keySet()) {
             List<String> classNames = new ArrayList<>();
             Map<String, Set<String>> extensionAndImplementations = new HashMap<>();

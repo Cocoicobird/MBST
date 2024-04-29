@@ -12,6 +12,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,8 @@ public class GodService {
 
     public GodServiceDetail getGodService(Map<String, String> filePathToMicroserviceName, String systemPath, String changed) throws IOException, DocumentException, XmlPullParserException {
         long start = System.currentTimeMillis();
+        SimpleDateFormat dateformat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String time = dateformat.format(start);
         // ServiceCutItem 包含微服务名称以及该微服务模块的实体数量
         List<ServiceCutItem> systemServiceCuts;
         if (redisTemplate.opsForValue().get(systemPath + "_systemServiceCuts") == null || "true".equals(changed)) {
@@ -48,6 +51,7 @@ public class GodService {
         }
         double std = Math.sqrt(sumOfSquares / systemServiceCuts.size());
         GodServiceDetail godServiceDetail = new GodServiceDetail();
+        godServiceDetail.setTime(time);
         for (ServiceCutItem serviceCut : systemServiceCuts) {
             if(Math.abs(serviceCut.getEntityCount() - systemAverageEntityCount) >= 3 * std
                     && (systemServiceCuts.size() != 1) && std != 0) {

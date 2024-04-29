@@ -14,6 +14,7 @@ import java.util.Map;
 public class ApiVersionDetail implements Serializable {
     private static final long serialVersionUID = 1L;
     private boolean status;
+    private String time;
     /**
      * key 为微服务名称
      * value 为对应方法和 url

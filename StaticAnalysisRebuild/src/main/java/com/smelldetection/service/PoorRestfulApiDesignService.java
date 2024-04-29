@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -42,7 +43,10 @@ public class PoorRestfulApiDesignService {
 
     public ApiDesignDetail getPoorRestfulApiDesign(Map<String, String> filePathToMicroserviceName, String systemPath, String changed) throws IOException {
         long start = System.currentTimeMillis();
+        SimpleDateFormat dateformat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String time = dateformat.format(start);
         ApiDesignDetail apiDesignDetail = new ApiDesignDetail();
+        apiDesignDetail.setTime(time);
         Map<String, Map<String, String>> urls = new HashMap<>();
         for (String filePath : filePathToMicroserviceName.keySet()) {
             String microserviceName = filePathToMicroserviceName.get(filePath);

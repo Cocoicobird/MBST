@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +32,10 @@ public class LocalLoggingService {
 
     public LocalLoggingDetail getLocalLoggingService(Map<String, String> filePathToMicroserviceName, String systemPath, String changed) throws IOException, DocumentException {
         long start = System.currentTimeMillis();
+        SimpleDateFormat dateformat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String time = dateformat.format(start);
         LocalLoggingDetail localLoggingDetail = new LocalLoggingDetail();
+        localLoggingDetail.setTime(time);
         Map<String, Configuration> filePathToConfiguration;
         if (redisTemplate.opsForValue().get(systemPath + "_filePathToConfiguration") == null || "true".equals(changed)) {
             filePathToConfiguration = FileUtils.getConfiguration(filePathToMicroserviceName);

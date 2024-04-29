@@ -46,6 +46,7 @@ public class QualityCharacteristicCalculationService {
     }
 
     public void calculateStaticAnalysisQualityScore() {
+        qualityScore = 0.0;
         int weightSum = sumQualityCharacteristicWeight();
         qualityScore = (Adaptability.weight * Adaptability.calculateAdaptability(this)
                 + Analyzability.weight * Analyzability.calculateAnalyzability(this)

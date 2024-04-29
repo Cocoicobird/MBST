@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -29,7 +30,10 @@ public class SharedLibraryService {
 
     public SharedLibraryDetail getSharedLibraries(Map<String, String> filePathToMicroserviceName, String systemPath, String changed) throws IOException, XmlPullParserException {
         long start = System.currentTimeMillis();
+        SimpleDateFormat dateformat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String time = dateformat.format(start);
         SharedLibraryDetail sharedLibraryDetail = new SharedLibraryDetail();
+        sharedLibraryDetail.setTime(time);
         List<Pom> poms = new ArrayList<>();
         for (String filePath : filePathToMicroserviceName.keySet()) {
             String microserviceName = filePathToMicroserviceName.get(filePath);

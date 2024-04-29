@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -32,7 +33,10 @@ public class BloatedService {
     public BloatedServiceDetail getBloatedService(Map<String, String> filePathToMicroserviceName, String systemPath, String changed) throws IOException {
         // 微服务调用结果，每个微服务调用了哪些微服务以及次数
         long start = System.currentTimeMillis();
+        SimpleDateFormat dateformat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String time = dateformat.format(start);
         BloatedServiceDetail bloatedServiceDetail = new BloatedServiceDetail();
+        bloatedServiceDetail.setTime(time);
         Map<String, Map<String, Integer>> microserviceCallResults;
         if (redisTemplate.opsForValue().get(systemPath + "_" + "microserviceCallResults") == null || "true".equals(changed)) {
             microserviceCallResults = ServiceCallParserUtils.getMicroserviceCallResults(filePathToMicroserviceName);

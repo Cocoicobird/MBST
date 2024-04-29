@@ -12,6 +12,7 @@ import org.yaml.snakeyaml.Yaml;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -26,7 +27,10 @@ public class NoApiVersionService {
 
     public ApiVersionDetail getNoApiVersion(Map<String, String> filePathToMicroserviceName, String systemPath, String changed) throws IOException {
         long start = System.currentTimeMillis();
+        SimpleDateFormat dateformat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String time = dateformat.format(start);
         ApiVersionDetail apiVersionDetail = new ApiVersionDetail();
+        apiVersionDetail.setTime(time);
         Map<String, Map<String, String>> urls = new HashMap<>();
         for (String directory : filePathToMicroserviceName.keySet()) {
             String microserviceName = filePathToMicroserviceName.get(directory);

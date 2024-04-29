@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -26,8 +27,10 @@ public class DuplicatedServicesService {
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
-    public Set<List<DuplicatedServiceDetail>> getDuplicatedService(Map<String, String> filePathToMicroserviceName, String systemPath, String changed) throws IOException {
+    public Map<String, Object> getDuplicatedService(Map<String, String> filePathToMicroserviceName, String systemPath, String changed) throws IOException {
         long start = System.currentTimeMillis();
+        SimpleDateFormat dateformat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String time = dateformat.format(start);
         // Map<String, Map<String, MethodDeclaration>> filePathToControllerMethod = new HashMap<>();
         Map<String, Map<String, MethodDeclaration>> filePathToServiceImplMethod = new HashMap<>();
         for (String filePath : filePathToMicroserviceName.keySet()) {
@@ -131,7 +134,10 @@ public class DuplicatedServicesService {
         }
         // results.put("controllers", controllers);
         redisTemplate.opsForValue().set(systemPath + "_duplicatedService_" + start, serviceImpls);
-        return serviceImpls;
+        Map<String, Object> result = new HashMap<>();
+        result.put("time", time);
+        result.put("data", serviceImpls);
+        return result;
     }
 
     private boolean check(Set<List<DuplicatedServiceDetail>> serviceImpls, List<DuplicatedServiceDetail> duplicatedServiceDetails) {
@@ -152,13 +158,13 @@ public class DuplicatedServicesService {
         return stringBuilder.toString();
     }
 
-    public List<Set<List<DuplicatedServiceDetail>>> getDuplicatedServiceHistory(String systemPath) {
+    public List<Map<String, Object>> getDuplicatedServiceHistory(String systemPath) {
         String key = systemPath + "_duplicatedService_*";
         Set<String> keys = redisTemplate.keys(key);
-        List<Set<List<DuplicatedServiceDetail>>> duplicatedServiceDetails = new ArrayList<>();
+        List<Map<String, Object>> duplicatedServiceDetails = new ArrayList<>();
         if (keys != null) {
             for (String k : keys) {
-                duplicatedServiceDetails.add((Set<List<DuplicatedServiceDetail>>) redisTemplate.opsForValue().get(k));
+                duplicatedServiceDetails.add((Map<String, Object>) redisTemplate.opsForValue().get(k));
             }
         }
         return duplicatedServiceDetails;

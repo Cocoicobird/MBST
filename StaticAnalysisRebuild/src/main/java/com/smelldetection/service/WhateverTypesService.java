@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import javax.json.stream.JsonGenerator;
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -29,7 +30,10 @@ public class WhateverTypesService {
 
     public WhateverTypesDetail getWhateverTypes(Map<String, String> filePathToMicroserviceName, String systemPath, String changed) throws IOException {
         long start = System.currentTimeMillis();
+        SimpleDateFormat dateformat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String time = dateformat.format(start);
         WhateverTypesDetail whateverTypesDetail = new WhateverTypesDetail();
+        whateverTypesDetail.setTime(time);
         for (String filePath : filePathToMicroserviceName.keySet()) {
             String microserviceName = filePathToMicroserviceName.get(filePath);
             List<String> javaFiles = FileUtils.getJavaFiles(filePath);

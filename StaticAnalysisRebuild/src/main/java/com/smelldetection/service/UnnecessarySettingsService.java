@@ -12,6 +12,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -50,6 +51,8 @@ public class UnnecessarySettingsService {
 
     public UnnecessarySettingsDetail getUnnecessarySettings(Map<String, String> filePathToMicroserviceName, String systemDirectory, String changed) throws IOException {
         long start = System.currentTimeMillis();
+        SimpleDateFormat dateformat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String time = dateformat.format(start);
         Map<String, Configuration> filePathToConfiguration;
         if (redisTemplate.opsForValue().get(systemDirectory + "_filePathToConfiguration") == null || "true".equals(changed)) {
             filePathToConfiguration = FileUtils.getConfiguration(filePathToMicroserviceName);
@@ -58,6 +61,7 @@ public class UnnecessarySettingsService {
             filePathToConfiguration = (Map<String, Configuration>) redisTemplate.opsForValue().get(systemDirectory + "_filePathToConfiguration");
         }
         UnnecessarySettingsDetail unnecessarySettingsDetail = new UnnecessarySettingsDetail();
+        unnecessarySettingsDetail.setTime(time);
         boolean status = false;
         for (String filePath : filePathToMicroserviceName.keySet()) {
             String microserviceName = filePathToMicroserviceName.get(filePath);

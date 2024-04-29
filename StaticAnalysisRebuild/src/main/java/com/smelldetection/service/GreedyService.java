@@ -12,6 +12,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +34,10 @@ public class GreedyService {
 
     public ServiceGreedyDetail getGreedyService(Map<String, String> filePathToMicroserviceName, String systemPath, String changed) throws IOException, DocumentException, XmlPullParserException {
         long start = System.currentTimeMillis();
+        SimpleDateFormat dateformat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String time = dateformat.format(start);
         ServiceGreedyDetail serviceGreedyDetail = new ServiceGreedyDetail();
+        serviceGreedyDetail.setTime(time);
         WrongCutDetail wrongCutDetail = wrongCutService.getWrongCut(filePathToMicroserviceName, systemPath, changed);
         for (String directory : filePathToMicroserviceName.keySet()) {
             String microserviceName = filePathToMicroserviceName.get(directory);

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -24,6 +25,8 @@ public class HubService {
 
     public HubServiceDetail getHubClass(Map<String, String> filePathToMicroserviceName, String systemPath, String changed) throws IOException {
         long start = System.currentTimeMillis();
+        SimpleDateFormat dateformat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String time = dateformat.format(start);
         Map<String, DependCount> importsAndOutputs = new HashMap<>();
         Set<String> classNames = new LinkedHashSet<>();
         // 收集本系统自身所有的类声明
@@ -44,6 +47,7 @@ public class HubService {
             }
         }
         HubServiceDetail hubServiceDetail = new HubServiceDetail();
+        hubServiceDetail.setTime(time);
         for (String className : importsAndOutputs.keySet()) {
             DependCount dependCount = importsAndOutputs.get(className);
             int importCount = dependCount.getImportCount();

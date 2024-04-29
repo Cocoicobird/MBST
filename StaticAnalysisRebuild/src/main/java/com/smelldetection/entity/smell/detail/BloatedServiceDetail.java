@@ -16,6 +16,7 @@ public class BloatedServiceDetail implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private boolean status; // true 表示为 BloatedService
+    private String time;
     Map<String, BloatedServiceItem> bloatedServices;
 
     public BloatedServiceDetail() {

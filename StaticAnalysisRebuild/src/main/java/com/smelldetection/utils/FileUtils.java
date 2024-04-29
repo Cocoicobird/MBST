@@ -38,8 +38,8 @@ public class FileUtils {
         Map<String, Configuration> configurations = new HashMap<>();
         for (String filePath : filePathToMicroserviceName.keySet()) {
             List<String> applicationYamlOrProperties = FileUtils.getApplicationYamlOrProperties(filePath);
+            Configuration configuration = new Configuration();
             for (String application : applicationYamlOrProperties) {
-                Configuration configuration = new Configuration();
                 if (application.endsWith("yaml") || application.endsWith("yml")) {
                     Yaml yaml = new Yaml();
                     final Iterable<Object> objects = yaml.loadAll(new FileInputStream(application));
@@ -50,8 +50,8 @@ public class FileUtils {
                     FileUtils.resolveProperties(application, configuration.getItems());
                 }
                 configuration.setMicroserviceName(filePathToMicroserviceName.get(filePath));
-                configurations.put(filePath, configuration);
             }
+            configurations.put(filePath, configuration);
         }
         return configurations;
     }

@@ -12,6 +12,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +31,10 @@ public class NoGatewayService {
 
     public NoGatewayDetail getGateway(Map<String, String> filePathToMicroserviceName, String systemPath, String changed) throws IOException, XmlPullParserException {
         long start = System.currentTimeMillis();
+        SimpleDateFormat dateformat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String time = dateformat.format(start);
         NoGatewayDetail noGatewayDetail = new NoGatewayDetail();
+        noGatewayDetail.setTime(time);
         boolean hasDependency = false;
         boolean hasConfiguration = false;
         Map<String, Configuration> configurations = FileUtils.getConfiguration(filePathToMicroserviceName);

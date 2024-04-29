@@ -18,6 +18,7 @@ public class ServiceGreedyDetail implements Serializable {
 
     // 是否存在服务贪婪
     private boolean status;
+    private String time;
     private List<ServiceGreedyItem> greedyServices;
 
     public ServiceGreedyDetail() {

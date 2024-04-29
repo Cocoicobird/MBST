@@ -98,9 +98,6 @@ public class HomeController {
     @Autowired
     private MetricExtraService metricExtraService;
 
-    @Autowired
-    private QualityCharacteristicCalculationService calculationService;
-
     @GetMapping("/static")
     public Map<String, Object> staticAnalysis(HttpServletRequest request) throws Exception {
         /**
@@ -112,7 +109,7 @@ public class HomeController {
          */
         long start = System.currentTimeMillis();
         SimpleDateFormat dateformat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        String time = dateformat.format(System.currentTimeMillis());
+        String time = dateformat.format(start);
         String systemPath = request.getParameter("path");
         String changed = request.getParameter("changed");
         if (!redisTemplate.hasKey(systemPath + "_prepare_static") || "true".equals(changed)) {
@@ -150,6 +147,7 @@ public class HomeController {
         result.put("unnecessarySettings", unnecessarySettingsService.getUnnecessarySettings(filePathToMicroserviceName, systemPath, changed));
         result.put("whateverTypes", whateverTypesService.getWhateverTypes(filePathToMicroserviceName, systemPath, changed));
         result.put("wrongCut", wrongCutService.getWrongCut(filePathToMicroserviceName, systemPath, changed));
+        QualityCharacteristicCalculationService calculationService = new QualityCharacteristicCalculationService();
         calculationService.processStaticAnalysisResult(result);
         calculationService.calculateStaticAnalysisQualityScore();
         result.put("qualityScore", QualityCharacteristicCalculationService.qualityScore);
@@ -317,7 +315,7 @@ public class HomeController {
     }
 
     @GetMapping("/duplicatedService")
-    public Set<List<DuplicatedServiceDetail>> duplicatedService(HttpServletRequest request) throws IOException {
+    public Map<String, Object> duplicatedService(HttpServletRequest request) throws IOException {
         String systemPath = request.getParameter("path");
         String changed = request.getParameter("changed");
         Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath);

@@ -101,7 +101,7 @@ public class HistoryController {
     }
 
     @GetMapping("/duplicatedService")
-    public List<Set<List<DuplicatedServiceDetail>>> duplicatedServiceHistory(HttpServletRequest request) {
+    public List<Map<String, Object>> duplicatedServiceHistory(HttpServletRequest request) {
         return duplicatedServicesService.getDuplicatedServiceHistory(request.getParameter("path"));
     }
 
@@ -186,14 +186,14 @@ public class HistoryController {
     }
 
     @GetMapping("/static")
-    public List<String> staticHistory(HttpServletRequest request) {
+    public List<Map<String, Object>> staticHistory(HttpServletRequest request) {
         String systemPath = request.getParameter("path");
         String key = systemPath + "_static_*";
         Set<String> keys = redisTemplate.keys(key);
-        List<String> statics = new ArrayList<>();
+        List<Map<String, Object>> statics = new ArrayList<>();
         if (keys != null) {
             for (String k : keys) {
-                statics.add((String) redisTemplate.opsForValue().get(k));
+                statics.add((Map<String, Object>) redisTemplate.opsForValue().get(k));
             }
         }
         return statics;

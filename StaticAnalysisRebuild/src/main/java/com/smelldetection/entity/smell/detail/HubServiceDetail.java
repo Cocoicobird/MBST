@@ -18,6 +18,7 @@ public class HubServiceDetail implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private boolean status;
+    private String time;
     Map<String, List<DependCount>> hubClasses;
 
     public HubServiceDetail() {

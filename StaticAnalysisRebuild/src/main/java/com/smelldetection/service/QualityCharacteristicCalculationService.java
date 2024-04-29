@@ -217,7 +217,8 @@ public class QualityCharacteristicCalculationService {
             this.noLocalLoggingCoverage = 1;
         } else {
             for (String microserviceName : localLoggingDetail.getLogs().keySet()) {
-                this.noLocalLoggingCoverage += this.microserviceWeights.getOrDefault(microserviceName, 0.0);
+                if (localLoggingDetail.getLogs().get(microserviceName))
+                    this.noLocalLoggingCoverage += this.microserviceWeights.getOrDefault(microserviceName, 0.0);
             }
             this.noLocalLoggingCoverage = 1 - this.noLocalLoggingCoverage;
         }
@@ -310,10 +311,13 @@ public class QualityCharacteristicCalculationService {
     }
 
     public void calculateAppropriateServiceIntimacyCoverage(Map<String, List<String>> serviceIntimacy) {
+        Set<String> microserviceNames = new LinkedHashSet<>();
         for (String microserviceName : serviceIntimacy.keySet()) {
-            if (!serviceIntimacy.get(microserviceName).isEmpty()) {
-                this.appropriateServiceIntimacyCoverage += this.microserviceWeights.getOrDefault(microserviceName, 0.0);
-            }
+            microserviceNames.add(microserviceName);
+            microserviceNames.addAll(serviceIntimacy.get(microserviceName));
+        }
+        for (String microserviceName : microserviceNames) {
+            this.appropriateServiceIntimacyCoverage += this.microserviceWeights.getOrDefault(microserviceName, 0.0);
         }
         this.appropriateServiceIntimacyCoverage = 1 - this.appropriateServiceIntimacyCoverage;
     }

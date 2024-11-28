@@ -50,7 +50,8 @@ public class ChattyService {
             if (microserviceCallResult.size() == 0)
                 maxCallNumber = -1;
             for (String calledMicroserviceName : microserviceCallResult.keySet()) {
-                maxCallNumber = Math.max(maxCallNumber, microserviceCallResult.get(calledMicroserviceName));
+                // maxCallNumber = Math.max(maxCallNumber, microserviceCallResult.get(calledMicroserviceName));
+                maxCallNumber += microserviceCallResult.get(calledMicroserviceName);
             }
             // entity 相关目录下的 .java 文件，一般是实体类，有些项目中也会将 DTO 置于该目录
             List<String> entityClasses;

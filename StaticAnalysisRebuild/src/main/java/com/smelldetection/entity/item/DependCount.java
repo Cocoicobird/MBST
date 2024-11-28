@@ -17,6 +17,10 @@ public class DependCount implements Serializable {
     private Integer importCount; // 引入的类
     private Integer outputCount; // 被引用的次数
 
+    public DependCount() {
+
+    }
+
     public DependCount(String className) {
         this.className = className;
         this.importCount = 0;

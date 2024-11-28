@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -20,7 +21,7 @@ public class ApiVersionDetail implements Serializable {
      * value 为对应方法和 url
      */
     private Map<String, Map<String, String>> noVersion;
-    private Map<String, Map<String, String>> missingUrl;
+    private Map<String, List<String>> missingUrl;
 
     public ApiVersionDetail() {
         this.noVersion = new HashMap<>();

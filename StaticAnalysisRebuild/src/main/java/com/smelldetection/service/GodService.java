@@ -55,9 +55,8 @@ public class GodService {
         for (ServiceCutItem serviceCut : systemServiceCuts) {
             if(Math.abs(serviceCut.getEntityCount() - systemAverageEntityCount) >= 3 * std
                     && (systemServiceCuts.size() != 1) && std != 0) {
-                if (serviceCut.getEntityCount() > systemAverageEntityCount && serviceCut.getEntityCount() <= 2)
-                    continue;
-                godServiceDetail.getGodServices().put(serviceCut.getMicroserviceName(), serviceCut);
+                if (serviceCut.getEntityCount() > systemAverageEntityCount && serviceCut.getEntityCount() >= 3)
+                    godServiceDetail.getGodServices().put(serviceCut.getMicroserviceName(), serviceCut);
             }
         }
         if (!godServiceDetail.getGodServices().isEmpty()) {

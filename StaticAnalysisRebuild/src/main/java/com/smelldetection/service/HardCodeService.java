@@ -34,7 +34,7 @@ public class HardCodeService {
             String microserviceName = filePathToMicroserviceName.get(filePath);
             List<String> javaFiles = FileUtils.getJavaFiles(filePath);
             List<HardCodeItem> hardCodeItems = new ArrayList<>();
-            HardCodeUtils.resolveHardCodeFromJavaFiles(javaFiles, hardCodeItems);
+            HardCodeUtils.resolveHardCodeFromJavaFiles(javaFiles, hardCodeItems, systemPath);
             if (!hardCodeItems.isEmpty()) {
                 hardCodeDetail.addAll(microserviceName, hardCodeItems);
             }

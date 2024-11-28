@@ -17,6 +17,7 @@ public class NlpUtils {
     public static StanfordCoreNLP pipeline;
 
     static {
+        System.out.println("NLP-----------------");
         // 定义使用的组件 tokenize分词 ssplit断句 pos词性标注 lemma词元化 ner命名实体识别 parse语法分析 dcoref同义词分辨
         properties.setProperty("annotators", "tokenize, ssplit, pos");
         pipeline = new StanfordCoreNLP(properties);

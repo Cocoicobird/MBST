@@ -53,7 +53,7 @@ public class JavaParserUtils {
         for (String methodName : methodToApi.keySet()) {
             String api = methodToApi.get(methodName);
             if ("".equals(api)) {
-                apiVersionDetail.getMissingUrl().get(microserviceName).put(methodName, api);
+                apiVersionDetail.getMissingUrl().get(microserviceName).add(methodName);
             } else if (matchApiVersion(api).isEmpty()) {
                 apiVersionDetail.getNoVersion().get(microserviceName).put(methodName, api);
             }
@@ -454,7 +454,7 @@ public class JavaParserUtils {
         TypeSolver typeSolver = new CombinedTypeSolver();
         JavaSymbolSolver javaSymbolSolver = new JavaSymbolSolver(typeSolver);
         StaticJavaParser.setConfiguration(new ParserConfiguration().setSymbolResolver(javaSymbolSolver));
-        for (String javaFile : javaFiles) {
+        for (String javaFile : javaFiles) { // 收集所有的全限定类名
             CompilationUnit compilationUnit = StaticJavaParser.parse(new File(javaFile));
             for (TypeDeclaration<?> typeDeclaration : compilationUnit.getTypes()) {
                 String fullClassName = typeDeclaration.getFullyQualifiedName().isPresent() ?
@@ -472,14 +472,14 @@ public class JavaParserUtils {
                 if (fullClassName != null) {
                     if ("com.github.javaparser.ast.body.ClassOrInterfaceDeclaration".equals(typeDeclaration.getClass().getName())) {
                         ClassOrInterfaceDeclaration classOrInterfaceDeclaration = (ClassOrInterfaceDeclaration) typeDeclaration;
-                        for (ClassOrInterfaceType classOrInterfaceType : classOrInterfaceDeclaration.getExtendedTypes()) {
+                        for (ClassOrInterfaceType classOrInterfaceType : classOrInterfaceDeclaration.getExtendedTypes()) { // 该类声明的继承类
                             for (String className : classNames) {
                                 String[] str = className.split("\\.");
-                                if (str[str.length - 1].equals(classOrInterfaceType.getNameAsString())) {
+                                if (str[str.length - 1].equals(classOrInterfaceType.getNameAsString())) { // 类名等于继承类名
                                     if (!extensionAndImplementations.containsKey(className)) {
                                         extensionAndImplementations.put(className, new LinkedHashSet<>());
                                     }
-                                    extensionAndImplementations.get(className).add(fullClassName);
+                                    extensionAndImplementations.get(className).add(fullClassName); //
                                     break;
                                 }
                             }

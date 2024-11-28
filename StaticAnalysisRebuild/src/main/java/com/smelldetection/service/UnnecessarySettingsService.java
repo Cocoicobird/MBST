@@ -5,12 +5,15 @@ import com.smelldetection.entity.smell.detail.UnnecessarySettingsDetail;
 import com.smelldetection.entity.system.component.Configuration;
 import com.smelldetection.utils.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -27,7 +30,8 @@ public class UnnecessarySettingsService {
     private static final Map<String, String> defaultConfiguration = new HashMap<>();
 
     static {
-        try (BufferedReader br = Files.newBufferedReader(Paths.get("StaticAnalysisRebuild", "src", "main", "resources", "configuration.csv"))) {
+        ClassPathResource classPathResource = new ClassPathResource("configuration.csv");
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(classPathResource.getInputStream()))) {
             // CSV文件的分隔符
             String DELIMITER = ",";
             // 按行读取

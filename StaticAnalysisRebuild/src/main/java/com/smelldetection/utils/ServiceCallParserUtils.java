@@ -60,6 +60,7 @@ public class ServiceCallParserUtils {
         for (String microserviceName : results.keySet()) {
             ServiceCallItem serviceCallItem = results.get(microserviceName);
             serviceCallItem.setMicroservice(microserviceName);
+            System.out.println(serviceCallItem);
             int callServiceNumber = serviceCallItem.getCallServices().size();
             int calledServiceNumber = serviceCallItem.getCalledServices().size();
             if (callServiceNumber == calledServiceNumber && calledServiceNumber >= percent * microserviceNumber) {
@@ -127,7 +128,6 @@ public class ServiceCallParserUtils {
             List<CompilationUnit> compilationUnits = sourceRoot.getCompilationUnits();
             for (CompilationUnit compilationUnit : compilationUnits) {
                 Map<String, Integer> parseResultsOfJavaFile = parseJavaFile(compilationUnit);
-                // System.out.println("parseResultsOfJavaFile: " + parseResultsOfJavaFile);
                 for (String key : parseResultsOfJavaFile.keySet()) {
                     parseResultsOfMicroservice.put(key, parseResultsOfMicroservice.getOrDefault(key, 0) + parseResultsOfJavaFile.get(key));
                 }
@@ -211,7 +211,7 @@ public class ServiceCallParserUtils {
         Map<String, Integer> parseResults = new HashMap<>();
         for (int i = 0; i < javaFileParseItem.getMethodDeclarations().size(); i++) {
             // 存储表达式
-            Set<Expression> callPathInit = new LinkedHashSet<>();
+            List<Expression> callPathInit = new ArrayList<>();
             // 获取初始 url 参数
             processMethodArgs(javaFileParseItem.getMethodDeclarations().get(i), callPathInit, restTemplateName);
 //            System.out.println(javaFileParseItem.getMethodDeclarations().get(i));
@@ -225,7 +225,7 @@ public class ServiceCallParserUtils {
                     continue;
                 }
             }
-            Set<Expression> callPathFinal = new LinkedHashSet<>();
+            List<Expression> callPathFinal = new ArrayList<>();
             // 针对字符串进行分割获取服务名
             processMethodArgs(javaFileParseItem.getMethodDeclarations().get(i), callPathFinal, restTemplateName);
             for (Expression callPath : callPathFinal) {
@@ -234,7 +234,7 @@ public class ServiceCallParserUtils {
                     microserviceName = getMicroserviceNameFromURL(callPath);
                     // System.out.println("1callPath: " + callPath);
                     if (microserviceName != null) {
-                        parseResults.put(microserviceName, parseResults.getOrDefault(callPath.toString(), 0) + 1);
+                        parseResults.put(microserviceName, parseResults.getOrDefault(microserviceName, 0) + 1);
                     }
                 } else { // 形如 "http:// + ... + ..." 的形式
                     microserviceName = getMicroserviceNameStandaloneExpr(callPath);
@@ -279,7 +279,7 @@ public class ServiceCallParserUtils {
      * 也可能是是其他类型参数，但若是请求路径参数，只能是在第一个参数位置
      * @param callPathArgs 存储 http 调用参数
      */
-    private static void processMethodArgs(Node node, Set<Expression> callPathArgs, String restTemplateName) {
+    private static void processMethodArgs(Node node, List<Expression> callPathArgs, String restTemplateName) {
         if (node instanceof MethodCallExpr) {
             // 处理方法调用所在实例对象名称
             if (((MethodCallExpr) node).getScope().isPresent()) {

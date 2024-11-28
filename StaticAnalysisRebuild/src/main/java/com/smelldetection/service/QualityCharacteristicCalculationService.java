@@ -81,7 +81,7 @@ public class QualityCharacteristicCalculationService {
         calculateNoBloatedServiceCoverage((BloatedServiceDetail) result.get("bloatedService"));
         calculateNoChattyServiceCoverage((ChattyServiceDetail) result.get("chattyService"));
         calculateNoCyclicReferenceCoverage((CyclicReferenceDetail) result.get("cyclicReference"));
-        calculateNoDuplicatedServiceCoverage((Set<List<DuplicatedServiceDetail>>) result.get("duplicatedService"));
+        calculateNoDuplicatedServiceCoverage((Map<String, Object>) result.get("duplicatedService"));
         calculateNoESBUsageCoverage((ESBUsageDetail) result.get("esbUsage"));
         calculateNoGodServiceCoverage((GodServiceDetail) result.get("godService"));
         calculateNoGreedyServiceCoverage((ServiceGreedyDetail) result.get("greedyService"));
@@ -142,9 +142,10 @@ public class QualityCharacteristicCalculationService {
         }
     }
 
-    public void calculateNoDuplicatedServiceCoverage(Set<List<DuplicatedServiceDetail>> duplicatedServiceDetail) {
+    public void calculateNoDuplicatedServiceCoverage(Map<String, Object> duplicatedServiceDetail) {
         Set<String> microserviceNames = new LinkedHashSet<>();
-        for (List<DuplicatedServiceDetail> duplicatedService : duplicatedServiceDetail) {
+        Set<List<DuplicatedServiceDetail>> data = (Set<List<DuplicatedServiceDetail>>) duplicatedServiceDetail.get("data");
+        for (List<DuplicatedServiceDetail> duplicatedService : data) {
             for (DuplicatedServiceDetail detail : duplicatedService) {
                 microserviceNames.add(detail.getMicroserviceName());
             }

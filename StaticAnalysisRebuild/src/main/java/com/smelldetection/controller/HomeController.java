@@ -160,13 +160,7 @@ public class HomeController {
         String systemPath = request.getParameter("path");
         String changed = request.getParameter("changed");
         Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
-        Map<String, Configuration> filePathToConfiguration;
-        if (redisTemplate.opsForValue().get(systemPath + "_filePathToConfiguration") == null || "true".equals(changed)) {
-            filePathToConfiguration = FileUtils.getConfiguration(filePathToMicroserviceName);
-            redisTemplate.opsForValue().set(systemPath + "_filePathToConfiguration", filePathToConfiguration);
-        } else {
-            filePathToConfiguration = (Map<String, Configuration>) redisTemplate.opsForValue().get(systemPath + "_filePathToConfiguration");
-        }
+        Map<String, Configuration> filePathToConfiguration = FileUtils.getConfiguration(filePathToMicroserviceName);
         SharedDatabasesAndServiceIntimacyDetail sharedDatabases = sharedDatabaseService.getSharedDatabasesAndServiceIntimacy(filePathToConfiguration, systemPath, changed);
         return sharedDatabases;
     }
@@ -420,5 +414,42 @@ public class HomeController {
             redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
         }
         return microserviceRankService.getMicroserviceRank(filePathToMicroserviceName, systemPath, changed);
+    }
+
+    @GetMapping("/test")
+    public Map<String, Object> test(HttpServletRequest request) throws Exception {
+        /**
+         * 1.获取系统各微服务模块的路径
+         * 2.针对每个模块进行静态解析
+         *   2.1.解析配置文件
+         *   2.2.解析 pom 文件
+         *   2.3.解析 .java 文件
+         */
+        long start = System.currentTimeMillis();
+        SimpleDateFormat dateformat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String time = dateformat.format(start);
+        String systemPath = request.getParameter("path");
+        String changed = request.getParameter("changed");
+        if (!redisTemplate.hasKey(systemPath + "_prepare_static") || "true".equals(changed)) {
+            metricExtraService.prepare(systemPath);
+            redisTemplate.opsForValue().set(systemPath + "_prepare_static", "mark");
+            changed = "false";
+        }
+        Map<String, String> filePathToMicroserviceName = (Map<String, String>) redisTemplate.opsForValue().get(systemPath + "_filePathToMicroserviceName");
+        Map<String, Object> result = new HashMap<>();
+        System.out.println(filePathToMicroserviceName);
+        result.put("time", time);
+        result.put("microserviceRank", microserviceRankService.getMicroserviceRank(filePathToMicroserviceName, systemPath, changed));
+        result.put("bloatedService", bloatedService.getBloatedService(filePathToMicroserviceName, systemPath, changed));
+        result.put("chattyService", chattyService.getChattyService(filePathToMicroserviceName, systemPath, changed));
+        result.put("duplicatedService", duplicatedServicesService.getDuplicatedService(filePathToMicroserviceName, systemPath, changed));
+        result.put("localLogging", localLoggingService.getLocalLoggingService(filePathToMicroserviceName, systemPath, changed));
+        NoHealthCheckAndNoServiceDiscoveryPatternDetail noHealthCheckAndNoServiceDiscoveryPattern = noHealthCheckAndNoServiceDiscoveryPatternService.getNoHealthCheckAndNoServiceDiscoveryPattern(filePathToMicroserviceName, systemPath, changed);
+        result.put("noHealthCheck", noHealthCheckAndNoServiceDiscoveryPattern);
+        result.put("noServiceDiscoveryPattern", noHealthCheckAndNoServiceDiscoveryPattern);
+        result.put("poorRestfulApiDesign", poorRestfulApiDesignService.getPoorRestfulApiDesign(filePathToMicroserviceName, systemPath, changed));
+        result.put("unnecessarySettings", unnecessarySettingsService.getUnnecessarySettings(filePathToMicroserviceName, systemPath, changed));
+        result.put("whateverTypes", whateverTypesService.getWhateverTypes(filePathToMicroserviceName, systemPath, changed));
+        return result;
     }
 }

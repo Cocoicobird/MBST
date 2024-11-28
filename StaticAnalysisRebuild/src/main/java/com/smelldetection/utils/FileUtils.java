@@ -1,8 +1,10 @@
 package com.smelldetection.utils;
 
+import com.smelldetection.common.ErrorCode;
 import com.smelldetection.entity.item.ServiceCutItem;
 import com.smelldetection.entity.system.component.Configuration;
 import com.smelldetection.entity.system.component.Pom;
+import com.smelldetection.exception.BusinessException;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
@@ -11,6 +13,7 @@ import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.io.SAXReader;
 import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.scanner.ScannerException;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -295,6 +298,7 @@ public class FileUtils {
         Map<String, String> filePathToMicroserviceName = new HashMap<>();
         List<String> services = getServices(directory);
         for (String service : services) {
+            System.out.println(service + " -------------------");
             List<String> applicationYamlOrProperties = getApplicationYamlOrProperties(service);
             String microserviceName = "";
             for (String applicationYamlOrProperty : applicationYamlOrProperties) {
@@ -302,14 +306,19 @@ public class FileUtils {
                 if (applicationYamlOrProperty.endsWith("yaml") || applicationYamlOrProperty.endsWith("yml")) {
                     Yaml yaml = new Yaml();
                     final Iterable<Object> objects = yaml.loadAll(new FileInputStream(applicationYamlOrProperty));
-                    for (Object o : objects) {
-                        // System.out.println(o.toString());
-                        FileUtils.resolveYaml(new Stack<>(), configuration.getItems(), (Map<String, Object>) o);
+                    try {
+                        for (Object o : objects) {
+                            // System.out.println(o.toString());
+                            FileUtils.resolveYaml(new Stack<>(), configuration.getItems(), (Map<String, Object>) o);
+                        }
+                    } catch (ScannerException e) {
+                        throw new BusinessException(ErrorCode.OPERATION_ERROR, "配置文件存在无法解析的占位符");
                     }
                 } else {
                     resolveProperties(applicationYamlOrProperty, configuration.getItems());
                 }
                 String[] strings = service.split("\\\\");
+                System.out.println(strings[strings.length - 1]);
                 microserviceName = configuration.getItems().getOrDefault("spring.application.name", strings[strings.length - 1]);
             }
             filePathToMicroserviceName.put(service, microserviceName);

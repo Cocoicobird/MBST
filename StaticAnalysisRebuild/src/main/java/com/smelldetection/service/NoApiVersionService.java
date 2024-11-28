@@ -35,7 +35,7 @@ public class NoApiVersionService {
         for (String directory : filePathToMicroserviceName.keySet()) {
             String microserviceName = filePathToMicroserviceName.get(directory);
             apiVersionDetail.getNoVersion().put(microserviceName, new HashMap<>());
-            apiVersionDetail.getMissingUrl().put(microserviceName, new HashMap<>());
+            apiVersionDetail.getMissingUrl().put(microserviceName, new ArrayList<>());
             List<String> javaFiles = FileUtils.getJavaFiles(directory);
             for (String javaFile : javaFiles) {
                 File file = new File(javaFile);

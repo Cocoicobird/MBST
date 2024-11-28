@@ -1,6 +1,7 @@
 package com.smelldetection.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.smelldetection.entity.MetricSummary;
@@ -185,9 +186,20 @@ public class MetricExtraService {
             System.out.println("API 版本集合(个数:" + apiVersions.size() + "): " + apiVersions);
             System.out.println("使用的数据库(个数:" + dataBases.size() + "): " + dataBases);
             System.out.println("服务层方法调用: " + serviceMethodCallResults.get(microserviceName));
-            metricSummaryMapper.insert(metricSummary);
+            LambdaQueryWrapper<MetricSummary> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(MetricSummary::getSystemName, microserviceSystemPath);
+            if (metricSummaryMapper.selectList(queryWrapper) == null) {
+                metricSummaryMapper.insert(metricSummary);
+            }
+
         }
         System.out.println("微服务间调用: " + microserviceCallResults);
+    }
+
+    public List<MetricSummary> getMetricSummaries(String path) {
+        LambdaQueryWrapper<MetricSummary> metricSummaryLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        metricSummaryLambdaQueryWrapper.eq(MetricSummary::getMicroserviceName, path);
+        return metricSummaryMapper.selectList(metricSummaryLambdaQueryWrapper);
     }
 
     public List<MetricSummary> getMetricSummaries() {
@@ -226,8 +238,10 @@ public class MetricExtraService {
 
     public void prepare(String systemPath) throws DocumentException, XmlPullParserException, IOException {
         Map<String, String> filePathToMicroserviceName = FileUtils.getFilePathToMicroserviceName(systemPath);
+        System.out.println(filePathToMicroserviceName);
         redisTemplate.opsForValue().set(systemPath + "_filePathToMicroserviceName", filePathToMicroserviceName);
         Map<String, Map<String, Integer>> microserviceCallResults = ServiceCallParserUtils.getMicroserviceCallResults(filePathToMicroserviceName);
+        System.out.println(microserviceCallResults);
         redisTemplate.opsForValue().set(systemPath + "_microserviceCallResults", microserviceCallResults);
         List<ServiceCutItem> systemServiceCuts = FileUtils.getSystemServiceCuts(filePathToMicroserviceName);
         redisTemplate.opsForValue().set(systemPath + "_systemServiceCuts", systemServiceCuts);

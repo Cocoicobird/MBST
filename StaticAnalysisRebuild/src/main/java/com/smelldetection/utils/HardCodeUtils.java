@@ -24,18 +24,19 @@ public class HardCodeUtils {
      * @param hardCodeItems 存储硬编码信息
      */
     public static void resolveHardCodeFromJavaFiles(List<String> javaFiles,
-                                                    List<HardCodeItem> hardCodeItems) throws IOException {
+                                                    List<HardCodeItem> hardCodeItems, String systemPath) throws IOException {
         for (String javaFile : javaFiles) {
-            HardCodeItem hardCodeItem = inspectJavaFile(javaFile);
+            HardCodeItem hardCodeItem = inspectJavaFile(javaFile, systemPath);
             if (!hardCodeItem.getHardCodeAndPositions().isEmpty()) {
                 hardCodeItems.add(hardCodeItem);
             }
         }
     }
 
-    private static HardCodeItem inspectJavaFile(String  javaFile) throws IOException {
+    private static HardCodeItem inspectJavaFile(String  javaFile, String systemPath) throws IOException {
         HardCodeItem hardCodeItem = new HardCodeItem();
-        hardCodeItem.setFileName(javaFile);
+        String fileName = javaFile.substring(javaFile.contains("src/main/java/") ? javaFile.indexOf("src/main/java/") + "src/main/java/".length() : 0).replace("/", ".");
+        hardCodeItem.setFileName(fileName);
         hardCodeItem.setFilePath(javaFile);
         InputStreamReader inputStreamReader = new InputStreamReader(new FileInputStream(javaFile));
         BufferedReader bufferedReader = new BufferedReader(inputStreamReader);

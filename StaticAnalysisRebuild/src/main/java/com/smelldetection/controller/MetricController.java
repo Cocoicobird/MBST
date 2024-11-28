@@ -38,8 +38,10 @@ public class MetricController {
     }
 
     @GetMapping("/list")
-    public List<MetricSummary> list() {
-        return metricExtraService.getMetricSummaries();
+    public List<MetricSummary> list(HttpServletRequest request) {
+        if (request.getParameter("path") == null)
+            return metricExtraService.getMetricSummaries();
+        return metricExtraService.getMetricSummaries(request.getParameter("path"));
     }
 
     @GetMapping("/excel")
